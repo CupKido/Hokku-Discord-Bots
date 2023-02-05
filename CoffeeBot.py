@@ -98,7 +98,9 @@ async def create_new_channel(interaction):
     await interaction.response.send_modal(thisModal)
 
 async def button_pressed(interaction):
-    print('button pressed')
+    users_amount = interaction.data['components'][0]['components'][0]['value']
+    await interaction.guild.create_voice_channel(name = f'{interaction.user.name}\'s office', user_limit = int(users_amount))
+    await interaction.response.send_message(f'created a vc for {users_amount} users')
 
 def activate():
     client.run(secret_key)
