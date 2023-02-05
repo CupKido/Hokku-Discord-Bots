@@ -33,7 +33,7 @@ class discord_client(discord.Client):
                 channel = self.get_channel(int(server_config.get_specific_announcement_channel(guildID)))
                 await channel.send(f'im active, my name is {self.user}')
             print('\t' + str(x.name))
-            print("Bot is UP")
+            print('bot is not up')
             
         await client.change_presence(activity = discord.Activity(type = discord.ActivityType.watching, name = "Cheetah pics"))
         
@@ -90,6 +90,9 @@ async def help(interaction: discord.Interaction):
     help_msg = '```' + 'Our bot\'s commands are:\n' + '\n'.join([('\t\"/' + str(x.name) + '\": ' + str(x.description) + '') for x in all_commands]) + \
         '\n\t\"/help\": to get more info about a specific command' + '```'
     await interaction.response.send_message(help_msg)
+
+
+@client.tree.command(name = 'choose_creation_channel', description='choose a channel for creationg new voice channels')
 
 
 @client.tree.command(name = 'spam', description = "spam a message")
