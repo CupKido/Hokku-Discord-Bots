@@ -33,6 +33,7 @@ class discord_client(discord.Client):
                 channel = self.get_channel(int(server_config.get_specific_announcement_channel(guildID)))
                 await channel.send(f'im active, my name is {self.user}')
             print('\t' + str(x.name))
+            print("Bot is UP")
             
         await client.change_presence(activity = discord.Activity(type = discord.ActivityType.watching, name = "Cheetah pics"))
         
