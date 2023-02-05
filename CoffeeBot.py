@@ -4,6 +4,7 @@ from discord.ext import commands
 import views
 import modals
 from server_config_interface import server_config
+import channel_modifier
 import random
 secret_key = ''
 with open('token.txt', 'r') as f:
@@ -42,10 +43,11 @@ async def choose_creation_channel(interaction: discord.Interaction, channel : di
     try:
         # get server config
         this_server_config = server_config(interaction.guild.id)
-
+        if this_server_config.get_creation_vc_channel() != ' ':
+            await channel_modifier.set_writable(client.get_channel(int(this_server_config.get_creation_vc_channel())))
         # set announcement channel
         this_server_config.set_creation_vc_channel(channel.id)
-
+        await channel_modifier.set_readonly(channel)
         await interaction.response.send_message(f'\"{channel.name}\" was set as vc creation channel')
 
     except Exception as e:
