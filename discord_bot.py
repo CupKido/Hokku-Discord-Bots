@@ -35,6 +35,7 @@ class discord_client(discord.Client):
             print('\t' + str(x.name))
             print("BOT IS UP BY NANI")
             print("BOT IS UP BY NANI")
+            print('bot is not up')
             
         await client.change_presence(activity = discord.Activity(type = discord.ActivityType.watching, name = "Cheetah pics"))
         
@@ -91,6 +92,9 @@ async def help(interaction: discord.Interaction):
     help_msg = '```' + 'Our bot\'s commands are:\n' + '\n'.join([('\t\"/' + str(x.name) + '\": ' + str(x.description) + '') for x in all_commands]) + \
         '\n\t\"/help\": to get more info about a specific command' + '```'
     await interaction.response.send_message(help_msg)
+
+
+@client.tree.command(name = 'choose_creation_channel', description='choose a channel for creationg new voice channels')
 
 
 @client.tree.command(name = 'spam', description = "spam a message")
