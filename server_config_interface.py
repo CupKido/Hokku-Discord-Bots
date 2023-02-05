@@ -11,10 +11,14 @@ class server_config:
                 self.server_id = server_id
                 self.announcement_channel = data[server_id]['announcement_channel']
                 self.log_channel = data[server_id]['log_channel']
+                self.create_vc_channel = data[server_id]['create_vc_channel']
+                self.static_message = data[server_id]['static_message']
             else:
                 self.server_id = server_id
                 self.announcement_channel = " "
                 self.log_channel = " "
+                self.create_vc_channel = " "
+                self.static_message = " "
 
     def confirm_announcement_channel(self, guild : discord.guild):
         announcement_channel = self.get_announcement_channel()
@@ -39,11 +43,25 @@ class server_config:
         self.log_channel = channel_id
         self.save()
 
+    def set_creation_vc_channel(self, channel_id : str):
+            self.create_vc_channel = channel_id
+            self.save()
+
+    def set_static_message(self, message : str):
+        self.static_message = message
+        self.save()
+    
+    def get_static_message(self):
+        return self.static_message
+        
     def get_announcement_channel(self):
         return self.announcement_channel
 
     def get_log_channel(self):
         return self.log_channel
+
+    def get_creation_vc_channel(self):
+        return self.create_vc_channel
 
     def get_server_id(self):
         return self.server_id
@@ -54,7 +72,8 @@ class server_config:
                 data = json.load(f)
         except:
             data = {}
-        data[self.server_id] = { 'announcement_channel' : self.announcement_channel, 'log_channel' : self.log_channel }
+        data[self.server_id] = { 'announcement_channel' : self.announcement_channel,
+         'log_channel' : self.log_channel, 'create_vc_channel' : self.create_vc_channel, "static_message" : self.static_message}
         with open(config_file, "w") as f:
             json.dump(data, f)
 
