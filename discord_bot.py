@@ -91,6 +91,9 @@ async def help(interaction: discord.Interaction):
     await interaction.response.send_message(help_msg)
 
 
+@client.tree.command(name = 'choose_creation_channel', description='choose a channel for creationg new voice channels')
+
+
 @client.tree.command(name = 'spam', description = "spam a message")
 async def spam(interaction: discord.Interaction, message: str, amount: int):
     if not await check_has_role('Tester', interaction.user):
