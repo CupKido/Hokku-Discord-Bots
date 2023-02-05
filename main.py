@@ -1,7 +1,7 @@
-import discord_bot
-import webhooks_server
+import CoffeeBot
 def main():
-    # start the bot
-    webhooks_server.start_server()
-    discord_bot.activate()
+    # stat the bot
+    CoffeeBot.activate()
+    # webhooks_server.start_server()
+    # discord_bot.activate()
 main()
