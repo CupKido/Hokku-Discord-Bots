@@ -59,8 +59,9 @@ async def check_has_role(role : str, member : discord.Member):
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message('pong! im alive ya know')
 
+
 @client.tree.command(name = 'set_announcements', description = "sets this channel as the announcements channel")
-async def ping(interaction: discord.Interaction):
+async def set_announcements(interaction: discord.Interaction):
     try:
         # get server config
         this_server_config = server_config(interaction.guild.id)
@@ -94,9 +95,6 @@ async def help(interaction: discord.Interaction):
     await interaction.response.send_message(help_msg)
 
 
-@client.tree.command(name = 'choose_creation_channel', description='choose a channel for creationg new voice channels')
-
-
 @client.tree.command(name = 'spam', description = "spam a message")
 async def spam(interaction: discord.Interaction, message: str, amount: int):
     if not await check_has_role('Tester', interaction.user):
@@ -116,6 +114,8 @@ async def spam(interaction: discord.Interaction, message: str, amount: int):
     for x in range(amount):
         await interaction.channel.send(message)
     await interaction.channel.send('done spamming, can i go now?')
+
+
 
 @client.tree.command(name = 'create_map_poll', description = "creates a poll for which map to play next")
 async def create_map_poll(interaction: discord.Interaction, game : discord.Role, close_in : float, poll_id : int = random.randint(10000, 99999), only_vc : bool = False, vc_channel : discord.VoiceChannel = None):
