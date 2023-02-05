@@ -1,0 +1,20 @@
+{
+    "valorant" : 
+    {
+        "maps" : ["Bind", "Haven", "Split", "Ascent", "Icebox", "Breeze"],
+         "max_players" : 10,
+         "min_players" : 1
+    },
+    "league": 
+    {
+        "maps" : ["Summoner's Rift", "Howling Abyss", "Twisted Treeline", "Crystal Scar", "Valoran City Park", "Butcher's Bridge", "Cosmic Ruins", "Proving Grounds"],
+         "max_players" : 10,
+         "min_players" : 1
+    },
+    "apex_legends" : 
+    {
+        "maps" : ["King's Canyon", "World's Edge"],
+         "max_players" : 60,
+         "min_players" : 1
+    }
+}
