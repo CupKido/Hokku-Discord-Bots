@@ -34,6 +34,7 @@ class discord_client(discord.Client):
                 await channel.send(f'im active, my name is {self.user}')
             print('\t' + str(x.name))
             print("BOT IS UP BY NANI")
+            print("BOT IS UP BY NANI")
             
         await client.change_presence(activity = discord.Activity(type = discord.ActivityType.watching, name = "Cheetah pics"))
         
