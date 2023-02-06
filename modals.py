@@ -9,24 +9,29 @@ from discord import ui
 class InstantModal(ui.Modal, title='Questionnaire Response'):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        
-    name = ui.TextInput(label='Name', placeholder='Enter a name for the VC', max_length=20, required=False)
-    users_limit = ui.TextInput(label='User Limit', placeholder='Enter a number between 1-99 or leave blank for no limit', max_length=2, required=False)
-    bitrate = ui.TextInput(label='Bitrate', placeholder='Enter a number between 8-96 or leave blank for default', max_length=2, required=False)
-    def set_callback_func(self, callback_func):
-        self.callback_func = callback_func
+
+    def set_fields(self, name_to_set=None, users_limit_to_set=None, bitrate_to_set=None):
+        if name_to_set is not None:
+            name = ui.TextInput(label='Name', placeholder='', default=name_to_set, max_length=20, required=False)
+        else:
+            name = ui.TextInput(label='Name', placeholder='Enter a name for the VC', max_length=20, required=False)
+        if users_limit_to_set is not None:
+            users_limit = ui.TextInput(label='User Limit', placeholder='', default=str(users_limit_to_set), max_length=2, required=False)
+        else:
+            users_limit = ui.TextInput(label='User Limit', placeholder='Enter a number between 1-99 or leave blank for no limit', max_length=2, required=False)
+        if bitrate_to_set is not None:
+            bitrate_to_set = str(int(int(bitrate_to_set) / 1000))
+            bitrate = ui.TextInput(label='Bitrate', placeholder='', default=bitrate_to_set, max_length=2, required=False)
+        else:
+            bitrate = ui.TextInput(label='Bitrate', placeholder='Enter a number between 8-96 or leave blank for default', max_length=2, required=False)
+        self.add_item(name)
+        self.add_item(users_limit)
+        self.add_item(bitrate)
     
 
-    def set_name(self, name):
-        self.name.value = name
-    def set_users_limit(self, users_limit):
-        if users_limit == None:
-            users_limit = ''
-        self.users_limit.value = users_limit
-    def set_bitrate(self, bitrate):
-        if bitrate == None:
-            bitrate = ''
-        self.bitrate.value = bitrate
+    def set_callback_func(self, callback_func):
+        self.callback_func = callback_func
 
     async def on_submit(self, interaction: discord.Interaction):
         await self.callback_func(interaction)
+
