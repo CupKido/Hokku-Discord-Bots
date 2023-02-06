@@ -38,5 +38,7 @@ class GenericBot_client(discord.Client):
     def add_on_ready_callback(self, callback):
         self.on_ready_callbacks.append(callback)
     
+    
+
     def activate(self): #
         self.run(secret_key)

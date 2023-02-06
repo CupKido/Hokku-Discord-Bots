@@ -9,15 +9,16 @@ import threading
 import tasks
 from DB_instances.server_config_interface import server_config
 import discord_modification_tools.channel_modifier as channel_modifier
-
+import json
 bot_client = ''
 
-active_channels = {}
+active_channels = ''
 
 def AddFuncs(client):
     global bot_client
     bot_client = client
     bot_client.add_on_ready_callback(on_ready_callback)
+    bot_client.add_on_ready_callback(initialize_active_channels)
     # client.tree.add_command(name = 'choose_creation_channel', description='choose a channel for creationg new voice channels', callback = choose_creation_channel)
     # client.tree.add_command(name = 'choose_static_message', description='choose a static message for vc creation channel', callback = choose_static_message)
     @client.tree.command(name = 'choose_creation_channel', description='choose a channel for creationg new voice channels')
@@ -89,7 +90,7 @@ def AddFuncs(client):
     @client.event
     async def on_voice_state_update(member, before, after):
         # check if before channel is empty
-        print(f'{member} moved from {before.channel} to {after.channel}')
+        # print(f'{member} moved from {before.channel} to {after.channel}')
         print(active_channels)
         if before.channel is not None and len(before.channel.members) == 0:
             # check if channel is active
@@ -100,6 +101,17 @@ def AddFuncs(client):
                 )
                 print(f'deleted {before.channel.name} channel because it was empty')
                 await before.channel.delete()
+                save_active_channels()
+        
+        if after.channel.id == 1072186751340249239:
+            if after.channel.guild.id not in active_channels.keys():
+                active_channels[int(after.channel.guild.id)] = {}
+            new_channel = await after.channel.category.create_voice_channel(name = f'{member.name}\'s Office')
+            await channel_modifier.give_management(new_channel, member)
+            await member.move_to(new_channel)
+            active_channels[after.channel.guild.id][member.id] = new_channel.id
+            save_active_channels()
+
 
 async def on_ready_callback():
     # get all guilds
@@ -115,9 +127,6 @@ async def on_ready_callback():
                 async for msg in creation_channel.history(limit=50):
                     if msg.id == static_message_id:
                         await msg.edit(content = msg.content, view = views.InsantButtonView(create_new_channel_button))
-
-
-            
 
 async def create_new_channel_button(interaction):
     print('presenting modal')
@@ -153,18 +162,14 @@ async def change_channel_details(interaction):
     if users_amount == '':
         users_amount = None
     else:
-        users_amount = int(users_amount)
-
-    # get bitrate
-    bitrate = get_modal_value(interaction, 2)
-    if bitrate == '':
-        bitrate = None
-    else:
-        # transform to kb
-        bitrate = int(bitrate) * 1000
+        try:
+            users_amount = int(users_amount)
+        except:
+            await interaction.response.send_message('please only use numbers in the user limit textbox', ephemeral = True)
+            return
 
     channel = bot_client.get_channel(active_channels[interaction.guild.id][interaction.user.id])
-    await channel.edit(name = name, user_limit = users_amount, bitrate = bitrate)
+    await channel.edit(name = name, user_limit = users_amount)
     await interaction.response.send_message(f'\"{channel.name}\" was edited', ephemeral = True)
     return 
 
@@ -181,15 +186,12 @@ async def create_new_channel(interaction):
     if users_amount == '':
         users_amount = None
     else:
-        users_amount = int(users_amount)
+        try:
+            users_amount = int(users_amount)
+        except:
+            await interaction.response.send_message('please only use numbers in the user limit textbox', ephemeral = True)
+            return
 
-    # get bitrate
-    bitrate = get_modal_value(interaction, 2)
-    if bitrate == '':
-        bitrate = None
-    else:
-        # transform to kb
-        bitrate = int(bitrate) * 1000
 
     
 
@@ -201,11 +203,8 @@ async def create_new_channel(interaction):
     # get category
     category = creation_channel.category
 
-    
-
-
     # create vc in category
-    new_channel = await category.create_voice_channel(name = name, user_limit = users_amount, bitrate = bitrate)
+    new_channel = await category.create_voice_channel(name = name, user_limit = users_amount)
     await channel_modifier.give_management(new_channel, interaction.user)
     #new_channel.permissions_synced = True
 
@@ -213,7 +212,7 @@ async def create_new_channel(interaction):
     if not interaction.guild.id in active_channels.keys(): 
         active_channels[interaction.guild.id] = {}
     active_channels[interaction.guild.id][interaction.user.id] = new_channel.id
-    
+    save_active_channels()
     # create embed with vc info
     if users_amount is None:
         users_amount = 'unlimited'
@@ -222,7 +221,7 @@ async def create_new_channel(interaction):
 
     
     embed = discord.Embed(title = f'\"{new_channel.name}\" was created',
-     description = f'\n\t users limit: {users_amount}\n\t bitrate: {str(int(new_channel.bitrate / 1000))}',
+     description = f'\n\t users limit: {users_amount}',
     color = 0x00ff00)
     await interaction.response.send_message(embed = embed, ephemeral = True)
 
@@ -234,8 +233,10 @@ async def create_new_channel(interaction):
         if len(new_channel.members) == 0:
             # delete channel
             active_channels[new_channel.guild.id].pop(interaction.user.id)
+            save_active_channels()
             print(f'deleted {new_channel.name} channel after {this_server_config.get_vc_closing_timer()} seconds due to inactivity')
             try:
+
                 await new_channel.delete()
             except:
                 print('could not delete channel')
@@ -243,6 +244,43 @@ async def create_new_channel(interaction):
 
     # respond to interaction
 
-
 def get_modal_value(interaction, index): #
     return interaction.data['components'][index]['components'][0]['value']
+
+async def initialize_active_channels():
+    load_active_channels()
+    # delete channels that are not active
+    for guild_id in active_channels.keys():
+        to_pop = []
+        for user_id in active_channels[guild_id].keys():
+
+            channel = bot_client.get_channel(active_channels[guild_id][user_id])
+            # delete if channel is empty
+            if len(channel.members) == 0:
+                to_pop.append(user_id)
+                save_active_channels()
+                print(f'deleted {channel.name} channel due to inactivity')
+                try:
+                    await channel.delete()
+                except:
+                    print('could not delete channel')
+                    pass
+            else:
+                await channel_modifier.give_management(channel, bot_client.get_user(user_id))
+        for user_id in to_pop:
+            active_channels[guild_id].pop(user_id)
+
+def save_active_channels():
+    with open('data_base/active_channels.json', 'w') as file:
+        json.dump(active_channels, file, indent=4)
+
+def load_active_channels():
+    global active_channels
+    with open('data_base/active_channels.json', 'r') as file:
+        temp_dic = json.load(file)
+    temp2_dic = {}
+    for guild_id in temp_dic.keys():
+        temp2_dic[int(guild_id)] = {}
+        for user_id in temp_dic[guild_id].keys():
+            temp2_dic[int(guild_id)][int(user_id)] = int(temp_dic[guild_id][user_id])
+    active_channels = temp2_dic

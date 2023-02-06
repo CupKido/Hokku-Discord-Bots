@@ -22,4 +22,4 @@ async def give_management(channel, role = None):
     if role == None:
         role = channel.guild.default_role
     await channel.edit(sync_permissions=True)
-    await channel.set_permissions(role, manage_channels=True)
+    await channel.set_permissions(role, manage_channels=True, move_members=True)
