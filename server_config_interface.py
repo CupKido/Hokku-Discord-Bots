@@ -14,6 +14,7 @@ class server_config:
                 self.create_vc_channel = data[server_id]['create_vc_channel']
                 self.static_message = data[server_id]['static_message']
                 self.static_message_id = data[server_id]['static_message_id']
+                self.vc_closing_timer = data[server_id]['vc_closing_timer']
             else:
                 self.server_id = server_id
                 self.announcement_channel = " "
@@ -21,6 +22,8 @@ class server_config:
                 self.create_vc_channel = " "
                 self.static_message = " "
                 self.static_message_id = " "
+                self.vc_closing_timer = 60
+                
 
     def confirm_announcement_channel(self, guild : discord.guild):
         announcement_channel = self.get_announcement_channel()
@@ -57,6 +60,13 @@ class server_config:
         self.static_message_id = message_id
         self.save()
     
+    def set_vc_closing_timer(self, timer : int):
+        self.vc_closing_timer = timer
+        self.save()
+    
+    def get_vc_closing_timer(self):
+        return self.vc_closing_timer
+
     def get_static_message_id(self):
         return self.static_message_id
 
@@ -83,7 +93,9 @@ class server_config:
         except:
             data = {}
         data[self.server_id] = { 'announcement_channel' : self.announcement_channel,
-         'log_channel' : self.log_channel, 'create_vc_channel' : self.create_vc_channel, "static_message" : self.static_message, "static_message_id" : self.static_message_id}
+         'log_channel' : self.log_channel, 'create_vc_channel' : self.create_vc_channel,
+          "static_message" : self.static_message, "static_message_id" : self.static_message_id,
+          "vc_closing_timer" : self.vc_closing_timer }
         with open(config_file, "w") as f:
             json.dump(data, f)
 

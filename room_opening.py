@@ -30,12 +30,25 @@ def AddFuncs(client):
             # set announcement channel
             this_server_config.set_creation_vc_channel(channel.id)
             await channel_modifier.set_readonly(channel)
-            await interaction.response.send_message(f'\"{channel.name}\" was set as vc creation channel')
+            await interaction.response.send_message(f'\"{channel.name}\" was set as vc creation channel', ephemeral = True)
 
         except Exception as e:
             print(str(e))
-            await interaction.response.send_message('error')
+            await interaction.response.send_message('error', ephemeral = True)
 
+    @client.tree.command(name = 'set_closing_timer', description='set a timer for closing a vc after creation in case no one joins')
+    async def set_closing_timer(interaction: discord.Interaction, timer : int):
+        try:
+            # get server config
+            this_server_config = server_config(interaction.guild.id)
+
+            # set timer
+            this_server_config.set_vc_closing_timer(timer)
+            await interaction.response.send_message(f'\"{timer}\" was set as closing timer', ephemeral = True)
+
+        except Exception as e:
+            print(str(e))
+            await interaction.response.send_message('error', ephemeral = True) 
 
     @client.tree.command(name = 'choose_static_message', description='choose a static message for vc creation channel')
     async def choose_static_message(interaction: discord.Interaction, message : str):
@@ -51,34 +64,34 @@ def AddFuncs(client):
 
             # check if channel is set, and if not, exits
             if this_server_config.get_creation_vc_channel() == ' ':
-                await interaction.response.send_message('please set a creation channel first')
+                await interaction.response.send_message('please set a creation channel first', ephemeral = True)
                 return
             this_server_config.set_static_message(message)
 
             # set message
-            await interaction.response.send_message(f'\"{message}\" was set as static message')
+            await interaction.response.send_message(f'\"{message}\" was set as static message', ephemeral = True)
 
             # get creation channel
             creation_channel = client.get_channel(int(this_server_config.get_creation_vc_channel()))
 
             embed = discord.Embed(title = 'Instant vc creation', description = message)
             
-            message = await creation_channel.send(embed = embed, view = views.InsantButtonView(create_new_channel))
+            message = await creation_channel.send(embed = embed, view = views.InsantButtonView(create_new_channel_button))
             this_server_config.set_static_message_id(message.id)
 
 
         except Exception as e:
             print(str(e))
-            await interaction.response.send_message('error')
+            await interaction.response.send_message('error', ephemeral = True)
 
     @client.event
     async def on_voice_state_update(member, before, after):
         # check if before channel is empty
         if before.channel is not None and len(before.channel.members) == 0:
             # check if channel is active
-            if before.channel.id in active_channels[before.channel.guild.id]:
+            if before.channel.guild.id in active_channels.keys() and before.channel.id in active_channels[before.channel.guild.id].keys():
                 # delete channel
-                active_channels[before.channel.guild.id].remove(before.channel.id)
+                active_channels[before.channel.guild.id].pop(before.channel.id)
                 print(f'deleted {before.channel.name} channel because it was empty')
                 await before.channel.delete()
 
@@ -95,18 +108,86 @@ async def on_ready_callback():
             if creation_channel is not None:
                 async for msg in creation_channel.history(limit=50):
                     if msg.id == static_message_id:
-                        await msg.edit(content = msg.content, view = views.InsantButtonView(create_new_channel))
+                        await msg.edit(content = msg.content, view = views.InsantButtonView(create_new_channel_button))
 
 
             
 
-async def create_new_channel(interaction):
+async def create_new_channel_button(interaction):
     print('presenting modal')
-    thisModal = modals.InstantModal(title="Modal via Button")
-    thisModal.set_callback_func(button_pressed)
+    flag = True
+    # if rooms are open for this guild
+    if interaction.guild.id in active_channels.keys():
+        # check if user has active channel
+        if interaction.user.id in active_channels[interaction.guild.id].keys():
+            # edit channel
+            channel = bot_client.get_channel(active_channels[interaction.guild.id][interaction.user.id])
+            thisModal = modals.InstantModal(title="Edit channel")
+            thisModal.set_callback_func(change_channel_details)
+            thisModal.set_fields(channel.name, channel.user_limit, channel.bitrate)
+            # thisModal.set_pre_fileds(channel.name, channel.user_limit, channel.bitrate)
+            flag = False
+    if flag:
+        category = interaction.channel.category
+        thisModal = modals.InstantModal(title="Create new channel")
+        thisModal.set_callback_func(create_new_channel)
+        thisModal.set_fields()
     await interaction.response.send_modal(thisModal)
 
-async def button_pressed(interaction):
+async def change_channel_details(interaction):
+
+    # get chosen values from modal
+    # get name
+    name = get_modal_value(interaction, 0)
+    if name == '':
+        name = f'{interaction.user.name}\'s office'
+
+    # get users limit
+    users_amount = get_modal_value(interaction, 1)
+    if users_amount == '':
+        users_amount = None
+    else:
+        users_amount = int(users_amount)
+
+    # get bitrate
+    bitrate = get_modal_value(interaction, 2)
+    if bitrate == '':
+        bitrate = None
+    else:
+        # transform to kb
+        bitrate = int(bitrate) * 1000
+
+    channel = bot_client.get_channel(active_channels[interaction.guild.id][interaction.user.id])
+    await channel.edit(name = name, user_limit = users_amount, bitrate = bitrate)
+    await interaction.response.send_message(f'\"{channel.name}\" was edited', ephemeral = True)
+    return 
+
+async def create_new_channel(interaction):
+    
+    # get chosen values from modal
+    # get name
+    name = get_modal_value(interaction, 0)
+    if name == '':
+        name = f'{interaction.user.name}\'s office'
+
+    # get users limit
+    users_amount = get_modal_value(interaction, 1)
+    if users_amount == '':
+        users_amount = None
+    else:
+        users_amount = int(users_amount)
+
+    # get bitrate
+    bitrate = get_modal_value(interaction, 2)
+    if bitrate == '':
+        bitrate = None
+    else:
+        # transform to kb
+        bitrate = int(bitrate) * 1000
+
+    
+
+
     # get vc creation channel
     this_server_config = server_config(interaction.guild.id)
     creation_channel = bot_client.get_channel(int(this_server_config.get_creation_vc_channel()))
@@ -114,23 +195,7 @@ async def button_pressed(interaction):
     # get category
     category = creation_channel.category
 
-    name = interaction.data['components'][0]['components'][0]['value']
-    if name == '':
-        name = f'{interaction.user.name}\'s office'
-    # get chosen values from modal
-    users_amount = interaction.data['components'][1]['components'][0]['value']
-    if users_amount == '':
-        users_amount = None
-    else:
-        users_amount = int(users_amount)
-
-    # get bitrate
-    bitrate = interaction.data['components'][2]['components'][0]['value']
-    if bitrate == '':
-        bitrate = None
-    else:
-        # transform to kb
-        bitrate = int(bitrate) * 1000
+    
 
 
     # create vc in category
@@ -139,23 +204,20 @@ async def button_pressed(interaction):
 
     # add vc to active channels list
     if not interaction.guild.id in active_channels.keys(): 
-        active_channels[interaction.guild.id] = []
-    active_channels[interaction.guild.id].append(new_channel.id)
+        active_channels[interaction.guild.id] = {}
+    active_channels[interaction.guild.id][interaction.user.id] = new_channel.id
 
     if not users_amount is None:
-        await interaction.response.send_message(f'created a vc for {users_amount} users')
+        await interaction.response.send_message(f'created a vc for {users_amount} users', ephemeral = True)
     else:
-        await interaction.response.send_message(f'created a vc for unlimited users')
-    message = interaction.channel.last_message
-    await asyncio.sleep(5)
-    await message.delete()
+        await interaction.response.send_message(f'created a vc for unlimited users', ephemeral = True)
     # start timer
-    await asyncio.sleep(25)
-    if new_channel.id in active_channels[new_channel.guild.id]:
+    await asyncio.sleep(this_server_config.get_vc_closing_timer())
+    if new_channel.id in active_channels[new_channel.guild.id].values():
         if len(new_channel.members) == 0:
             # delete channel
-            active_channels[new_channel.guild.id].remove(new_channel.id)
-            print(f'deleted {new_channel.name} channel after 30 seconds due to inactivity')
+            active_channels[new_channel.guild.id].pop(interaction.user.id)
+            print(f'deleted {new_channel.name} channel after {this_server_config.get_vc_closing_timer()} seconds due to inactivity')
             try:
                 await new_channel.delete()
             except:
@@ -165,3 +227,5 @@ async def button_pressed(interaction):
     # respond to interaction
 
 
+def get_modal_value(interaction, index): #
+    return interaction.data['components'][index]['components'][0]['value']
