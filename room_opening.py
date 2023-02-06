@@ -1,40 +1,69 @@
 import discord
+import discord
 from discord import app_commands
+from discord.ext import commands
+import views
+import modals
 from server_config_interface import server_config
-secret_key = ''
-with open('token.txt', 'r') as f:
-    secret_key = f.read().split("\n")[2]
+import channel_modifier
+
+def AddFuncs(client):
+    # client.tree.add_command(name = 'choose_creation_channel', description='choose a channel for creationg new voice channels', callback = choose_creation_channel)
+    # client.tree.add_command(name = 'choose_static_message', description='choose a static message for vc creation channel', callback = choose_static_message)
+    @client.tree.command(name = 'choose_creation_channel', description='choose a channel for creationg new voice channels')
+    async def choose_creation_channel(interaction: discord.Interaction, channel : discord.TextChannel):
+        try:
+            # get server config
+            this_server_config = server_config(interaction.guild.id)
+            if this_server_config.get_creation_vc_channel() != ' ':
+                await channel_modifier.set_writable(client.get_channel(int(this_server_config.get_creation_vc_channel())))
+            # set announcement channel
+            this_server_config.set_creation_vc_channel(channel.id)
+            await channel_modifier.set_readonly(channel)
+            await interaction.response.send_message(f'\"{channel.name}\" was set as vc creation channel')
+
+        except Exception as e:
+            print(str(e))
+            await interaction.response.send_message('error')
 
 
-class CoffeeBot_client(discord.Client):
-    def __init__(self, alert_when_online : bool = False):
-        super().__init__(intents = discord.Intents.all())
-        self.tree = app_commands.CommandTree(self)
-        self.synced = False
-        self.added = False
-        self.alert_when_online = alert_when_online
+    @client.tree.command(name = 'choose_static_message', description='choose a static message for vc creation channel')
+    async def choose_static_message(interaction: discord.Interaction, message : str):
+        try:
+            # get server config
+            this_server_config = server_config(interaction.guild.id)
 
-    async def on_ready(self):
-        await self.wait_until_ready()
-        # sent message to channel with id 123456789
-        if not self.synced:
-            print('=================================\nsyncing commands tree to discord')
-            await self.tree.sync()
-            self.synced = True
-            print('synced \
-            \n=================================')
-        print('im active on: ')
-        for guild in self.guilds:
-            if self.alert_when_online:
-                guildID = guild.id
-                channel = self.get_channel(int(server_config.get_specific_announcement_channel(guildID)))
-                await channel.send(f'im active, my name is {self.user}')
-            print('\t' + str(guild.name))
-    def activate(self): #
-        self.run(secret_key)
+            if this_server_config.get_creation_vc_channel() == ' ':
+                await interaction.response.send_message('please set a creation channel first')
+                return
+
+            # set message
+            await interaction.response.send_message(f'\"{message}\" was set as static message')
+
+            # get creation channel
+            creation_channel = client.get_channel(int(this_server_config.get_creation_vc_channel()))
+
+            # embed = discord.Embed(title = 'Instant vc creation', description = message)
+
+            await creation_channel.send(content = message, view = views.InsantButtonView(create_new_channel))
+
+            # add view to embed
+            # view = views.MyView()
+
+            
+            # add buttons to embed
+            # buttons = []
+            # for i in range(1, 11):
+            #     buttons.append(app_commands.ActionRow(app_commands.Button(label = str(i), custom_id = str(i))))
+            # await creation_channel.send('choose a number of users to create a vc for', components = buttons)
+
+
+        except Exception as e:
+            print(str(e))
+            await interaction.response.send_message('error')
+
 
 '''
-@client.tree.command(name = 'choose_creation_channel', description='choose a channel for creationg new voice channels')
 async def choose_creation_channel(interaction: discord.Interaction, channel : discord.TextChannel):
     try:
         # get server config
@@ -50,8 +79,6 @@ async def choose_creation_channel(interaction: discord.Interaction, channel : di
         print(str(e))
         await interaction.response.send_message('error')
 
-
-@client.tree.command(name = 'choose_static_message', description='choose a static message for vc creation channel')
 async def choose_static_message(interaction: discord.Interaction, message : str):
     try:
         # get server config
@@ -85,7 +112,7 @@ async def choose_static_message(interaction: discord.Interaction, message : str)
     except Exception as e:
         print(str(e))
         await interaction.response.send_message('error')
-
+'''
 
 async def create_new_channel(interaction):
     print('presenting modal')
@@ -114,7 +141,7 @@ async def button_pressed(interaction):
 
     new_channel = await interaction.guild.create_voice_channel(name = f'{interaction.user.name}\'s office',
     user_limit = users_amount, bitrate = bitrate)
-    new_channel.sync_permissions(True)
+    #new_channel.permissions_synced = True
     new_channel.nsfw = age_restricted
     await interaction.response.send_message(f'created a vc for {users_amount} users')
-'''
+

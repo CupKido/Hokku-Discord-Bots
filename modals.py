@@ -12,7 +12,9 @@ class InstantModal(ui.Modal, title='Questionnaire Response'):
     
     def set_callback_func(self, callback_func):
         self.callback_func = callback_func
-    botlimit = ui.TextInput(label='User Limit', placeholder='Enter a number between 1-99 or leave blank for no limit', min_length=0, max_length=2)
+    users_limit = ui.TextInput(label='User Limit', placeholder='Enter a number between 1-99 or leave blank for no limit', max_length=2, required=False)
+    bitrate = ui.TextInput(label='Bitrate', placeholder='Enter a number between 8-96 or leave blank for default', max_length=2, required=False)
+    age_restricted = ui.TextInput(label='Age_restricted', placeholder='Yes or No',max_length=3, required=False)
 
     async def on_submit(self, interaction: discord.Interaction):
         await self.callback_func(interaction)
