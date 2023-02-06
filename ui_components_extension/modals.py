@@ -19,14 +19,9 @@ class InstantModal(ui.Modal, title='Questionnaire Response'):
             users_limit = ui.TextInput(label='User Limit', placeholder='', default=str(users_limit_to_set), max_length=2, required=False)
         else:
             users_limit = ui.TextInput(label='User Limit', placeholder='Enter a number between 1-99 or leave blank for no limit', max_length=2, required=False)
-        if bitrate_to_set is not None:
-            bitrate_to_set = str(int(int(bitrate_to_set) / 1000))
-            bitrate = ui.TextInput(label='Bitrate', placeholder='', default=bitrate_to_set, max_length=2, required=False)
-        else:
-            bitrate = ui.TextInput(label='Bitrate', placeholder='Enter a number between 8-96 or leave blank for default', max_length=2, required=False)
+        
         self.add_item(name)
         self.add_item(users_limit)
-        self.add_item(bitrate)
     
 
     def set_callback_func(self, callback_func):
