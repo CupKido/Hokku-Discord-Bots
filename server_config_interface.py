@@ -13,12 +13,14 @@ class server_config:
                 self.log_channel = data[server_id]['log_channel']
                 self.create_vc_channel = data[server_id]['create_vc_channel']
                 self.static_message = data[server_id]['static_message']
+                self.static_message_id = data[server_id]['static_message_id']
             else:
                 self.server_id = server_id
                 self.announcement_channel = " "
                 self.log_channel = " "
                 self.create_vc_channel = " "
                 self.static_message = " "
+                self.static_message_id = " "
 
     def confirm_announcement_channel(self, guild : discord.guild):
         announcement_channel = self.get_announcement_channel()
@@ -51,9 +53,17 @@ class server_config:
         self.static_message = message
         self.save()
     
+    def set_static_message_id(self, message_id : str):
+        self.static_message_id = message_id
+        self.save()
+    
+    def get_static_message_id(self):
+        return self.static_message_id
+
     def get_static_message(self):
         return self.static_message
         
+
     def get_announcement_channel(self):
         return self.announcement_channel
 
@@ -73,7 +83,7 @@ class server_config:
         except:
             data = {}
         data[self.server_id] = { 'announcement_channel' : self.announcement_channel,
-         'log_channel' : self.log_channel, 'create_vc_channel' : self.create_vc_channel, "static_message" : self.static_message}
+         'log_channel' : self.log_channel, 'create_vc_channel' : self.create_vc_channel, "static_message" : self.static_message, "static_message_id" : self.static_message_id}
         with open(config_file, "w") as f:
             json.dump(data, f)
 
