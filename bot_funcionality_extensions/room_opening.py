@@ -103,7 +103,7 @@ def AddFuncs(client):
                 await before.channel.delete()
                 save_active_channels()
         
-        if after.channel.id == 1072186751340249239:
+        if after.channel is not None and after.channel.id == 1072186751340249239:
             if after.channel.guild.id not in active_channels.keys():
                 active_channels[int(after.channel.guild.id)] = {}
             new_channel = await after.channel.category.create_voice_channel(name = f'{member.name}\'s Office')
