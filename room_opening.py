@@ -200,17 +200,28 @@ async def create_new_channel(interaction):
 
     # create vc in category
     new_channel = await category.create_voice_channel(name = name, user_limit = users_amount, bitrate = bitrate)
+    await channel_modifier.give_management(new_channel, interaction.user)
     #new_channel.permissions_synced = True
 
     # add vc to active channels list
     if not interaction.guild.id in active_channels.keys(): 
         active_channels[interaction.guild.id] = {}
     active_channels[interaction.guild.id][interaction.user.id] = new_channel.id
-
-    if not users_amount is None:
-        await interaction.response.send_message(f'created a vc for {users_amount} users', ephemeral = True)
+    
+    # create embed with vc info
+    if users_amount is None:
+        users_amount = 'unlimited'
     else:
-        await interaction.response.send_message(f'created a vc for unlimited users', ephemeral = True)
+        users_amount = str(users_amount)
+
+    
+    embed = discord.Embed(title = f'\"{new_channel.name}\" was created',
+     description = f'\n\t users limit: {users_amount}\n\t bitrate: {str(int(new_channel.bitrate / 1000))}',
+    color = 0x00ff00)
+    await interaction.response.send_message(embed = embed, ephemeral = True)
+
+
+    
     # start timer
     await asyncio.sleep(this_server_config.get_vc_closing_timer())
     if new_channel.id in active_channels[new_channel.guild.id].values():
