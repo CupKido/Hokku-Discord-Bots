@@ -1,19 +1,15 @@
 import discord
 from discord import app_commands
 from DB_instances.server_config_interface import server_config
-secret_key = ''
-with open('token.txt', 'r') as f:
-    secret_key = f.read().split("\n")[2]
-
-
 class GenericBot_client(discord.Client):
-    def __init__(self, alert_when_online : bool = False):
+    def __init__(self, secret_key, alert_when_online : bool = False):
         super().__init__(intents = discord.Intents.all())
         self.tree = app_commands.CommandTree(self)
         self.synced = False
         self.added = False
         self.alert_when_online = alert_when_online
         self.on_ready_callbacks = []
+        self.secret_key = secret_key
 
     async def on_ready(self):
         await self.wait_until_ready()
@@ -38,7 +34,7 @@ class GenericBot_client(discord.Client):
     def add_on_ready_callback(self, callback):
         self.on_ready_callbacks.append(callback)
     
-    
+
 
     def activate(self): #
-        self.run(secret_key)
+        self.run(self.secret_key)
