@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from server_config_interface import server_config
+from DB_instances.server_config_interface import server_config
 import random
 import previous_bot.polls as polls
 secret_key = ''

@@ -1,8 +1,8 @@
-import CoffeeBot
-import room_opening
+import GenericBot
+import bot_funcionality_extensions.room_opening as room_opening
 def main():
     # stat the bot
-    Bot = CoffeeBot.CoffeeBot_client()
+    Bot = GenericBot.GenericBot_client()
     room_opening.AddFuncs(Bot)
     Bot.activate()
     # webhooks_server.start_server()

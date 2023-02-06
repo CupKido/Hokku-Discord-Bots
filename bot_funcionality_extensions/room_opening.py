@@ -2,13 +2,13 @@ import discord
 import discord
 from discord import app_commands
 from discord.ext import commands
-import views
-import modals
+import ui_components_extension.views as views
+import ui_components_extension.modals as modals
 import asyncio
 import threading
 import tasks
-from server_config_interface import server_config
-import channel_modifier
+from DB_instances.server_config_interface import server_config
+import discord_modification_tools.channel_modifier as channel_modifier
 
 bot_client = ''
 
@@ -50,6 +50,8 @@ def AddFuncs(client):
             print(str(e))
             await interaction.response.send_message('error', ephemeral = True) 
 
+    
+
     @client.tree.command(name = 'choose_static_message', description='choose a static message for vc creation channel')
     async def choose_static_message(interaction: discord.Interaction, message : str):
         try:
@@ -87,11 +89,15 @@ def AddFuncs(client):
     @client.event
     async def on_voice_state_update(member, before, after):
         # check if before channel is empty
+        print(f'{member} moved from {before.channel} to {after.channel}')
+        print(active_channels)
         if before.channel is not None and len(before.channel.members) == 0:
             # check if channel is active
-            if before.channel.guild.id in active_channels.keys() and before.channel.id in active_channels[before.channel.guild.id].keys():
+            if before.channel.guild.id in active_channels.keys() and before.channel.id in active_channels[before.channel.guild.id].values():
                 # delete channel
-                active_channels[before.channel.guild.id].pop(before.channel.id)
+                active_channels[before.channel.guild.id].pop(
+                    [x for x in active_channels[before.channel.guild.id].keys() if active_channels[before.channel.guild.id][x] == before.channel.id][0]
+                )
                 print(f'deleted {before.channel.name} channel because it was empty')
                 await before.channel.delete()
 

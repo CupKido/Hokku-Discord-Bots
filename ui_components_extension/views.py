@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ui import View, button, Modal
 from discord.ext import commands
-from server_config_interface import server_config
+from DB_instances.server_config_interface import server_config
 
 class InsantButtonView(View): # Create a class called MyView that subclasses discord.ui.View
     def __init__(self, callback_func):

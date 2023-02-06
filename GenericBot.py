@@ -1,12 +1,12 @@
 import discord
 from discord import app_commands
-from server_config_interface import server_config
+from DB_instances.server_config_interface import server_config
 secret_key = ''
 with open('token.txt', 'r') as f:
     secret_key = f.read().split("\n")[2]
 
 
-class CoffeeBot_client(discord.Client):
+class GenericBot_client(discord.Client):
     def __init__(self, alert_when_online : bool = False):
         super().__init__(intents = discord.Intents.all())
         self.tree = app_commands.CommandTree(self)
