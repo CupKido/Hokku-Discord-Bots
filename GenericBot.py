@@ -8,9 +8,11 @@ class GenericBot_client(discord.Client):
         self.synced = False
         self.added = False
         self.alert_when_online = alert_when_online
-        self.on_ready_callbacks = []
+        
+        
         self.secret_key = secret_key
-
+        self.add_event_callback_support()
+        
     async def on_ready(self):
         await self.wait_until_ready()
         # sent message to channel with id 123456789
@@ -30,11 +32,22 @@ class GenericBot_client(discord.Client):
         for callback in self.on_ready_callbacks:
             await callback()
 
+    def add_event_callback_support(self):
+        self.on_voice_state_update_callbacks = []
+        self.on_ready_callbacks = []
+        @self.event
+        async def on_voice_state_update(member, before, after):
+            for callback in self.on_voice_state_update_callbacks:
+                await callback(member, before, after)
+        
 
     def add_on_ready_callback(self, callback):
         self.on_ready_callbacks.append(callback)
     
+    def add_on_voice_state_update_callback(self, callback):
+        self.on_voice_state_update_callbacks.append(callback)
 
+    
 
     def activate(self): #
         self.run(self.secret_key)
