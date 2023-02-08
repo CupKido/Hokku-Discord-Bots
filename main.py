@@ -1,9 +1,9 @@
 import GenericBot
-import bot_funcionality_extensions.room_opening as room_opening
+from bot_funcionality_extensions.room_opening import room_opening
 def main():
     # stat the bot
-    CoffeeBot = GenericBot.GenericBot_client(extract_key(0))
-    room_opening.AddFuncs(CoffeeBot)
+    CoffeeBot = GenericBot.GenericBot_client(extract_key(2))
+    room_opening(CoffeeBot)
     CoffeeBot.activate()
     # webhooks_server.start_server()
     # discord_bot.activate()
