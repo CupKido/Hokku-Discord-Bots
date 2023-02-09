@@ -21,6 +21,7 @@ class room_opening:
         self.bot_client.add_on_ready_callback(self.initialize_buttons)
         self.bot_client.add_on_ready_callback(self.initialize_active_channels)
         self.bot_client.add_on_session_resumed_callback(self.initialize_buttons)
+        self.bot_client.add_on_session_resumed_callback(self.initialize_active_channels)
         self.bot_client.add_on_voice_state_update_callback(self.vc_state_update)
         self.bot_client.add_on_guild_channel_delete_callback(self.on_guild_channel_delete_callback)
         @client.tree.command(name = 'choose_creation_channel', description='choose a channel for creationg new voice channels')
@@ -122,7 +123,7 @@ class room_opening:
                     self.load_active_channels()
                     return
                 self.save_active_channels()
-                self.log(f'deleted {before.channel.name} channel because it was empty')
+                self.log_guild(f'deleted {before.channel.name} channel because it was empty', before.channel.guild)
         
         # check if after channel is vc for vc
         if after.channel is None:
@@ -163,7 +164,7 @@ class room_opening:
             self.active_channels[channel.guild.id].pop(
                 [x for x in self.active_channels[channel.guild.id].keys() if self.active_channels[channel.guild.id][x] == channel.id][0]
             )
-            self.log(f'deleted {channel.name} channel from active channels because it was deleted')
+            self.log_guild(f'deleted {channel.name} channel from active channels because it was deleted', channel.guild)
             self.save_active_channels()
 
     async def create_new_channel_button(self, interaction):
@@ -291,7 +292,7 @@ class room_opening:
                 # delete channel
                 self.active_channels[new_channel.guild.id].pop(interaction.user.id)
                 self.save_active_channels()
-                self.log(f'deleted {new_channel.name} channel after {this_server_config.get_vc_closing_timer()} seconds due to inactivity')
+                self.log_guild(f'deleted {new_channel.name} channel after {this_server_config.get_vc_closing_timer()} seconds due to inactivity', new_channel.guild)
                 try:
 
                     await new_channel.delete()
@@ -320,7 +321,7 @@ class room_opening:
                     self.log('a channel was deleted due to it not existing')
                 elif len(channel.members) == 0:
                     to_pop.append(user_id)
-                    self.log(f'deleted {channel.name} channel due to inactivity')
+                    self.log_guild(f'deleted {channel.name} channel due to inactivity', channel.guild)
                     try:
                         await channel.delete()
                     except Exception as e:
@@ -350,3 +351,8 @@ class room_opening:
         print(message)
         if self.logger is not None :
             self.logger.log_instance(message, self)
+
+    def log_guild(self, message, guild):
+        print(message)
+        if self.logger is not None:
+            self.logger.log_guild_instance(message, guild.id, self)

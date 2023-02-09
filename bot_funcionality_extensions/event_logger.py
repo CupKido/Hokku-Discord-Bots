@@ -14,18 +14,22 @@ class event_logger:
         self.bot_client.add_on_message_callback(self.on_message)
         @bot_client.tree.command(name = 'get_todays_event_logs', description='get todays event logs')
         async def get_todays_event_logs(interaction: discord.Interaction):
-            event_logs = '\n'.join([x for x in self.logger.get_logs().split('\n') if x.startswith('event_logger')])
-            await interaction.response.send_message(event_logs, ephemeral=True)
+            guild_logs = self.logger.get_guild_logs(interaction.guild.id)
+            if not guild_logs:
+                await interaction.response.send_message('no logs found', ephemeral=True)
+            else:
+                event_logs = '\n'.join([x for x in guild_logs.split('\n') if x.startswith('event_logger')])
+                await interaction.response.send_message(event_logs, ephemeral=True)
 
     async def on_ready(self):
         self.log("on_ready")
 
     async def on_voice_state_update(self, member, before, after):
-        #self.log("on_voice_state_update")
+        self.log_guild("on_voice_state_update. member name: " + member.name, member.guild)
         pass
 
     async def on_guild_channel_delete(self, channel):
-        self.log("on_guild_channel_delete")
+        self.log_guild("on_guild_channel_delete. channel name: " + channel.name, channel.guild)
 
         pass
 
@@ -33,10 +37,14 @@ class event_logger:
         self.log("on_session_resumed")
 
     async def on_message(self, message):
-        self.log("on_message. length = " + str(len(message.content)))
+        self.log_guild("on_message. length = " + str(len(message.content)), message.guild)
     
     def log(self, message):
         # print(message)
         self.logger.log_instance(message, self)
+    
+    def log_guild(self, message, guild):
+        if self.logger is not None:
+            self.logger.log_guild_instance(message, guild.id, self)
 
     
