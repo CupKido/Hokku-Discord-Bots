@@ -35,7 +35,7 @@ class room_opening:
                 await interaction.response.send_message(f'\"{channel.name}\" was set as vc creation channel', ephemeral = True)
 
             except Exception as e:
-                print(str(e))
+                self.log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
 
         @client.tree.command(name = 'set_closing_timer', description='set a timer for closing a vc after creation in case no one joins')
@@ -49,7 +49,7 @@ class room_opening:
                 await interaction.response.send_message(f'\"{timer}\" was set as closing timer', ephemeral = True)
 
             except Exception as e:
-                print(str(e))
+                self.log(str(e))
                 await interaction.response.send_message('error', ephemeral = True) 
 
         @client.tree.command(name = 'choose_static_message', description='choose a static message for vc creation channel')
@@ -83,7 +83,7 @@ class room_opening:
 
 
             except Exception as e:
-                print(str(e))
+                self.log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
         
         @client.tree.command(name = 'choose_vc_for_vc', description='set a channel for vc creation')
@@ -98,13 +98,13 @@ class room_opening:
                 await interaction.response.send_message(f'\"{channel.name}\" was set as vc for vc', ephemeral = True)
 
             except Exception as e:
-                print(str(e))
+                self.log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
 
     async def vc_state_update(self, member, before, after):
         # check if before channel is empty
         # print(f'{member} moved from {before.channel} to {after.channel}')
-        print(self.active_channels)
+        
         if before.channel is not None and len(before.channel.members) == 0:
             # check if channel is active
             if before.channel.guild.id in self.active_channels.keys() and before.channel.id in self.active_channels[before.channel.guild.id].values():
@@ -112,7 +112,7 @@ class room_opening:
                 self.active_channels[before.channel.guild.id].pop(
                     [x for x in self.active_channels[before.channel.guild.id].keys() if self.active_channels[before.channel.guild.id][x] == before.channel.id][0]
                 )
-                print(f'deleted {before.channel.name} channel because it was empty')
+                self.log(f'deleted {before.channel.name} channel because it was empty')
                 await before.channel.delete()
                 self.save_active_channels()
         
@@ -128,12 +128,13 @@ class room_opening:
             await member.move_to(new_channel)
             self.active_channels[after.channel.guild.id][member.id] = new_channel.id
             self.save_active_channels()
+        self.log(self.active_channels)
 
     async def initialize_buttons(self):
         '''
         restarts all active buttons on all creatrion channels
         '''
-        print('initializing buttons')
+        self.log('initializing buttons')
 
         # get all guilds
         for guild in self.bot_client.guilds:
@@ -154,11 +155,11 @@ class room_opening:
             self.active_channels[channel.guild.id].pop(
                 [x for x in self.active_channels[channel.guild.id].keys() if self.active_channels[channel.guild.id][x] == channel.id][0]
             )
-            print(f'deleted {channel.name} channel because it was deleted')
+            self.log(f'deleted {channel.name} channel because it was deleted')
             self.save_active_channels()
 
     async def create_new_channel_button(self, interaction):
-        print('presenting modal')
+        self.log('presenting vc editing modal')
         flag = True
         # if rooms are open for this guild
         if interaction.guild.id in self.active_channels.keys():
@@ -282,12 +283,12 @@ class room_opening:
                 # delete channel
                 self.active_channels[new_channel.guild.id].pop(interaction.user.id)
                 self.save_active_channels()
-                print(f'deleted {new_channel.name} channel after {this_server_config.get_vc_closing_timer()} seconds due to inactivity')
+                self.log(f'deleted {new_channel.name} channel after {this_server_config.get_vc_closing_timer()} seconds due to inactivity')
                 try:
 
                     await new_channel.delete()
-                except:
-                    print('could not delete channel')
+                except Exception as e:
+                    self.log('could not delete channel due to error: \n' + str(e))
                     pass
 
     def get_modal_value(self, interaction, index): #
@@ -309,11 +310,11 @@ class room_opening:
                 if len(channel.members) == 0:
                     to_pop.append(user_id)
                     self.save_active_channels()
-                    print(f'deleted {channel.name} channel due to inactivity')
+                    self.log(f'deleted {channel.name} channel due to inactivity')
                     try:
                         await channel.delete()
-                    except:
-                        print('could not delete channel')
+                    except Exception as e:
+                        self.log('could not delete channel due to error: \n' + str(e))
                         pass
                 else:
                     await channel_modifier.give_management(channel, self.bot_client.get_user(user_id))
@@ -333,3 +334,8 @@ class room_opening:
             for user_id in temp_dic[guild_id].keys():
                 temp2_dic[int(guild_id)][int(user_id)] = int(temp_dic[guild_id][user_id])
         self.active_channels = temp2_dic
+    
+    def log(self, message):
+        print(message)
+        if self.logger is not None:
+            self.logger.log(message)
