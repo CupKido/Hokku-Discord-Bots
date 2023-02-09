@@ -6,8 +6,6 @@ class logger:
     def log(self, msg):
         todays_file = str(datetime.datetime.now().date()) + '_logfile.txt'
         # create file if not exists
-        
-
         with open(f'./logs/{todays_file}', 'a+') as f:
             # write time
             

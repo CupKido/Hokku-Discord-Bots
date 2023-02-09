@@ -16,8 +16,7 @@ def add_functionality(bot, **kwargs):
     logger = None
     if 'logger' in kwargs:
         print("adding logger functionality")
-        kwargs['logger'](bot)
-        logger = kwargs['logger']
+        logger = kwargs['logger'](bot)
         kwargs.pop('logger')
         print('\n')
     

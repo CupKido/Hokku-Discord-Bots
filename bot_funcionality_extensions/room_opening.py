@@ -337,5 +337,5 @@ class room_opening:
     
     def log(self, message):
         print(message)
-        if self.logger is not None:
-            self.logger.log(message)
+        if self.logger is not None :
+            self.logger.log(msg = message)
