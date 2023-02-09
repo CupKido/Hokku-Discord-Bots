@@ -168,6 +168,7 @@ class room_opening:
             self.save_active_channels()
 
     async def edit_channel_button(self, interaction):
+        print('edit channel button pressed')
         flag = True
         # if rooms are open for this guild
         if interaction.guild.id in self.active_channels.keys():
@@ -183,7 +184,7 @@ class room_opening:
                 flag = False
                 await interaction.response.send_modal(thisModal)
         if flag:
-            interaction.response.send_message('you don\'t have an active channel, please open one first', ephemeral = True)
+            await interaction.response.send_message('you don\'t have an active channel, please open one first', ephemeral = True)
             
         
 
