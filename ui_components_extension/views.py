@@ -9,7 +9,7 @@ class InsantButtonView(View): # Create a class called MyView that subclasses dis
         super().__init__()
         self.callback_func = callback_func
 
-    @button(label="Open VC", style=discord.ButtonStyle.primary, emoji="😎") # Create a button with the label "😎 Click me!" with color Blurple
+    @button(label="Edit VC", style=discord.ButtonStyle.primary, emoji="😎") 
     async def button_callback(self, interaction, button):
          # Send a message when the button is clicked
          print("button clicked")
