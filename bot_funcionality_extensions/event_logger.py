@@ -1,5 +1,5 @@
 import discord
-
+import io
 class event_logger:
     def __init__(self, bot_client):
         self.bot_client = bot_client
@@ -19,17 +19,27 @@ class event_logger:
                 await interaction.response.send_message('no logs found', ephemeral=True)
             else:
                 event_logs = '\n'.join([x for x in guild_logs.split('\n') if x.startswith('event_logger')])
-                await interaction.response.send_message(event_logs, ephemeral=True)
+                if len(event_logs) < 2000:
+                    await interaction.response.send_message(event_logs, ephemeral=True)
+                else:
+                    # send as file
+                    await interaction.response.send_message('logs are too long, sending as file on dms', ephemeral=True)
+                    await interaction.user.send(file=discord.File(io.BytesIO(event_logs.encode()), filename='event_logs.txt'))
+
 
     async def on_ready(self):
         self.log("on_ready")
 
     async def on_voice_state_update(self, member, before, after):
-        self.log_guild("on_voice_state_update. member name: " + member.name, member.guild)
+        
+        self.log_guild("on_voice_state_update. member name: " + member.name + 
+            ". before: " + before.channel.name + ". after: " + after.channel.name,
+            member.guild)
         pass
 
     async def on_guild_channel_delete(self, channel):
-        self.log_guild("on_guild_channel_delete. channel name: " + channel.name, channel.guild)
+        if channel is not None:
+            self.log_guild("on_guild_channel_delete. channel name: " + channel.name, channel.guild)
 
         pass
 
@@ -37,7 +47,11 @@ class event_logger:
         self.log("on_session_resumed")
 
     async def on_message(self, message):
-        self.log_guild("on_message. length = " + str(len(message.content)), message.guild)
+        # check if message is not None
+        if message is not None:
+            # check if message is from bot
+            if message.author != self.bot_client.user:
+                self.log_guild("on_message. length = " + str(len(message.content)), message.guild)
     
     def log(self, message):
         # print(message)
