@@ -10,4 +10,4 @@ class logger:
             # write time
             
             # write msg
-            f.write(msg + '\t(' +str(datetime.datetime.now()) + ')\n')
+            f.write(str(msg) + '\t(' +str(datetime.datetime.now()) + ')\n')
