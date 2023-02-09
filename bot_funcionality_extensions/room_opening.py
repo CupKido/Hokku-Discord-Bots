@@ -124,20 +124,24 @@ class room_opening:
                     return
                 self.save_active_channels()
                 self.log_guild(f'deleted {before.channel.name} channel because it was empty', before.channel.guild)
-        
+        try:
         # check if after channel is vc for vc
-        if after.channel is None:
+            if after.channel is None:
+                return
+            this_server_config = server_config(after.channel.guild.id)
+            if after.channel is not None and after.channel.id == this_server_config.get_vc_for_vc():
+                if after.channel.guild.id not in self.active_channels.keys():
+                    self.active_channels[int(after.channel.guild.id)] = {}
+                new_channel = await after.channel.category.create_voice_channel(name = f'{member.name}\'s Office')
+                await channel_modifier.give_management(new_channel, member)
+                await member.move_to(new_channel)
+                self.active_channels[after.channel.guild.id][member.id] = new_channel.id
+                self.save_active_channels()
+            self.log(self.active_channels)
+        except discord.errors.HTTPException as e:
+            self.log_guild('Error creating channel due to error: ' + str(e), after.channel.guild)
+            self.load_active_channels()
             return
-        this_server_config = server_config(after.channel.guild.id)
-        if after.channel is not None and after.channel.id == this_server_config.get_vc_for_vc():
-            if after.channel.guild.id not in self.active_channels.keys():
-                self.active_channels[int(after.channel.guild.id)] = {}
-            new_channel = await after.channel.category.create_voice_channel(name = f'{member.name}\'s Office')
-            await channel_modifier.give_management(new_channel, member)
-            await member.move_to(new_channel)
-            self.active_channels[after.channel.guild.id][member.id] = new_channel.id
-            self.save_active_channels()
-        self.log(self.active_channels)
 
     async def initialize_buttons(self):
         '''
@@ -155,9 +159,12 @@ class room_opening:
             if  creation_channel != ' ' and static_message != ' ' and static_message_id != ' ':
                 creation_channel = self.bot_client.get_channel(int(this_server_config.get_creation_vc_channel()))
                 if creation_channel is not None:
-                    async for msg in creation_channel.history(limit=50):
-                        if msg.id == static_message_id:
-                            await msg.edit(content = msg.content, view = views.InsantButtonView(self.edit_channel_button))
+                    async for msg in creation_channel.history(limit=100):
+                        if msg.author == self.bot_client.user:
+                            if msg.id == static_message_id:
+                                new_msg = await msg.edit(content = msg.content, view = views.InsantButtonView(self.edit_channel_button))
+                                this_server_config.set_static_message_id(new_msg.id)
+                                self.log('button initialized for ' + guild.name)
 
     async def on_guild_channel_delete_callback(self, channel):
         if channel.guild.id in self.active_channels.keys() and channel.id in self.active_channels[channel.guild.id].values():
