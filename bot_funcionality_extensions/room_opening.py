@@ -16,8 +16,9 @@ class room_opening:
     def __init__(self, client):
         self.bot_client = client
         self.active_channels = ''
-        self.bot_client.add_on_ready_callback(self.on_ready_callback)
+        self.bot_client.add_on_ready_callback(self.initialize_buttons)
         self.bot_client.add_on_ready_callback(self.initialize_active_channels)
+        self.bot_client.add_on_session_resumed_callback(self.initialize_buttons)
         self.bot_client.add_on_voice_state_update_callback(self.vc_state_update)
         self.bot_client.add_on_guild_channel_delete_callback(self.on_guild_channel_delete_callback)
         @client.tree.command(name = 'choose_creation_channel', description='choose a channel for creationg new voice channels')
@@ -127,7 +128,12 @@ class room_opening:
             self.active_channels[after.channel.guild.id][member.id] = new_channel.id
             self.save_active_channels()
 
-    async def on_ready_callback(self):
+    async def initialize_buttons(self):
+        '''
+        restarts all active buttons on all creatrion channels
+        '''
+        print('initializing buttons')
+
         # get all guilds
         for guild in self.bot_client.guilds:
             # get all channels
@@ -287,6 +293,10 @@ class room_opening:
         return interaction.data['components'][index]['components'][0]['value']
 
     async def initialize_active_channels(self):
+        '''
+        loads active channels from file,
+        and deletes channels that are not active
+        '''
         self.load_active_channels()
         # delete channels that are not active
         for guild_id in self.active_channels.keys():
