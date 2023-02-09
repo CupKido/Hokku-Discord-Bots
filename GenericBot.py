@@ -50,7 +50,11 @@ class GenericBot_client(discord.Client):
 
         @self.event
         async def on_resumed():
+            print("session resumed")
             for callback in self.on_session_resumed_callbacks:
+                # print callback type
+                print('activation: ' + str(callback))
+                # start callback
                 await callback()
 
         @self.event
@@ -60,18 +64,23 @@ class GenericBot_client(discord.Client):
 
     def add_on_session_resumed_callback(self, callback):
         self.on_session_resumed_callbacks.append(callback)
+        print("added on_session_resumed_callback: " + str(callback))
 
     def add_on_ready_callback(self, callback):
         self.on_ready_callbacks.append(callback)
+        print("added on_ready_callback: " + str(callback))
     
     def add_on_voice_state_update_callback(self, callback):
         self.on_voice_state_update_callbacks.append(callback)
+        print("added on_voice_state_update_callback: " + str(callback))
 
     def add_on_guild_channel_delete_callback(self, callback):
         self.on_guild_channel_delete_callbacks.append(callback)
+        print("added on_guild_channel_delete_callback: " + str(callback))
 
     def add_on_message_callback(self, callback):
         self.on_message_callbacks.append(callback)
+        print("added on_message_callback: " + str(callback))
 
     def activate(self): #
         self.run(self.secret_key)
