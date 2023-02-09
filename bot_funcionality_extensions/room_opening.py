@@ -16,7 +16,8 @@ class room_opening:
     def __init__(self, client, logger):
         self.bot_client = client
         self.logger = logger
-        self.active_channels = ''
+        self.active_channels = {}
+        logger.log('room_opening extension loading...')
         self.bot_client.add_on_ready_callback(self.initialize_buttons)
         self.bot_client.add_on_ready_callback(self.initialize_active_channels)
         self.bot_client.add_on_session_resumed_callback(self.initialize_buttons)
@@ -109,12 +110,19 @@ class room_opening:
             # check if channel is active
             if before.channel.guild.id in self.active_channels.keys() and before.channel.id in self.active_channels[before.channel.guild.id].values():
                 # delete channel
-                self.active_channels[before.channel.guild.id].pop(
-                    [x for x in self.active_channels[before.channel.guild.id].keys() if self.active_channels[before.channel.guild.id][x] == before.channel.id][0]
-                )
-                self.log(f'deleted {before.channel.name} channel because it was empty')
-                await before.channel.delete()
+                try:
+                    self.active_channels[before.channel.guild.id].pop(
+                    [ x for x in self.active_channels[before.channel.guild.id].keys() 
+                    if self.active_channels[before.channel.guild.id][x] == before.channel.id][0] )
+                    await before.channel.delete()
+                except discord.errors.NotFound as e:
+                    pass
+                except Exception as e:
+                    self.log('Error deleting channel due to error: ' + str(e))
+                    self.load_active_channels()
+                    return
                 self.save_active_channels()
+                self.log(f'deleted {before.channel.name} channel because it was empty')
         
         # check if after channel is vc for vc
         if after.channel is None:
@@ -155,7 +163,7 @@ class room_opening:
             self.active_channels[channel.guild.id].pop(
                 [x for x in self.active_channels[channel.guild.id].keys() if self.active_channels[channel.guild.id][x] == channel.id][0]
             )
-            self.log(f'deleted {channel.name} channel because it was deleted')
+            self.log(f'deleted {channel.name} channel from active channels because it was deleted')
             self.save_active_channels()
 
     async def create_new_channel_button(self, interaction):
@@ -307,9 +315,11 @@ class room_opening:
 
                 channel = self.bot_client.get_channel(self.active_channels[guild_id][user_id])
                 # delete if channel is empty
-                if len(channel.members) == 0:
+                if channel is None:
                     to_pop.append(user_id)
-                    self.save_active_channels()
+                    self.log('a channel was deleted due to it not existing')
+                elif len(channel.members) == 0:
+                    to_pop.append(user_id)
                     self.log(f'deleted {channel.name} channel due to inactivity')
                     try:
                         await channel.delete()
@@ -320,6 +330,7 @@ class room_opening:
                     await channel_modifier.give_management(channel, self.bot_client.get_user(user_id))
             for user_id in to_pop:
                 self.active_channels[guild_id].pop(user_id)
+        self.save_active_channels()
 
     def save_active_channels(self):
         with open('data_base/active_channels.json', 'w') as file:
@@ -338,4 +349,4 @@ class room_opening:
     def log(self, message):
         print(message)
         if self.logger is not None :
-            self.logger.log(msg = message)
+            self.logger.log_instance(message, self)
