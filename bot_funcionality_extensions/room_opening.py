@@ -84,6 +84,21 @@ class room_opening:
                 print(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
         
+        @client.tree.command(name = 'choose_vc_for_vc', description='set a channel for vc creation')
+        async def choose_vc_for_vc(interaction: discord.Interaction, channel : discord.VoiceChannel):
+            try:
+                # get server config
+                this_server_config = server_config(interaction.guild.id)
+
+                # set channel
+                this_server_config.set_vc_for_vc(channel.id)
+
+                await interaction.response.send_message(f'\"{channel.name}\" was set as vc for vc', ephemeral = True)
+
+            except Exception as e:
+                print(str(e))
+                await interaction.response.send_message('error', ephemeral = True)
+
     async def vc_state_update(self, member, before, after):
         # check if before channel is empty
         # print(f'{member} moved from {before.channel} to {after.channel}')
@@ -99,7 +114,9 @@ class room_opening:
                 await before.channel.delete()
                 self.save_active_channels()
         
-        if after.channel is not None and after.channel.id == 1072186751340249239:
+        # check if after channel is vc for vc
+        this_server_config = server_config(after.channel.guild.id)
+        if after.channel is not None and after.channel.id == this_server_config.get_vc_for_vc():
             if after.channel.guild.id not in self.active_channels.keys():
                 self.active_channels[int(after.channel.guild.id)] = {}
             new_channel = await after.channel.category.create_voice_channel(name = f'{member.name}\'s Office')
