@@ -115,6 +115,8 @@ class room_opening:
                 self.save_active_channels()
         
         # check if after channel is vc for vc
+        if after.channel is None:
+            return
         this_server_config = server_config(after.channel.guild.id)
         if after.channel is not None and after.channel.id == this_server_config.get_vc_for_vc():
             if after.channel.guild.id not in self.active_channels.keys():
