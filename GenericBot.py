@@ -3,21 +3,25 @@ from discord import app_commands
 from DB_instances.server_config_interface import server_config
 class GenericBot_client(discord.Client):
     def __init__(self, secret_key, alert_when_online : bool = False):
+        # bot init
         super().__init__(intents = discord.Intents.all())
         self.tree = app_commands.CommandTree(self)
         self.synced = False
+        # bot options
         self.added = False
         self.alert_when_online = alert_when_online
+        # bot logger
         self.logger = None 
+        # bot secret key
         self.secret_key = secret_key
+        # adding event callbacks support
         self.add_event_callback_support()
     
-    def set_logger(self, logger):
-        self.logger = logger
+
+    
 
     async def on_ready(self):
         await self.wait_until_ready()
-        self.log('bot is ready')
         #syncing commands tree to discord
         if not self.synced:
             self.log('=================================\nsyncing commands tree to discord')
@@ -25,6 +29,11 @@ class GenericBot_client(discord.Client):
             self.synced = True
             self.log('synced \
             \n=================================')
+            
+        # running on_ready callbacks
+        for callback in self.on_ready_callbacks:
+            await callback()
+        
         # printing active guilds
         self.log('im active on: ')
         for guild in self.guilds:
@@ -33,9 +42,7 @@ class GenericBot_client(discord.Client):
                 channel = self.get_channel(int(server_config.get_specific_announcement_channel(guildID)))
                 await channel.send(f'im active, my name is {self.user}')
             self.log('\t' + str(guild.name))
-        # running on_ready callbacks
-        for callback in self.on_ready_callbacks:
-            await callback()
+        
 
     def add_event_callback_support(self):
         self.on_voice_state_update_callbacks = []
@@ -93,7 +100,13 @@ class GenericBot_client(discord.Client):
 
     def get_secret(self):
         return self.secret_key
-    
+
+    def set_logger(self, logger):
+        self.logger = logger
+        
+    def get_logger(self):
+        return self.logger
+
     def log(self, message):
         print(message)
         if self.logger is not None:
