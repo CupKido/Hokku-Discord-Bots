@@ -157,7 +157,7 @@ class room_opening:
                 if creation_channel is not None:
                     async for msg in creation_channel.history(limit=50):
                         if msg.id == static_message_id:
-                            await msg.edit(content = msg.content, view = views.InsantButtonView(self.create_new_channel_button))
+                            await msg.edit(content = msg.content, view = views.InsantButtonView(self.edit_channel_button))
 
     async def on_guild_channel_delete_callback(self, channel):
         if channel.guild.id in self.active_channels.keys() and channel.id in self.active_channels[channel.guild.id].values():
@@ -167,13 +167,13 @@ class room_opening:
             self.log_guild(f'deleted {channel.name} channel from active channels because it was deleted', channel.guild)
             self.save_active_channels()
 
-    async def create_new_channel_button(self, interaction):
-        self.log('presenting vc editing modal')
+    async def edit_channel_button(self, interaction):
         flag = True
         # if rooms are open for this guild
         if interaction.guild.id in self.active_channels.keys():
             # check if user has active channel
             if interaction.user.id in self.active_channels[interaction.guild.id].keys():
+                self.log('presenting vc editing modal')
                 # edit channel
                 channel = self.bot_client.get_channel(self.active_channels[interaction.guild.id][interaction.user.id])
                 thisModal = modals.InstantModal(title="Edit channel")
@@ -181,12 +181,11 @@ class room_opening:
                 thisModal.set_fields(channel.name, channel.user_limit, channel.bitrate)
                 # thisModal.set_pre_fileds(channel.name, channel.user_limit, channel.bitrate)
                 flag = False
+                await interaction.response.send_modal(thisModal)
         if flag:
-            category = interaction.channel.category
-            thisModal = modals.InstantModal(title="Create new channel")
-            thisModal.set_callback_func(self.create_new_channel)
-            thisModal.set_fields()
-        await interaction.response.send_modal(thisModal)
+            interaction.response.send_message('you don\'t have an active channel, please open one first', ephemeral = True)
+            
+        
 
     async def change_channel_details(self, interaction):
 

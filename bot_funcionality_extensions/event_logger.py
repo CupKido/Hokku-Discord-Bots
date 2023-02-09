@@ -31,11 +31,18 @@ class event_logger:
         self.log("on_ready")
 
     async def on_voice_state_update(self, member, before, after):
-        
-        self.log_guild("on_voice_state_update. member name: " + member.name + 
-            ". before: " + before.channel.name + ". after: " + after.channel.name,
+        if before.channel is None and after.channel is not None:
+            self.log_guild("on_voice_state_update. member name: " + member.name + 
+            ". before: None. after: " + after.channel.name,
             member.guild)
-        pass
+        elif before.channel is not None and after.channel is None:
+            self.log_guild("on_voice_state_update. member name: " + member.name + 
+            ". before: " + before.channel.name + ". after: None",
+            member.guild)
+        elif before.channel is not None and after.channel is not None:
+            self.log_guild("on_voice_state_update. member name: " + member.name + 
+                ". before: " + before.channel.name + ". after: " + after.channel.name,
+                member.guild)
 
     async def on_guild_channel_delete(self, channel):
         if channel is not None:
