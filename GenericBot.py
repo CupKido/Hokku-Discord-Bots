@@ -35,11 +35,17 @@ class GenericBot_client(discord.Client):
     def add_event_callback_support(self):
         self.on_voice_state_update_callbacks = []
         self.on_ready_callbacks = []
+        self.on_guild_channel_delete_callbacks = []
         @self.event
         async def on_voice_state_update(member, before, after):
             for callback in self.on_voice_state_update_callbacks:
                 await callback(member, before, after)
-        
+
+        @self.event
+        async def on_guild_channel_delete(channel):
+            for callback in self.on_guild_channel_delete_callbacks:
+                await callback(channel)
+            
 
     def add_on_ready_callback(self, callback):
         self.on_ready_callbacks.append(callback)
@@ -47,10 +53,11 @@ class GenericBot_client(discord.Client):
     def add_on_voice_state_update_callback(self, callback):
         self.on_voice_state_update_callbacks.append(callback)
 
-    
+    def add_on_guild_channel_delete_callback(self, callback):
+        self.on_guild_channel_delete_callbacks.append(callback)
 
     def activate(self): #
         self.run(self.secret_key)
-        
+
     def get_secret(self):
         return self.secret_key

@@ -19,6 +19,7 @@ class room_opening:
         self.bot_client.add_on_ready_callback(self.on_ready_callback)
         self.bot_client.add_on_ready_callback(self.initialize_active_channels)
         self.bot_client.add_on_voice_state_update_callback(self.vc_state_update)
+        self.bot_client.add_on_guild_channel_delete_callback(self.on_guild_channel_delete_callback)
         @client.tree.command(name = 'choose_creation_channel', description='choose a channel for creationg new voice channels')
         async def choose_creation_channel(interaction: discord.Interaction, channel : discord.TextChannel):
             try:
@@ -121,6 +122,14 @@ class room_opening:
                     async for msg in creation_channel.history(limit=50):
                         if msg.id == static_message_id:
                             await msg.edit(content = msg.content, view = views.InsantButtonView(self.create_new_channel_button))
+
+    async def on_guild_channel_delete_callback(self, channel):
+        if channel.guild.id in self.active_channels.keys() and channel.id in self.active_channels[channel.guild.id].values():
+            self.active_channels[channel.guild.id].pop(
+                [x for x in self.active_channels[channel.guild.id].keys() if self.active_channels[channel.guild.id][x] == channel.id][0]
+            )
+            print(f'deleted {channel.name} channel because it was deleted')
+            self.save_active_channels()
 
     async def create_new_channel_button(self, interaction):
         print('presenting modal')
