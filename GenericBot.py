@@ -36,6 +36,8 @@ class GenericBot_client(discord.Client):
         self.on_voice_state_update_callbacks = []
         self.on_ready_callbacks = []
         self.on_guild_channel_delete_callbacks = []
+        self.on_session_resumed_callbacks = []
+        self.on_message_callbacks = []
         @self.event
         async def on_voice_state_update(member, before, after):
             for callback in self.on_voice_state_update_callbacks:
@@ -45,7 +47,19 @@ class GenericBot_client(discord.Client):
         async def on_guild_channel_delete(channel):
             for callback in self.on_guild_channel_delete_callbacks:
                 await callback(channel)
-            
+
+        @self.event
+        async def on_resumed():
+            for callback in self.on_session_resumed_callbacks:
+                await callback()
+
+        @self.event
+        async def on_message(message):
+            for callback in self.on_message_callbacks:
+                await callback(message)
+
+    def add_on_session_resumed_callback(self, callback):
+        self.on_session_resumed_callbacks.append(callback)
 
     def add_on_ready_callback(self, callback):
         self.on_ready_callbacks.append(callback)
@@ -55,6 +69,9 @@ class GenericBot_client(discord.Client):
 
     def add_on_guild_channel_delete_callback(self, callback):
         self.on_guild_channel_delete_callbacks.append(callback)
+
+    def add_on_message_callback(self, callback):
+        self.on_message_callbacks.append(callback)
 
     def activate(self): #
         self.run(self.secret_key)
