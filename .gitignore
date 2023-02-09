@@ -1,6 +1,7 @@
 token.txt
 *.pyc
 *.sqlite
+data_base/
 VSWorkspaceState.json
 *.suo
 logfile*.txt

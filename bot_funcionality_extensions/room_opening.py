@@ -24,6 +24,7 @@ class room_opening:
         self.bot_client.add_on_session_resumed_callback(self.initialize_active_channels)
         self.bot_client.add_on_voice_state_update_callback(self.vc_state_update)
         self.bot_client.add_on_guild_channel_delete_callback(self.on_guild_channel_delete_callback)
+        
         @client.tree.command(name = 'choose_creation_channel', description='choose a channel for creationg new voice channels')
         async def choose_creation_channel(interaction: discord.Interaction, channel : discord.TextChannel):
             try:
@@ -80,7 +81,7 @@ class room_opening:
 
                 embed = discord.Embed(title = 'Instant vc creation', description = message)
                 
-                message = await creation_channel.send(embed = embed, view = views.InsantButtonView(self.create_new_channel_button))
+                message = await creation_channel.send(embed = embed, view = views.InstantButtonView(self.edit_channel_button))
                 this_server_config.set_static_message_id(message.id)
 
 
@@ -162,7 +163,7 @@ class room_opening:
                     async for msg in creation_channel.history(limit=100):
                         if msg.author == self.bot_client.user:
                             if msg.id == static_message_id:
-                                new_msg = await msg.edit(content = msg.content, view = views.InsantButtonView(self.edit_channel_button))
+                                new_msg = await msg.edit(content = msg.content, view = views.InstantButtonView(self.edit_channel_button))
                                 this_server_config.set_static_message_id(new_msg.id)
                                 self.log('button initialized for ' + guild.name)
 
