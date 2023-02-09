@@ -10,7 +10,7 @@ import tasks
 from DB_instances.server_config_interface import server_config
 import discord_modification_tools.channel_modifier as channel_modifier
 import json
-
+import requests
 
 class room_opening:
     def __init__(self, client):
@@ -49,8 +49,6 @@ class room_opening:
                 print(str(e))
                 await interaction.response.send_message('error', ephemeral = True) 
 
-        
-
         @client.tree.command(name = 'choose_static_message', description='choose a static message for vc creation channel')
         async def choose_static_message(interaction: discord.Interaction, message : str):
             try:
@@ -84,7 +82,6 @@ class room_opening:
             except Exception as e:
                 print(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
-
         
     async def vc_state_update(self, member, before, after):
         # check if before channel is empty
@@ -109,7 +106,6 @@ class room_opening:
             await member.move_to(new_channel)
             self.active_channels[after.channel.guild.id][member.id] = new_channel.id
             self.save_active_channels()
-
 
     async def on_ready_callback(self):
         # get all guilds
@@ -167,8 +163,27 @@ class room_opening:
                 return
 
         channel = self.bot_client.get_channel(self.active_channels[interaction.guild.id][interaction.user.id])
-        await channel.edit(name = name, user_limit = users_amount)
-        await interaction.response.send_message(f'\"{channel.name}\" was edited', ephemeral = True)
+        
+        url = "https://discord.com/api/v10/channels/" + str(channel.id)
+        
+        headers = {
+            "Authorization": "Bot " + self.bot_client.get_secret(),
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "name": name,
+            "user_limit": users_amount
+        }
+        
+        response = requests.patch(url, headers=headers, json=payload)
+        if response.status_code == 429:
+            time = int(response.headers["Retry-After"])
+            minutes = time // 60
+            seconds = time % 60
+            await interaction.response.send_message(f'please wait {minutes} minutes and {seconds} seconds before changing the channel again', ephemeral = True)
+        else:
+            await interaction.response.send_message(f'\"{name}\" was edited', ephemeral = True)
         return 
 
     async def create_new_channel(self, interaction):
@@ -239,8 +254,6 @@ class room_opening:
                 except:
                     print('could not delete channel')
                     pass
-
-        # respond to interaction
 
     def get_modal_value(self, interaction, index): #
         return interaction.data['components'][index]['components'][0]['value']

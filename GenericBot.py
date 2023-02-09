@@ -51,3 +51,6 @@ class GenericBot_client(discord.Client):
 
     def activate(self): #
         self.run(self.secret_key)
+        
+    def get_secret(self):
+        return self.secret_key
