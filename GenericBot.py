@@ -8,27 +8,32 @@ class GenericBot_client(discord.Client):
         self.synced = False
         self.added = False
         self.alert_when_online = alert_when_online
-        
-        
+        self.logger = None 
         self.secret_key = secret_key
         self.add_event_callback_support()
-        
+    
+    def set_logger(self, logger):
+        self.logger = logger
+
     async def on_ready(self):
         await self.wait_until_ready()
-        # sent message to channel with id 123456789
+        self.log('bot is ready')
+        #syncing commands tree to discord
         if not self.synced:
-            print('=================================\nsyncing commands tree to discord')
+            self.log('=================================\nsyncing commands tree to discord')
             await self.tree.sync()
             self.synced = True
-            print('synced \
+            self.log('synced \
             \n=================================')
-        print('im active on: ')
+        # printing active guilds
+        self.log('im active on: ')
         for guild in self.guilds:
             if self.alert_when_online:
                 guildID = guild.id
                 channel = self.get_channel(int(server_config.get_specific_announcement_channel(guildID)))
                 await channel.send(f'im active, my name is {self.user}')
-            print('\t' + str(guild.name))
+            self.log('\t' + str(guild.name))
+        # running on_ready callbacks
         for callback in self.on_ready_callbacks:
             await callback()
 
@@ -50,10 +55,10 @@ class GenericBot_client(discord.Client):
 
         @self.event
         async def on_resumed():
-            print("session resumed")
+            self.log("session resumed")
             for callback in self.on_session_resumed_callbacks:
                 # print callback type
-                print('activation: ' + str(callback))
+                self.log('activating: ' + str(callback))
                 # start callback
                 await callback()
 
@@ -64,26 +69,31 @@ class GenericBot_client(discord.Client):
 
     def add_on_session_resumed_callback(self, callback):
         self.on_session_resumed_callbacks.append(callback)
-        print("added on_session_resumed_callback: " + str(callback))
+        self.log("added on_session_resumed_callback: " + str(callback))
 
     def add_on_ready_callback(self, callback):
         self.on_ready_callbacks.append(callback)
-        print("added on_ready_callback: " + str(callback))
+        self.log("added on_ready_callback: " + str(callback))
     
     def add_on_voice_state_update_callback(self, callback):
         self.on_voice_state_update_callbacks.append(callback)
-        print("added on_voice_state_update_callback: " + str(callback))
+        self.log("added on_voice_state_update_callback: " + str(callback))
 
     def add_on_guild_channel_delete_callback(self, callback):
         self.on_guild_channel_delete_callbacks.append(callback)
-        print("added on_guild_channel_delete_callback: " + str(callback))
+        self.log("added on_guild_channel_delete_callback: " + str(callback))
 
     def add_on_message_callback(self, callback):
         self.on_message_callbacks.append(callback)
-        print("added on_message_callback: " + str(callback))
+        self.log("added on_message_callback: " + str(callback))
 
     def activate(self): #
         self.run(self.secret_key)
 
     def get_secret(self):
         return self.secret_key
+    
+    def log(self, message):
+        print(message)
+        if self.logger is not None:
+            self.logger.log(message)

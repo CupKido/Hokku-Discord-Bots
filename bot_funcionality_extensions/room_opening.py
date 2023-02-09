@@ -13,8 +13,9 @@ import json
 import requests
 
 class room_opening:
-    def __init__(self, client):
+    def __init__(self, client, logger):
         self.bot_client = client
+        self.logger = logger
         self.active_channels = ''
         self.bot_client.add_on_ready_callback(self.initialize_buttons)
         self.bot_client.add_on_ready_callback(self.initialize_active_channels)

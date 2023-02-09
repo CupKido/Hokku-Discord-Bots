@@ -3,3 +3,4 @@ token.txt
 *.sqlite
 VSWorkspaceState.json
 *.suo
+*logfile.txt
