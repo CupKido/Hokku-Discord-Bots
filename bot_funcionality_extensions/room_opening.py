@@ -176,11 +176,11 @@ class room_opening:
             self.save_active_channels()
 
     async def edit_channel_button(self, interaction):
-        self.log('edit channel button pressed', self)
+        self.log('edit channel button pressed')
         try:
             flag = True
             # if rooms are open for this guild
-            self.log('this room\'s id:' + str(interaction.guild.id) + '\nopen guilds ids: ' + str(self.active_channels.keys())
+            self.log('this room\'s id: ' + str(interaction.guild.id) + '\nopen guilds ids: ' + str(self.active_channels.keys())
             + '\nis inside? ' + str(interaction.guild.id in self.active_channels.keys()))
             if interaction.guild.id in self.active_channels.keys():
                 self.log('guild is open, checking if user has active channel')
