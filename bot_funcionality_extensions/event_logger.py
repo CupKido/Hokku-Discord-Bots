@@ -12,13 +12,14 @@ class event_logger:
         self.bot_client.add_on_guild_channel_delete_callback(self.on_guild_channel_delete)
         self.bot_client.add_on_session_resumed_callback(self.on_session_resumed)
         self.bot_client.add_on_message_callback(self.on_message)
+        self.class_name = 'event_logger'
         @bot_client.tree.command(name = 'get_todays_event_logs', description='get todays event logs')
         async def get_todays_event_logs(interaction: discord.Interaction):
             guild_logs = self.logger.get_guild_logs(interaction.guild.id)
             if not guild_logs:
                 await interaction.response.send_message('no logs found', ephemeral=True)
             else:
-                event_logs = '\n'.join([x for x in guild_logs.split('\n') if x.startswith('event_logger')])
+                event_logs = '\n'.join([x[len(type(self).__name__ +": "):] for x in guild_logs.split('\n') if x.startswith(type(self).__name__)])
                 if len(event_logs) < 2000:
                     await interaction.response.send_message(event_logs, ephemeral=True)
                 else:
