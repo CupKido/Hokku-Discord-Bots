@@ -181,7 +181,7 @@ class room_opening:
             flag = True
             # if rooms are open for this guild
             self.log('this room\'s id:' + str(interaction.guild.id) + '\nopen guilds ids: ' + str(self.active_channels.keys())
-            + '\nis inside? ' + str(interaction.guild.id in self.active_channels.keys()), self)
+            + '\nis inside? ' + str(interaction.guild.id in self.active_channels.keys()))
             if interaction.guild.id in self.active_channels.keys():
                 self.log('guild is open, checking if user has active channel')
                 # check if user has active channel
@@ -196,10 +196,10 @@ class room_opening:
                     flag = False
                     await interaction.response.send_modal(thisModal)
             if flag:
-                self.log('user doesn\'t have an active channel, sending error message', self)
+                self.log('user doesn\'t have an active channel, sending error message')
                 await interaction.response.send_message('you don\'t have an active channel, please open one first', ephemeral = True)
         except Exception as e:
-            self.log('Error editing channel due to error: ' + str(e), self)
+            self.log('Error editing channel due to error: ' + str(e))
             self.load_active_channels()
         
 
