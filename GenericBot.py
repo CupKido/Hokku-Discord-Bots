@@ -21,6 +21,10 @@ class GenericBot_client(discord.Client):
     
 
     async def on_ready(self):
+        # running on_ready callbacks
+        for callback in self.on_ready_callbacks:
+            await callback()
+
         await self.wait_until_ready()
         #syncing commands tree to discord
         if not self.synced:
@@ -30,9 +34,8 @@ class GenericBot_client(discord.Client):
             self.log('synced \
             \n=================================')
             
-        # running on_ready callbacks
-        for callback in self.on_ready_callbacks:
-            await callback()
+        
+        
         
         # printing active guilds
         self.log('im active on: ')
