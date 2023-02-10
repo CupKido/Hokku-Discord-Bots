@@ -199,7 +199,7 @@ class room_opening:
                 self.log('user doesn\'t have an active channel, sending error message', self)
                 await interaction.response.send_message('you don\'t have an active channel, please open one first', ephemeral = True)
         except Exception as e:
-            self.log_instance('Error editing channel due to error: ' + str(e), self)
+            self.log('Error editing channel due to error: ' + str(e), self)
             self.load_active_channels()
         
 
