@@ -81,7 +81,7 @@ class room_opening:
 
                 embed = discord.Embed(title = 'Instant vc creation', description = message)
                 
-                message = await creation_channel.send(embed = embed, view = views.get_InstantButtonView(self.bot_client))
+                message = await creation_channel.send(embed = embed, view = views.get_InstantButtonView(self))
                 this_server_config.set_static_message_id(message.id)
 
 
@@ -163,7 +163,7 @@ class room_opening:
                     async for msg in creation_channel.history(limit=100):
                         if msg.author == self.bot_client.user:
                             if msg.id == static_message_id:
-                                new_msg = await msg.edit(content = msg.content, view = views.get_InstantButtonView(self.bot_client))
+                                new_msg = await msg.edit(content = msg.content, view = views.get_InstantButtonView(self))
                                 this_server_config.set_static_message_id(new_msg.id)
                                 self.log('button initialized for ' + guild.name)
 
