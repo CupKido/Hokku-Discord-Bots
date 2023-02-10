@@ -176,14 +176,14 @@ class room_opening:
             self.save_active_channels()
 
     async def edit_channel_button(self, interaction):
-        self.log_instance('edit channel button pressed', self)
+        self.log('edit channel button pressed', self)
         try:
             flag = True
             # if rooms are open for this guild
-            self.log_instance('this room\'s id:' + str(interaction.guild.id) + '\nopen guilds ids: ' + str(self.active_channels.keys())
+            self.log('this room\'s id:' + str(interaction.guild.id) + '\nopen guilds ids: ' + str(self.active_channels.keys())
             + '\nis inside? ' + str(interaction.guild.id in self.active_channels.keys()), self)
             if interaction.guild.id in self.active_channels.keys():
-                self.log_instance('guild is open, checking if user has active channel')
+                self.log('guild is open, checking if user has active channel')
                 # check if user has active channel
                 if interaction.user.id in self.active_channels[interaction.guild.id].keys():
                     self.log('presenting vc editing modal')
@@ -196,7 +196,7 @@ class room_opening:
                     flag = False
                     await interaction.response.send_modal(thisModal)
             if flag:
-                self.log_instance('user doesn\'t have an active channel, sending error message', self)
+                self.log('user doesn\'t have an active channel, sending error message', self)
                 await interaction.response.send_message('you don\'t have an active channel, please open one first', ephemeral = True)
         except Exception as e:
             self.log_instance('Error editing channel due to error: ' + str(e), self)
