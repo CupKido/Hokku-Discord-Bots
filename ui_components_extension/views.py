@@ -6,7 +6,7 @@ from DB_instances.server_config_interface import server_config
 
 class InstantButtonView(View): # Create a class called MyView that subclasses discord.ui.View
     def __init__(self, room_opening):
-        super().__init__()
+        super().__init__(timeout=None)
         self.room_opening = room_opening
         
     @button(label="Edit VC", style=discord.ButtonStyle.primary, emoji="😎") 
