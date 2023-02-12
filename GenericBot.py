@@ -18,7 +18,11 @@ class GenericBot_client(discord.Client):
         self.add_event_callback_support()
     
 
-    
+    async def get_message(self, message_id, channel, limit):
+        async for message in channel.history(limit=limit):
+            if message.id == message_id:
+                return message
+        return None
 
     async def on_ready(self):
         # running on_ready callbacks
