@@ -202,35 +202,41 @@ class room_opening:
 
     async def edit_channel_button(self, interaction):
         self.log('edit channel button pressed')
+        this_server_config = server_config(interaction.guild.id)
         try:
-            flag = True
             # if rooms are open for this guild
             self.log('this room\'s id: ' + str(interaction.guild.id) + '\nopen guilds ids: ' + str(self.active_channels.keys())
             + '\nis inside? ' + str(interaction.guild.id in self.active_channels.keys()))
-            if interaction.guild.id in self.active_channels.keys():
-                self.log('guild is open, checking if user has active channel')
+
+            if interaction.guild.id not in self.active_channels.keys() or interaction.user.id not in self.active_channels[interaction.guild.id].keys():
+                embed = discord.Embed(title = "צריך לפתוח משרד קודם..", description = "פשוט פותחים משרד ואז מנסים שוב - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
+                embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
+                await interaction.response.send_message(embed = embed, ephemeral = True)
+                return
+            self.log('guild is open, user has active channel')
+            if interaction.user.voice is None:
+                embed = discord.Embed(title = "צריך להכנס למשרד קודם..", description = "פשוט נכנסים למשרד ואז מנסים שוב - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
+                embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
+                await interaction.response.send_message(embed = embed, ephemeral = True)
+                return
                 # check if user has active channel
-                if interaction.user.id in self.active_channels[interaction.guild.id].keys():
-                    self.log('presenting vc editing modal')
-                    # edit channel
-                    channel = self.bot_client.get_channel(self.active_channels[interaction.guild.id][interaction.user.id])
-                    thisModal = modals.InstantModal(title="Edit channel")
-                    thisModal.set_callback_func(self.change_channel_details)
-                    thisModal.set_fields(channel.name, channel.user_limit, channel.bitrate)
-                    # thisModal.set_pre_fileds(channel.name, channel.user_limit, channel.bitrate)
-                    flag = False
-                    await interaction.response.send_modal(thisModal)
-            if flag:
-                this_server_config = server_config(interaction.guild.id)
-                if interaction.user.voice is None: 
-                    embed = discord.Embed(title = "צריך לפתוח משרד קודם..", description = "פשוט פותחים משרד ואז מנסים שוב - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
-                    embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
-                    await interaction.response.send_message(embed = embed, ephemeral = True)
-                else:
-                    self.log('user doesn\'t have an active channel, sending error message')
-                    embed = discord.Embed(title = "אופס.. זה לא המשרד שלך", description = "במשרד שלך זה יעבוד - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
-                    embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
-                    await interaction.response.send_message(embed = embed, ephemeral = True)
+            if interaction.user.voice.channel.id != self.active_channels[interaction.guild.id][interaction.user.id]:
+                self.log('user doesn\'t have an active channel, sending error message')
+                embed = discord.Embed(title = "אופס.. זה לא המשרד שלך", description = "במשרד שלך זה יעבוד - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
+                embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
+                await interaction.response.send_message(embed = embed, ephemeral = True)
+                return
+                
+            #check user is inside his channel
+            self.log('presenting vc editing modal')
+            # edit channel
+            channel = interaction.user.voice.channel
+            thisModal = modals.InstantModal(title="Edit channel")
+            thisModal.set_callback_func(self.change_channel_details)
+            thisModal.set_fields(channel.name, channel.user_limit, channel.bitrate)
+            # thisModal.set_pre_fileds(channel.name, channel.user_limit, channel.bitrate)
+            await interaction.response.send_modal(thisModal)
+                    
                     # await interaction.response.send_message('you don\'t have an active channel, please open one first', ephemeral = True)
         except Exception as e:
             self.log('Error editing channel due to error: ' + str(e))
@@ -256,7 +262,10 @@ class room_opening:
                 await interaction.response.send_message('please only use numbers in the user limit textbox', ephemeral = True)
                 return
 
-        channel = self.bot_client.get_channel(self.active_channels[interaction.guild.id][interaction.user.id])
+        if interaction.user.voice is None:
+            await interaction.response.send_message('you need to be in a voice channel to edit it', ephemeral = True)
+            return
+        channel = interaction.user.voice.channel
         
         url = "https://discord.com/api/v10/channels/" + str(channel.id)
         
@@ -439,4 +448,4 @@ class room_opening:
         message_id = message.id
         this_server_config.set_static_message_id(message_id)
 
-    
+        
