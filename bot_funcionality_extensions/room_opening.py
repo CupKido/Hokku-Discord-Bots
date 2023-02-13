@@ -26,6 +26,7 @@ class room_opening:
         self.bot_client.add_on_guild_channel_delete_callback(self.on_guild_channel_delete_callback)
         
         @client.tree.command(name = 'choose_creation_channel', description='choose a channel for creationg new voice channels')
+        @commands.has_permissions(administrator=True)
         async def choose_creation_channel(interaction: discord.Interaction, channel : discord.TextChannel):
             if not interaction.user.guild_permissions.administrator:
                 await interaction.response.send_message('you are not an admin', ephemeral = True)
@@ -53,6 +54,7 @@ class room_opening:
                 await interaction.response.send_message('error', ephemeral = True)
 
         @client.tree.command(name = 'set_closing_timer', description='set a timer for closing a vc after creation in case no one joins')
+        @commands.has_permissions(administrator=True)
         async def set_closing_timer(interaction: discord.Interaction, timer : int):
             if not interaction.user.guild_permissions.administrator:
                 await interaction.response.send_message('you are not an admin', ephemeral = True)
@@ -70,6 +72,7 @@ class room_opening:
                 await interaction.response.send_message('error', ephemeral = True) 
 
         @client.tree.command(name = 'choose_static_message', description='choose a static message for vc creation channel')
+        @commands.has_permissions(administrator=True)
         async def choose_static_message(interaction: discord.Interaction, message : str):
             #check if user is admin
             if not interaction.user.guild_permissions.administrator:
@@ -104,6 +107,7 @@ class room_opening:
                 await interaction.response.send_message('error', ephemeral = True)
         
         @client.tree.command(name = 'choose_vc_for_vc', description='set a channel for vc creation')
+        @commands.has_permissions(administrator=True)
         async def choose_vc_for_vc(interaction: discord.Interaction, channel : discord.VoiceChannel):
             try:
                 # get server config
