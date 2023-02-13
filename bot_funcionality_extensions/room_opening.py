@@ -207,25 +207,37 @@ class room_opening:
             # if rooms are open for this guild
             self.log('this room\'s id: ' + str(interaction.guild.id) + '\nopen guilds ids: ' + str(self.active_channels.keys())
             + '\nis inside? ' + str(interaction.guild.id in self.active_channels.keys()))
-
-            if interaction.guild.id not in self.active_channels.keys() or interaction.user.id not in self.active_channels[interaction.guild.id].keys():
-                embed = discord.Embed(title = "צריך לפתוח משרד קודם..", description = "פשוט פותחים משרד ואז מנסים שוב - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
+            if interaction.user.voice is None or interaction.guild.id not in self.active_channels.keys():
+                embed = discord.Embed(title = "צריך לפתוח משרד קודם..", description = "פשוט נכנסים למשרד ואז מנסים שוב - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
                 embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
                 await interaction.response.send_message(embed = embed, ephemeral = True)
                 return
+            # if user is in an active channel 
+            if interaction.user.voice.channel.id in self.active_channels[interaction.guild.id].values():
+                if interaction.user.id in self.active_channels[interaction.guild.id].keys():
+                    if interaction.user.voice.channel.id != self.active_channels[interaction.guild.id][interaction.user.id]:
+                        self.log('user doesn\'t have an active channel, sending error message')
+                        embed = discord.Embed(title = "אופס.. זה לא המשרד שלך", description = "במשרד שלך זה יעבוד - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
+                        embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
+                        await interaction.response.send_message(embed = embed, ephemeral = True)
+                        return
+                else:
+                    self.log('user doesn\'t have an active channel, sending error message')
+                    embed = discord.Embed(title = "אופס.. זה לא המשרד שלך", description = "במשרד שלך זה יעבוד - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
+                    embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
+                    await interaction.response.send_message(embed = embed, ephemeral = True)
+                    return
+            # if user doesnt have a channel
+            if interaction.user.id not in self.active_channels[interaction.guild.id].keys():
+                # if user is in a channel which is not hes own
+                    embed = discord.Embed(title = "צריך לפתוח משרד קודם..", description = "פשוט פותחים משרד ואז מנסים שוב - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
+                    embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
+                    await interaction.response.send_message(embed = embed, ephemeral = True)
+                    return
             self.log('guild is open, user has active channel')
-            if interaction.user.voice is None:
-                embed = discord.Embed(title = "צריך להכנס למשרד קודם..", description = "פשוט נכנסים למשרד ואז מנסים שוב - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
-                embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
-                await interaction.response.send_message(embed = embed, ephemeral = True)
-                return
+            
                 # check if user has active channel
-            if interaction.user.voice.channel.id != self.active_channels[interaction.guild.id][interaction.user.id]:
-                self.log('user doesn\'t have an active channel, sending error message')
-                embed = discord.Embed(title = "אופס.. זה לא המשרד שלך", description = "במשרד שלך זה יעבוד - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
-                embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
-                await interaction.response.send_message(embed = embed, ephemeral = True)
-                return
+            
                 
             #check user is inside his channel
             self.log('presenting vc editing modal')
