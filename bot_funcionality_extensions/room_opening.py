@@ -1,12 +1,8 @@
 import discord
 import discord
-from discord import app_commands
 from discord.ext import commands
 import ui_components_extension.views as views
 import ui_components_extension.modals as modals
-import asyncio
-import threading
-import tasks
 from DB_instances.server_config_interface import server_config
 import discord_modification_tools.channel_modifier as channel_modifier
 import json
@@ -25,20 +21,16 @@ class room_opening:
         self.bot_client.add_on_voice_state_update_callback(self.vc_state_update)
         self.bot_client.add_on_guild_channel_delete_callback(self.on_guild_channel_delete_callback)
         
-        @client.tree.command(name = 'choose_creation_channel', description='choose a channel for creationg new voice channels')
+        @client.tree.command(name = 'choose_editing_channel', description='choose a channel for editing new voice channels')
         @commands.has_permissions(administrator=True)
-        async def choose_creation_channel(interaction: discord.Interaction, channel : discord.TextChannel):
-            if not interaction.user.guild_permissions.administrator:
-                await interaction.response.send_message('you are not an admin', ephemeral = True)
-                return
-            
-            try:
+        async def choose_editing_channel(interaction: discord.Interaction, channel : discord.TextChannel):
 
+            try:
                 # get server config
                 this_server_config = server_config(interaction.guild.id)
 
                 if channel.id == this_server_config.get_creation_vc_channel():
-                    await interaction.response.send_message('this channel is already set as creation channel', ephemeral = True)
+                    await interaction.response.send_message('this channel is already set as editing channel', ephemeral = True)
                     return
 
                 # check if channel is set, and if so, remove readonly and delete static message
@@ -47,37 +39,16 @@ class room_opening:
 
                 # set announcement channel
                 await self.initialize_creation_channel(channel, this_server_config)
-                await interaction.response.send_message(f'\"{channel.name}\" was set as vc creation channel', ephemeral = True)
+                await interaction.response.send_message(f'\"{channel.name}\" was set as vc editing channel', ephemeral = True)
 
             except Exception as e:
                 self.log(str(e))
-                await interaction.response.send_message('error', ephemeral = True)
+                await interaction.response.send_message('Ops.. Something went wrong', ephemeral = True)
 
-        @client.tree.command(name = 'set_closing_timer', description='set a timer for closing a vc after creation in case no one joins')
+        @client.tree.command(name = 'create_static_message', description='create a static message for vc creation channel')
         @commands.has_permissions(administrator=True)
-        async def set_closing_timer(interaction: discord.Interaction, timer : int):
-            if not interaction.user.guild_permissions.administrator:
-                await interaction.response.send_message('you are not an admin', ephemeral = True)
-                return
-            try:
-                # get server config
-                this_server_config = server_config(interaction.guild.id)
+        async def create_static_message(interaction: discord.Interaction, message : str, color : str):
 
-                # set timer
-                this_server_config.set_vc_closing_timer(timer)
-                await interaction.response.send_message(f'\"{timer}\" was set as closing timer', ephemeral = True)
-
-            except Exception as e:
-                self.log(str(e))
-                await interaction.response.send_message('error', ephemeral = True) 
-
-        @client.tree.command(name = 'choose_static_message', description='choose a static message for vc creation channel')
-        @commands.has_permissions(administrator=True)
-        async def choose_static_message(interaction: discord.Interaction, message : str, color : str):
-            #check if user is admin
-            if not interaction.user.guild_permissions.administrator:
-                await interaction.response.send_message('you are not an admin', ephemeral = True)
-                return
             try:
                 # get server config
                 this_server_config = server_config(interaction.guild.id)
@@ -97,17 +68,15 @@ class room_opening:
                 if this_server_config.set_button_style(color) == False:
                     await interaction.response.send_message('please choose a valid color', ephemeral = True)
                     return
+
                 await self.clean_previous_static_message(this_server_config)
                 this_server_config.set_static_message(message)
 
                 # set message
                 await interaction.response.send_message(f'\"{message}\" was set as static message', ephemeral = True)
 
-
-
                 # get creation channel
                 await self.initialize_static_message(this_server_config)
-
 
             except Exception as e:
                 self.log(str(e))
@@ -116,6 +85,7 @@ class room_opening:
         @client.tree.command(name = 'choose_vc_for_vc', description='set a channel for vc creation')
         @commands.has_permissions(administrator=True)
         async def choose_vc_for_vc(interaction: discord.Interaction, channel : discord.VoiceChannel):
+
             try:
                 # get server config
                 this_server_config = server_config(interaction.guild.id)
@@ -148,6 +118,7 @@ class room_opening:
                     return
                 self.save_active_channels()
                 self.log_guild(f'deleted {before.channel.name} channel because it was empty', before.channel.guild)
+
         try:
         # check if after channel is vc for vc
             if after.channel is None:
@@ -308,75 +279,6 @@ class room_opening:
             await interaction.response.send_message(embed = embed_response, ephemeral = True)
         return 
 
-    async def create_new_channel(self, interaction):
-        
-        # get chosen values from modal
-        # get name
-        name = self.get_modal_value(interaction, 0)
-        if name == '':
-            name = f'{interaction.user.name}\'s office'
-
-        # get users limit
-        users_amount = self.get_modal_value(interaction, 1)
-        if users_amount == '':
-            users_amount = None
-        else:
-            try:
-                users_amount = int(users_amount)
-            except:
-                await interaction.response.send_message('please only use numbers in the user limit textbox', ephemeral = True)
-                return
-
-
-        
-
-
-        # get vc creation channel
-        this_server_config = server_config(interaction.guild.id)
-        creation_channel = self.bot_client.get_channel(int(this_server_config.get_creation_vc_channel()))
-
-        # get category
-        category = creation_channel.category
-
-        # create vc in category
-        new_channel = await category.create_voice_channel(name = name, user_limit = users_amount)
-        await channel_modifier.give_management(new_channel, interaction.user)
-        #new_channel.permissions_synced = True
-
-        # add vc to active channels list
-        if not interaction.guild.id in self.active_channels.values(): 
-            self.active_channels[interaction.guild.id] = {}
-        self.active_channels[interaction.guild.id][new_channel.id] = interaction.user.id
-        self.save_active_channels()
-        # create embed with vc info
-        if users_amount is None:
-            users_amount = 'unlimited'
-        else:
-            users_amount = str(users_amount)
-
-        
-        embed = discord.Embed(title = f'\"{new_channel.name}\" was created',
-        description = f'\n\t users limit: {users_amount}',
-        color = 0x00ff00)
-        await interaction.response.send_message(embed = embed, ephemeral = True)
-
-
-        
-        # start timer
-        await asyncio.sleep(this_server_config.get_vc_closing_timer())
-        if new_channel.id in self.active_channels[new_channel.guild.id].keys():
-            if len(new_channel.members) == 0:
-                # delete channel
-                self.active_channels[new_channel.guild.id].pop(interaction.user.id)
-                self.save_active_channels()
-                self.log_guild(f'deleted {new_channel.name} channel after {this_server_config.get_vc_closing_timer()} seconds due to inactivity', new_channel.guild)
-                try:
-
-                    await new_channel.delete()
-                except Exception as e:
-                    self.log('could not delete channel due to error: \n' + str(e))
-                    pass
-
     def get_modal_value(self, interaction, index): #
         return interaction.data['components'][index]['components'][0]['value']
 
@@ -434,7 +336,6 @@ class room_opening:
         if self.logger is not None:
             self.logger.log_guild_instance(message, guild.id, self)
 
-
     async def clean_previous_channel(self, this_server_config):
         previous_channel = self.bot_client.get_channel(int(this_server_config.get_creation_vc_channel()))
         if previous_channel is not None:
@@ -449,7 +350,6 @@ class room_opening:
                 if previous_message is not None:
                     await previous_message.delete()
                     this_server_config.set_static_message_id(' ')
-
 
     async def initialize_creation_channel(self, channel, this_server_config):
         this_server_config.set_creation_vc_channel(channel.id)
@@ -466,5 +366,3 @@ class room_opening:
         message = await creation_channel.send(embed = embed, view = views.get_InstantButtonView(self, this_server_config.get_button_style()))
         message_id = message.id
         this_server_config.set_static_message_id(message_id)
-
-        
