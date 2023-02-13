@@ -135,12 +135,10 @@ class room_opening:
         
         if before.channel is not None and len(before.channel.members) == 0:
             # check if channel is active
-            if before.channel.guild.id in self.active_channels.keys() and before.channel.id in self.active_channels[before.channel.guild.id].values():
+            if before.channel.guild.id in self.active_channels.keys() and before.channel.id in self.active_channels[before.channel.guild.id].keys():
                 # delete channel
                 try:
-                    self.active_channels[before.channel.guild.id].pop(
-                    [ x for x in self.active_channels[before.channel.guild.id].keys() 
-                    if self.active_channels[before.channel.guild.id][x] == before.channel.id][0] )
+                    self.active_channels[before.channel.guild.id].pop(before.channel.id)
                     await before.channel.delete()
                 except discord.errors.NotFound as e:
                     pass
@@ -161,7 +159,7 @@ class room_opening:
                 new_channel = await after.channel.category.create_voice_channel(name = f'{member.name}\'s Office')
                 await channel_modifier.give_management(new_channel, member)
                 await member.move_to(new_channel)
-                self.active_channels[after.channel.guild.id][member.id] = new_channel.id
+                self.active_channels[after.channel.guild.id][new_channel.id] = member.id
                 self.save_active_channels()
             self.log(self.active_channels)
         except discord.errors.HTTPException as e:
@@ -193,10 +191,8 @@ class room_opening:
                                 self.log('button initialized for ' + guild.name)
 
     async def on_guild_channel_delete_callback(self, channel):
-        if channel.guild.id in self.active_channels.keys() and channel.id in self.active_channels[channel.guild.id].values():
-            self.active_channels[channel.guild.id].pop(
-                [x for x in self.active_channels[channel.guild.id].keys() if self.active_channels[channel.guild.id][x] == channel.id][0]
-            )
+        if channel.guild.id in self.active_channels.keys() and channel.id in self.active_channels[channel.guild.id].keys():
+            self.active_channels[channel.guild.id].pop(channel.id)
             self.log_guild(f'deleted {channel.name} channel from active channels because it was deleted', channel.guild)
             self.save_active_channels()
 
@@ -213,9 +209,11 @@ class room_opening:
                 await interaction.response.send_message(embed = embed, ephemeral = True)
                 return
             # if user is in an active channel 
-            if interaction.user.voice.channel.id in self.active_channels[interaction.guild.id].values():
-                if interaction.user.id in self.active_channels[interaction.guild.id].keys():
-                    if interaction.user.voice.channel.id != self.active_channels[interaction.guild.id][interaction.user.id]:
+            if interaction.user.voice.channel.id in self.active_channels[interaction.guild.id].keys():
+                # check if user has an active channel
+                if interaction.user.id in self.active_channels[interaction.guild.id].values():
+                    # check if user is in his active channel
+                    if interaction.user.id != self.active_channels[interaction.guild.id][interaction.user.voice.channel.id]:
                         self.log('user doesn\'t have an active channel, sending error message')
                         embed = discord.Embed(title = "אופס.. זה לא המשרד שלך", description = "במשרד שלך זה יעבוד - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
                         embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
@@ -228,7 +226,7 @@ class room_opening:
                     await interaction.response.send_message(embed = embed, ephemeral = True)
                     return
             # if user doesnt have a channel
-            if interaction.user.id not in self.active_channels[interaction.guild.id].keys():
+            if interaction.user.id not in self.active_channels[interaction.guild.id].values():
                 # if user is in a channel which is not hes own
                     embed = discord.Embed(title = "צריך לפתוח משרד קודם..", description = "פשוט פותחים משרד ואז מנסים שוב - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
                     embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
@@ -346,9 +344,9 @@ class room_opening:
         #new_channel.permissions_synced = True
 
         # add vc to active channels list
-        if not interaction.guild.id in self.active_channels.keys(): 
+        if not interaction.guild.id in self.active_channels.values(): 
             self.active_channels[interaction.guild.id] = {}
-        self.active_channels[interaction.guild.id][interaction.user.id] = new_channel.id
+        self.active_channels[interaction.guild.id][new_channel.id] = interaction.user.id
         self.save_active_channels()
         # create embed with vc info
         if users_amount is None:
@@ -366,7 +364,7 @@ class room_opening:
         
         # start timer
         await asyncio.sleep(this_server_config.get_vc_closing_timer())
-        if new_channel.id in self.active_channels[new_channel.guild.id].values():
+        if new_channel.id in self.active_channels[new_channel.guild.id].keys():
             if len(new_channel.members) == 0:
                 # delete channel
                 self.active_channels[new_channel.guild.id].pop(interaction.user.id)
@@ -391,15 +389,15 @@ class room_opening:
         # delete channels that are not active
         for guild_id in self.active_channels.keys():
             to_pop = []
-            for user_id in self.active_channels[guild_id].keys():
+            for channel_id in self.active_channels[guild_id].keys():
 
-                channel = self.bot_client.get_channel(self.active_channels[guild_id][user_id])
+                channel = self.bot_client.get_channel(channel_id)
                 # delete if channel is empty
                 if channel is None:
-                    to_pop.append(user_id)
+                    to_pop.append(channel_id)
                     self.log('a channel was deleted due to it not existing')
                 elif len(channel.members) == 0:
-                    to_pop.append(user_id)
+                    to_pop.append(channel_id)
                     self.log_guild(f'deleted {channel.name} channel due to inactivity', channel.guild)
                     try:
                         await channel.delete()
@@ -407,9 +405,9 @@ class room_opening:
                         self.log('could not delete channel due to error: \n' + str(e))
                         pass
                 else:
-                    await channel_modifier.give_management(channel, self.bot_client.get_user(user_id))
-            for user_id in to_pop:
-                self.active_channels[guild_id].pop(user_id)
+                    await channel_modifier.give_management(channel, self.bot_client.get_user(self.active_channels[guild_id][channel_id]))
+            for channel_id in to_pop:
+                self.active_channels[guild_id].pop(channel_id)
         self.save_active_channels()
 
     def save_active_channels(self):
@@ -422,8 +420,8 @@ class room_opening:
         temp2_dic = {}
         for guild_id in temp_dic.keys():
             temp2_dic[int(guild_id)] = {}
-            for user_id in temp_dic[guild_id].keys():
-                temp2_dic[int(guild_id)][int(user_id)] = int(temp_dic[guild_id][user_id])
+            for channel_id in temp_dic[guild_id].keys():
+                temp2_dic[int(guild_id)][int(channel_id)] = int(temp_dic[guild_id][channel_id])
         self.active_channels = temp2_dic
     
     def log(self, message):
