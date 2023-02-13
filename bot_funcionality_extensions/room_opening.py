@@ -290,15 +290,24 @@ class room_opening:
             "name": name,
             "user_limit": users_amount
         }
-        
+        # get reply from discord
         response = requests.patch(url, headers=headers, json=payload)
+
+        # if channel is rate limited
         if response.status_code == 429:
+            this_server_config = server_config(interaction.guild.id)
             time = int(response.headers["Retry-After"])
             minutes = time // 60
             seconds = time % 60
-            await interaction.response.send_message(f'please wait {minutes} minutes and {seconds} seconds before changing the channel again', ephemeral = True)
+            embed_response = discord.Embed(title = "לאט לאט...", description = "שינית את שם החדר יותר מדיי פעמים \
+            \nיש להמתין "+ str(time) +" שניות, \
+            \nאו לפתוח משרד חדש - <#" + str(this_server_config.get_vc_for_vc()) + ">")
+            await interaction.response.send_message(embed = embed_response, ephemeral = True)
+            #await interaction.response.send_message(f'please wait {minutes} minutes and {seconds} seconds before changing the channel again', ephemeral = True)
         else:
-            await interaction.response.send_message(f'\"{name}\" was edited', ephemeral = True)
+            embed_response = discord.Embed(title = "השינויים בוצעו בהצלחה", description = "שם החדר: " + str(name) 
+            + "\nהגבלת משתמשים: " + str(users_amount))
+            await interaction.response.send_message(embed = embed_response, ephemeral = True)
         return 
 
     async def create_new_channel(self, interaction):
