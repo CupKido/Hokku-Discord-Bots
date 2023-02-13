@@ -73,7 +73,7 @@ class room_opening:
 
         @client.tree.command(name = 'choose_static_message', description='choose a static message for vc creation channel')
         @commands.has_permissions(administrator=True)
-        async def choose_static_message(interaction: discord.Interaction, message : str):
+        async def choose_static_message(interaction: discord.Interaction, message : str, color : str):
             #check if user is admin
             if not interaction.user.guild_permissions.administrator:
                 await interaction.response.send_message('you are not an admin', ephemeral = True)
@@ -81,7 +81,7 @@ class room_opening:
             try:
                 # get server config
                 this_server_config = server_config(interaction.guild.id)
-
+                
                 #check if channel exists
                 try:
                     channnel = interaction.guild.fetch_channel(this_server_config.get_creation_vc_channel())
@@ -92,11 +92,18 @@ class room_opening:
                 if this_server_config.get_creation_vc_channel() == ' ':
                     await interaction.response.send_message('please set a creation channel first', ephemeral = True)
                     return
+
+                # set button style
+                if this_server_config.set_button_style(color) == False:
+                    await interaction.response.send_message('please choose a valid color', ephemeral = True)
+                    return
                 await self.clean_previous_static_message(this_server_config)
                 this_server_config.set_static_message(message)
 
                 # set message
                 await interaction.response.send_message(f'\"{message}\" was set as static message', ephemeral = True)
+
+
 
                 # get creation channel
                 await self.initialize_static_message(this_server_config)
@@ -181,7 +188,7 @@ class room_opening:
                     async for msg in creation_channel.history(limit=100):
                         if msg.author == self.bot_client.user:
                             if msg.id == static_message_id:
-                                new_msg = await msg.edit(content = msg.content, view = views.get_InstantButtonView(self))
+                                new_msg = await msg.edit(content = msg.content, view = views.get_InstantButtonView(self, this_server_config.get_button_style()))
                                 this_server_config.set_static_message_id(new_msg.id)
                                 self.log('button initialized for ' + guild.name)
 
@@ -214,8 +221,17 @@ class room_opening:
                     flag = False
                     await interaction.response.send_modal(thisModal)
             if flag:
-                self.log('user doesn\'t have an active channel, sending error message')
-                await interaction.response.send_message('you don\'t have an active channel, please open one first', ephemeral = True)
+                this_server_config = server_config(interaction.guild.id)
+                if interaction.user.voice is None: 
+                    embed = discord.Embed(title = "צריך לפתוח משרד קודם..", description = "פשוט פותחים משרד ואז מנסים שוב - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
+                    embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
+                    await interaction.response.send_message(embed = embed, ephemeral = True)
+                else:
+                    self.log('user doesn\'t have an active channel, sending error message')
+                    embed = discord.Embed(title = "אופס.. זה לא המשרד שלך", description = "במשרד שלך זה יעבוד - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
+                    embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
+                    await interaction.response.send_message(embed = embed, ephemeral = True)
+                    # await interaction.response.send_message('you don\'t have an active channel, please open one first', ephemeral = True)
         except Exception as e:
             self.log('Error editing channel due to error: ' + str(e))
             self.load_active_channels()
@@ -419,5 +435,8 @@ class room_opening:
 
         embed = discord.Embed(title = 'Edit voice channel', description = this_server_config.get_static_message())
         
-        message = await creation_channel.send(embed = embed, view = views.get_InstantButtonView(self))
-        this_server_config.set_static_message_id(message.id)
+        message = await creation_channel.send(embed = embed, view = views.get_InstantButtonView(self, this_server_config.get_button_style()))
+        message_id = message.id
+        this_server_config.set_static_message_id(message_id)
+
+    

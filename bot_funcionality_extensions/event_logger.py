@@ -62,10 +62,13 @@ class event_logger:
 
     async def on_message(self, message):
         # check if message is not None
-        if message is not None:
-            # check if message is from bot
-            if message.author != self.bot_client.user:
-                self.log_guild("on_message. length = " + str(len(message.content)), message.guild)
+        try:
+            if message is not None:
+                # check if message is from bot
+                if message.author != self.bot_client.user:
+                    self.log_guild("on_message. length = " + str(len(message.content)), message.guild)
+        except:
+            pass
     
     def log(self, message):
         # print(message)
