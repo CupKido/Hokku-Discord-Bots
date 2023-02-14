@@ -118,7 +118,7 @@ class server_config:
           "static_message" : self.static_message, "static_message_id" : self.static_message_id,
           "vc_closing_timer" : self.vc_closing_timer, "vc_for_vc" : self.vc_for_vc, "button_style" : self.button_style }
         with open(config_file, "w") as f:
-            json.dump(data, f)
+            json.dump(data, f, indent=4)
 
     # Static methods
 

@@ -17,6 +17,6 @@ async def remove_readonly(channel, role = None):
 async def give_management(channel, role = None):
     if channel is None:
         return
-    if role == None:
+    if role is None:
         role = channel.guild.default_role
     await channel.set_permissions(role, manage_channels=True, move_members=True)

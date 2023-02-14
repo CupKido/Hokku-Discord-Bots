@@ -129,8 +129,11 @@ class room_opening:
                     self.active_channels[int(after.channel.guild.id)] = {}
 
                 #create channel
-                new_channel = await after.channel.category.create_voice_channel(name = f'{member.name}\'s Office', bitrate = after.channel.bitrate, 
-                overwrites=after.channel.overwrites, user_limit=after.channel.user_limit, reason='opening channel for ' + member.name)
+                new_channel = await after.channel.category.create_voice_channel(name = f'{member.display_name}\'s Office', bitrate = after.channel.bitrate, 
+                    overwrites=after.channel.overwrites, user_limit=after.channel.user_limit, reason='opening channel for ' + member.name)
+                print(after.channel.overwrites)
+                # stop category sync
+                await new_channel.edit(sync_permissions=False)
                 # await after.channel.edit(sync_permissions=True)
                 await channel_modifier.give_management(new_channel, member)
                 #print(after.channel.overwrites)

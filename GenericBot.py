@@ -48,7 +48,7 @@ class GenericBot_client(discord.Client):
                 guildID = guild.id
                 channel = self.get_channel(int(server_config.get_specific_announcement_channel(guildID)))
                 await channel.send(f'im active, my name is {self.user}')
-            self.log('\t' + str(guild.name))
+            self.log('\t' + str(guild.name) + ' (' + str(guild.id) + ')')
         
 
     def add_event_callback_support(self):
@@ -115,6 +115,11 @@ class GenericBot_client(discord.Client):
         return self.logger
 
     def log(self, message):
-        print(message)
         if self.logger is not None:
             self.logger.log(message)
+            print(self.logger.remove_emojis(message)) #
+        else:
+            try:
+                print(message)
+            except:
+                print('failed to print message')
