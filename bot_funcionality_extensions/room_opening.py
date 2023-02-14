@@ -127,11 +127,19 @@ class room_opening:
             if after.channel is not None and after.channel.id == this_server_config.get_vc_for_vc():
                 if after.channel.guild.id not in self.active_channels.keys():
                     self.active_channels[int(after.channel.guild.id)] = {}
-                new_channel = await after.channel.category.create_voice_channel(name = f'{member.name}\'s Office')
+
+                #create channel
+                new_channel = await after.channel.category.create_voice_channel(name = f'{member.name}\'s Office', bitrate = after.channel.bitrate, 
+                overwrites=after.channel.overwrites, user_limit=after.channel.user_limit, reason='opening channel for ' + member.name)
+                # await after.channel.edit(sync_permissions=True)
                 await channel_modifier.give_management(new_channel, member)
+                #print(after.channel.overwrites)
+
                 await member.move_to(new_channel)
                 self.active_channels[after.channel.guild.id][new_channel.id] = member.id
+
                 self.save_active_channels()
+
             self.log(self.active_channels)
         except discord.errors.HTTPException as e:
             self.log_guild('Error creating channel due to error: ' + str(e), after.channel.guild)
