@@ -17,6 +17,7 @@ class GenericBot_client(discord.Client):
         # adding event callbacks support
         self.add_event_callback_support()
     
+    
 
     async def get_message(self, message_id, channel, limit):
         async for message in channel.history(limit=limit):
@@ -48,8 +49,14 @@ class GenericBot_client(discord.Client):
                 guildID = guild.id
                 channel = self.get_channel(int(server_config.get_specific_announcement_channel(guildID)))
                 await channel.send(f'im active, my name is {self.user}')
-            self.log('\t' + str(guild.name) + ' (' + str(guild.id) + ')')
-        
+            self.log('\t    ' + str(guild.name) + ' (' + str(guild.id) + ')')
+
+        @self.event
+        async def on_guild_join(guild):
+            # sync commands tree to discord guild
+            await self.tree.sync(guild=guild)
+            self.log('bot joined guild: ' + str(guild.name) + ' (' + str(guild.id) + ')')
+    
 
     def add_event_callback_support(self):
         self.on_voice_state_update_callbacks = []
@@ -64,7 +71,6 @@ class GenericBot_client(discord.Client):
 
         @self.event
         async def on_guild_channel_delete(channel):
-            print('channel deleted ' + str(channel.name))
             for callback in self.on_guild_channel_delete_callbacks:
                 await callback(channel)
 

@@ -1,7 +1,7 @@
 import datetime
 import os
 import discord
-import re
+from cleantext import clean
 class logger:
     def __init__(self, bot_client):
         bot_client.set_logger(self)
@@ -76,28 +76,10 @@ class logger:
         file_path = f'./logs/{todays_file}'
         if not os.path.exists(file_path):
             return False
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r') as f: 
             return f.read()
     
-    def remove_emojis(self, data):
-        emoj = re.compile("["
-            u"\U0001F600-\U0001F64F"  # emoticons
-            u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-            u"\U0001F680-\U0001F6FF"  # transport & map symbols
-            u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-            u"\U00002500-\U00002BEF"  # chinese char
-            u"\U00002702-\U000027B0"
-            u"\U00002702-\U000027B0"
-            u"\U000024C2-\U0001F251"
-            u"\U0001f926-\U0001f937"
-            u"\U00010000-\U0010ffff"
-            u"\u2640-\u2642" 
-            u"\u2600-\u2B55"
-            u"\u200d"
-            u"\u23cf"
-            u"\u23e9"
-            u"\u231a"
-            u"\ufe0f"  # dingbats
-            u"\u3030"
-                        "]+", re.UNICODE)
-        return re.sub(emoj, '', data)
+    def remove_emojis(self, text):
+        # Remove all emojis from the string
+        return clean(text, no_emoji=True, no_line_breaks=False, no_urls=False,
+                      fix_unicode=False, to_ascii=False, no_punct=False)
