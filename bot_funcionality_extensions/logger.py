@@ -80,6 +80,13 @@ class logger:
             return f.read()
     
     def remove_emojis(self, text):
-        # Remove all emojis from the string
-        return clean(text, no_emoji=True, no_line_breaks=False, no_urls=False,
+        if len(text) == 0:
+            return text
+        clean_text = clean(text, no_emoji=True, no_line_breaks=False, no_urls=False,
                       fix_unicode=False, to_ascii=False, no_punct=False)
+        
+        if text[0] == '\t':
+            return '\t' + clean_text
+        return clean_text
+        # Remove all emojis from the string
+        
