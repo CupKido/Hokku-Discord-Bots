@@ -1,6 +1,5 @@
 import discord
 from discord import app_commands
-from DB_instances.server_config_interface import server_config
 class GenericBot_client(discord.Client):
     def __init__(self, secret_key, alert_when_online : bool = False):
         # bot init
@@ -45,10 +44,6 @@ class GenericBot_client(discord.Client):
         # printing active guilds
         self.log('im active on: ')
         for guild in self.guilds:
-            if self.alert_when_online:
-                guildID = guild.id
-                channel = self.get_channel(int(server_config.get_specific_announcement_channel(guildID)))
-                await channel.send(f'im active, my name is {self.user}')
             self.log('\t    ' + str(guild.name) + ' (' + str(guild.id) + ')')
 
         @self.event
