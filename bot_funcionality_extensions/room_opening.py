@@ -14,7 +14,7 @@ STATIC_MESSAGE_ID = 'static_message_id'
 STATIC_MESSAGE = 'static_message'
 BUTTON_STYLE = 'button_style'
 VC_FOR_VC = 'vc_for_vc'
-
+VC_NAME = 'vc_name'
 class room_opening:
     def __init__(self, client):
         self.bot_client = client
@@ -114,6 +114,22 @@ class room_opening:
                 self.log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
 
+        @client.tree.command(name = 'set_vc_names', description='set what name will be given to new vcs, for example: {name}\'s vc')
+        @commands.has_permissions(administrator=True)
+        async def set_vc_names(interaction: discord.Interaction, name : str):
+            try:
+                # get server config
+                this_server_config = server_config(interaction.guild.id)
+
+                # set channel
+                this_server_config.set_params(vc_name = name)
+
+                await interaction.response.send_message(f'\"{name}\" was set as new vc names', ephemeral = True)
+
+            except Exception as e:
+                self.log(str(e))
+                await interaction.response.send_message('error', ephemeral = True)
+
     async def vc_state_update(self, member, before, after):
         # check if before channel is empty
         # print(f'{member} moved from {before.channel} to {after.channel}')
@@ -143,8 +159,17 @@ class room_opening:
                 if after.channel.guild.id not in self.active_channels.keys():
                     self.active_channels[int(after.channel.guild.id)] = {}
 
+                # get vc name
+                vc_name = this_server_config.get_param(VC_NAME)
+                if vc_name is None:
+                    vc_name = f'{member.display_name}\'s Office'
+                else:
+                    if vc_name.find('{name}') == -1:
+                        vc_name = member.display_name + ' ' + vc_name
+                    else:
+                        vc_name = vc_name.replace('{name}', member.display_name)
                 #create channel
-                new_channel = await after.channel.category.create_voice_channel(name = f'{member.display_name}\'s Office', bitrate = after.channel.bitrate, 
+                new_channel = await after.channel.category.create_voice_channel(name = vc_name, bitrate = after.channel.bitrate, 
                     overwrites=after.channel.overwrites, user_limit=after.channel.user_limit, reason='opening channel for ' + member.name)
                 # print(after.channel.overwrites)
                 # stop category sync

@@ -1,21 +1,3 @@
 {
-    "1003298553780768890": {
-        "activated": true,
-        "greeting_room_id": 1005767956866813952,
-        "birthdays_channel_id": 1076153472271003668,
-        "birthday_room_id": 1005767956866813952,
-        "editing_vc_channel": 1073017412997369966,
-        "static_message": "hey there",
-        "button_style": "red",
-        "static_message_id": 1076253892578390106
-    },
-    "748257981937746090": {},
-    "765551020658524190": {},
-    "857155958974316555": {
-        "vc_for_vc": 1076231738696663080,
-        "editing_vc_channel": 857155958974316559,
-        "button_style": "green",
-        "static_message": "hey there",
-        "static_message_id": 1076244154515992606
-    }
+    
 }
