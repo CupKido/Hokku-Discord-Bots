@@ -130,7 +130,7 @@ class room_opening:
                 #create channel
                 new_channel = await after.channel.category.create_voice_channel(name = f'{member.display_name}\'s Office', bitrate = after.channel.bitrate, 
                     overwrites=after.channel.overwrites, user_limit=after.channel.user_limit, reason='opening channel for ' + member.name)
-                print(after.channel.overwrites)
+                # print(after.channel.overwrites)
                 # stop category sync
                 await new_channel.edit(sync_permissions=False)
                 # await after.channel.edit(sync_permissions=True)
@@ -142,7 +142,7 @@ class room_opening:
 
                 self.save_active_channels()
 
-            self.log(self.active_channels)
+            # self.log(self.active_channels)
         except discord.errors.HTTPException as e:
             self.log_guild('Error creating channel due to error: ' + str(e), after.channel.guild)
             self.load_active_channels()
