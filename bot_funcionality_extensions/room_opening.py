@@ -117,6 +117,9 @@ class room_opening:
         @client.tree.command(name = 'set_vc_names', description='set what name will be given to new vcs, for example: {name}\'s vc')
         @commands.has_permissions(administrator=True)
         async def set_vc_names(interaction: discord.Interaction, name : str):
+            if len(name) >= 100:
+                await interaction.response.send_message('name is too long, must be under 100 characters', ephemeral = True)
+                return
             try:
                 # get server config
                 this_server_config = server_config(interaction.guild.id)
