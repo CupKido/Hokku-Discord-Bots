@@ -1,0 +1,30 @@
+{
+    "748257981937746090": {
+        "create_vc_channel": " ",
+        "static_message": " ",
+        "static_message_id": " ",
+        "vc_for_vc": " ",
+        "button_style": " "
+    },
+    "765551020658524190": {
+        "create_vc_channel": " ",
+        "static_message": " ",
+        "static_message_id": " ",
+        "vc_for_vc": " ",
+        "button_style": " "
+    },
+    "857155958974316555": {
+        "create_vc_channel": 857155958974316559,
+        "static_message": "heyyyy",
+        "static_message_id": 1076143773802844230,
+        "vc_for_vc": 857155958974316560,
+        "button_style": "blue"
+    },
+    "1003298553780768890": {
+        "create_vc_channel": " ",
+        "static_message": " ",
+        "static_message_id": " ",
+        "vc_for_vc": " ",
+        "button_style": " "
+    }
+}
