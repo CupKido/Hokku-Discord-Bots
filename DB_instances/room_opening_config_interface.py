@@ -1,6 +1,12 @@
 import json
 import discord
-config_file = './data_base/servers_config.json'
+import os
+
+if not os.path.exists('data_base'):
+    os.makedirs('data_base')
+
+config_file = './data_base/room_opening_config.json'
+
 
 class server_config:
     def __init__(self, server_id):
@@ -9,8 +15,6 @@ class server_config:
             data = json.load(f)
             if server_id in data.keys():
                 self.server_id = server_id
-                self.announcement_channel = data[server_id]['announcement_channel']
-                self.log_channel = data[server_id]['log_channel']
                 self.create_vc_channel = data[server_id]['create_vc_channel']
                 self.static_message = data[server_id]['static_message']
                 self.static_message_id = data[server_id]['static_message_id']
@@ -19,38 +23,12 @@ class server_config:
                 self.button_style = data[server_id]['button_style']
             else:
                 self.server_id = server_id
-                self.announcement_channel = " "
-                self.log_channel = " "
                 self.create_vc_channel = " "
                 self.static_message = " "
                 self.static_message_id = " "
                 self.vc_for_vc = " "
                 self.vc_closing_timer = 60
                 self.button_style = " "
-
-                
-
-    def confirm_announcement_channel(self, guild : discord.guild):
-        announcement_channel = self.get_announcement_channel()
-        if announcement_channel == " ":
-            announcement_channel = guild.public_updates_channel
-            if announcement_channel == None:
-                announcement_channel = guild.text_channels[0]
-            self.set_announcement_channel(str(announcement_channel.id))
-
-    def confirm_log_channel(self, guild : discord.guild):
-        log_channel = self.get_log_channel()
-        if log_channel == " ":
-            log_channel = guild.system_channel
-            if log_channel != None:
-                self.set_log_channel(str(log_channel.id))
-
-    def set_announcement_channel(self, channel_id : str):
-        self.announcement_channel = channel_id
-        self.save()
-        
-    def set_log_channel(self, channel_id : str):
-        self.log_channel = channel_id
         self.save()
 
     def set_creation_vc_channel(self, channel_id : str):
@@ -117,7 +95,7 @@ class server_config:
          'log_channel' : self.log_channel, 'create_vc_channel' : self.create_vc_channel,
           "static_message" : self.static_message, "static_message_id" : self.static_message_id,
           "vc_closing_timer" : self.vc_closing_timer, "vc_for_vc" : self.vc_for_vc, "button_style" : self.button_style }
-        with open(config_file, "w") as f:
+        with open(config_file, "w+") as f:
             json.dump(data, f, indent=4)
 
     # Static methods

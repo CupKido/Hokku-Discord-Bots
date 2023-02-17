@@ -1,9 +1,8 @@
 import discord
 import discord
 from discord.ext import commands
-import ui_components_extension.views as views
-import ui_components_extension.modals as modals
-from DB_instances.server_config_interface import server_config
+import ui_components_extension.room_opening_ui as room_opening_ui
+from DB_instances.room_opening_config_interface import server_config
 import discord_modification_tools.channel_modifier as channel_modifier
 import json
 import requests
@@ -168,7 +167,7 @@ class room_opening:
                     async for msg in creation_channel.history(limit=100):
                         if msg.author == self.bot_client.user:
                             if msg.id == static_message_id:
-                                new_msg = await msg.edit(content = msg.content, view = views.get_InstantButtonView(self, this_server_config.get_button_style()))
+                                new_msg = await msg.edit(content = msg.content, view = room_opening_ui.get_InstantButtonView(self, this_server_config.get_button_style()))
                                 this_server_config.set_static_message_id(new_msg.id)
                                 self.log('button initialized for ' + guild.name)
 
@@ -223,7 +222,7 @@ class room_opening:
             self.log('presenting vc editing modal')
             # edit channel
             channel = interaction.user.voice.channel
-            thisModal = modals.InstantModal(title="Edit channel")
+            thisModal = room_opening_ui.InstantModal(title="Edit channel")
             thisModal.set_callback_func(self.change_channel_details)
             thisModal.set_fields(channel.name, channel.user_limit, channel.bitrate)
             # thisModal.set_pre_fileds(channel.name, channel.user_limit, channel.bitrate)
@@ -374,6 +373,6 @@ class room_opening:
 
         embed = discord.Embed(title = 'Edit voice channel', description = this_server_config.get_static_message())
         
-        message = await creation_channel.send(embed = embed, view = views.get_InstantButtonView(self, this_server_config.get_button_style()))
+        message = await creation_channel.send(embed = embed, view = room_opening_ui.get_InstantButtonView(self, this_server_config.get_button_style()))
         message_id = message.id
         this_server_config.set_static_message_id(message_id)
