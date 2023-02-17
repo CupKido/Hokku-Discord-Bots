@@ -297,29 +297,32 @@ class room_opening:
         loads active channels from file,
         and deletes channels that are not active
         '''
-        self.load_active_channels()
-        # delete channels that are not active
-        for guild_id in self.active_channels.keys():
-            to_pop = []
-            for channel_id in self.active_channels[guild_id].keys():
+        try:
+            self.load_active_channels()
+            # delete channels that are not active
+            for guild_id in self.active_channels.keys():
+                to_pop = []
+                for channel_id in self.active_channels[guild_id].keys():
 
-                channel = self.bot_client.get_channel(channel_id)
-                # delete if channel is empty
-                if channel is None:
-                    to_pop.append(channel_id)
-                    self.log('a channel was deleted due to it not existing')
-                elif len(channel.members) == 0:
-                    to_pop.append(channel_id)
-                    self.log_guild(f'deleted {channel.name} channel due to inactivity', channel.guild)
-                    try:
-                        await channel.delete()
-                    except Exception as e:
-                        self.log('could not delete channel due to error: \n' + str(e))
-                        pass
-                else:
-                    await channel_modifier.give_management(channel, self.bot_client.get_user(self.active_channels[guild_id][channel_id]))
-            for channel_id in to_pop:
-                self.active_channels[guild_id].pop(channel_id)
+                    channel = self.bot_client.get_channel(channel_id)
+                    # delete if channel is empty
+                    if channel is None:
+                        to_pop.append(channel_id)
+                        self.log('a channel was deleted due to it not existing')
+                    elif len(channel.members) == 0:
+                        to_pop.append(channel_id)
+                        self.log_guild(f'deleted {channel.name} channel due to inactivity', channel.guild)
+                        try:
+                            await channel.delete()
+                        except Exception as e:
+                            self.log('could not delete channel due to error: \n' + str(e))
+                            pass
+                    else:
+                        await channel_modifier.give_management(channel, self.bot_client.get_user(self.active_channels[guild_id][channel_id]))
+                for channel_id in to_pop:
+                    self.active_channels[guild_id].pop(channel_id)
+        except Exception as e:
+            self.log('could not load active channels due to fatal error: \n' + str(e))
         self.save_active_channels()
 
     def save_active_channels(self):
