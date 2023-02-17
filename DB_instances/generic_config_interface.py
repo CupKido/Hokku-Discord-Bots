@@ -29,7 +29,7 @@ class server_config:
 
     def set_params(self, **kwargs):
         for x in kwargs.keys():
-            self.params[str(x).lower()] = kwargs[str(x).lower()]
+            self.params[str(x).lower()] = kwargs[x]
         self.save_params()
 
 

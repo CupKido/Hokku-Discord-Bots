@@ -1,5 +1,7 @@
 import discord
 from discord import app_commands
+import asyncio
+
 class GenericBot_client(discord.Client):
     def __init__(self, secret_key, alert_when_online : bool = False):
         # bot init
@@ -20,23 +22,24 @@ class GenericBot_client(discord.Client):
 
     async def get_message(self, message_id, channel, limit):
         async for message in channel.history(limit=limit):
-            if message.id == message_id:
+            if int(message.id) == int(message_id):
                 return message
-        return None
 
     async def on_ready(self):
         # running on_ready callbacks
-        for callback in self.on_ready_callbacks:
-            await callback()
-
         await self.wait_until_ready()
         #syncing commands tree to discord
+        for callback in self.on_ready_callbacks:
+            await callback()
+        
         if not self.synced:
             self.log('=================================\nsyncing commands tree to discord')
             await self.tree.sync()
             self.synced = True
             self.log('synced \
             \n=================================')
+        
+        
             
         
         

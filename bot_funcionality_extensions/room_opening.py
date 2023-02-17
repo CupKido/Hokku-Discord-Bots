@@ -2,10 +2,18 @@ import discord
 import discord
 from discord.ext import commands
 import ui_components_extension.room_opening_ui as room_opening_ui
-from DB_instances.room_opening_config_interface import server_config
+import ui_components_extension.ui_tools as ui_tools
+import DB_instances.room_opening_config_interface as ro_server_config
+from DB_instances.generic_config_interface import server_config
 import discord_modification_tools.channel_modifier as channel_modifier
 import json
 import requests
+
+EDITING_VC_CHANNEL = 'editing_vc_channel'
+STATIC_MESSAGE_ID = 'static_message_id'
+STATIC_MESSAGE = 'static_message'
+BUTTON_STYLE = 'button_style'
+VC_FOR_VC = 'vc_for_vc'
 
 class room_opening:
     def __init__(self, client):
@@ -28,12 +36,12 @@ class room_opening:
                 # get server config
                 this_server_config = server_config(interaction.guild.id)
 
-                if channel.id == this_server_config.get_creation_vc_channel():
+                if channel.id == this_server_config.get_param(EDITING_VC_CHANNEL):
                     await interaction.response.send_message('this channel is already set as editing channel', ephemeral = True)
                     return
 
                 # check if channel is set, and if so, remove readonly and delete static message
-                if this_server_config.get_creation_vc_channel() != ' ':
+                if this_server_config.get_param(EDITING_VC_CHANNEL) is not None:
                     await self.clean_previous_channel(this_server_config)
 
                 # set announcement channel
@@ -46,7 +54,7 @@ class room_opening:
 
         @client.tree.command(name = 'create_static_message', description='create a static message for vc creation channel')
         @commands.has_permissions(administrator=True)
-        async def create_static_message(interaction: discord.Interaction, message : str, color : str):
+        async def create_static_message(interaction: discord.Interaction, message : str, button_color : str):
 
             try:
                 # get server config
@@ -54,28 +62,36 @@ class room_opening:
                 
                 #check if channel exists
                 try:
-                    channnel = interaction.guild.fetch_channel(this_server_config.get_creation_vc_channel())
+                    channnel = interaction.guild.fetch_channel(this_server_config.get_param(EDITING_VC_CHANNEL))
                 except:
-                    this_server_config.set_creation_vc_channel(' ')
-
-                # check if channel is set, and if not, exits
-                if this_server_config.get_creation_vc_channel() == ' ':
+                    this_server_config.set_params(editing_vc_channel=None)
                     await interaction.response.send_message('please set a creation channel first', ephemeral = True)
                     return
 
-                # set button style
-                if this_server_config.set_button_style(color) == False:
-                    await interaction.response.send_message('please choose a valid color', ephemeral = True)
+                # check if channel is set, and if not, exits
+                if this_server_config.get_param(EDITING_VC_CHANNEL) is None:
+                    await interaction.response.send_message('please set a creation channel first', ephemeral = True)
                     return
 
+                discord_color = ui_tools.string_to_color(button_color)
+                # set button style
+                if discord_color is None:
+                    await interaction.response.send_message('please choose a valid color', ephemeral = True)
+                    return
+                else:
+                    this_server_config.set_params(static_message=message, button_style=button_color)
+                    response = f'\"{message}\" was set as static message' 
+                    await interaction.response.send_message(response, ephemeral = True)
                 await self.clean_previous_static_message(this_server_config)
-                this_server_config.set_static_message(message)
+                
+                
+                # respond to user
+                
 
                 # set message
-                await interaction.response.send_message(f'\"{message}\" was set as static message', ephemeral = True)
-
-                # get creation channel
                 await self.initialize_static_message(this_server_config)
+
+
 
             except Exception as e:
                 self.log(str(e))
@@ -90,7 +106,7 @@ class room_opening:
                 this_server_config = server_config(interaction.guild.id)
 
                 # set channel
-                this_server_config.set_vc_for_vc(channel.id)
+                this_server_config.set_params(vc_for_vc = channel.id)
 
                 await interaction.response.send_message(f'\"{channel.name}\" was set as vc for vc', ephemeral = True)
 
@@ -123,7 +139,7 @@ class room_opening:
             if after.channel is None:
                 return
             this_server_config = server_config(after.channel.guild.id)
-            if after.channel is not None and after.channel.id == this_server_config.get_vc_for_vc():
+            if after.channel is not None and after.channel.id == this_server_config.get_param(VC_FOR_VC):
                 if after.channel.guild.id not in self.active_channels.keys():
                     self.active_channels[int(after.channel.guild.id)] = {}
 
@@ -158,18 +174,21 @@ class room_opening:
         for guild in self.bot_client.guilds:
             # get all channels
             this_server_config = server_config(guild.id)
-            creation_channel = this_server_config.get_creation_vc_channel()
-            static_message = this_server_config.get_static_message()
-            static_message_id = this_server_config.get_static_message_id()
-            if  creation_channel != ' ' and static_message != ' ' and static_message_id != ' ':
-                creation_channel = self.bot_client.get_channel(int(this_server_config.get_creation_vc_channel()))
+            creation_channel = this_server_config.get_param(EDITING_VC_CHANNEL)
+            static_message = this_server_config.get_param(STATIC_MESSAGE)
+            static_message_id = this_server_config.get_param(STATIC_MESSAGE_ID)
+            if creation_channel is not None and static_message is not None and static_message_id is not None:
+                creation_channel = self.bot_client.get_channel(int(this_server_config.get_param(EDITING_VC_CHANNEL)))
                 if creation_channel is not None:
-                    async for msg in creation_channel.history(limit=100):
-                        if msg.author == self.bot_client.user:
-                            if msg.id == static_message_id:
-                                new_msg = await msg.edit(content = msg.content, view = room_opening_ui.get_InstantButtonView(self, this_server_config.get_button_style()))
-                                this_server_config.set_static_message_id(new_msg.id)
-                                self.log('button initialized for ' + guild.name)
+                    msg = await self.bot_client.get_message(static_message_id, creation_channel, 20)
+                    if msg is None:
+                        self.log('could not find message')
+                    else:
+                        new_msg = await msg.edit(content = msg.content, 
+                                view = room_opening_ui.get_InstantButtonView(self,
+                                ui_tools.string_to_color(this_server_config.get_param(BUTTON_STYLE))))
+                        this_server_config.set_params(static_message_id=new_msg.id)
+                        self.log('button initialized for ' + guild.name)
 
     async def on_guild_channel_delete_callback(self, channel):
         if channel.guild.id in self.active_channels.keys() and channel.id in self.active_channels[channel.guild.id].keys():
@@ -185,7 +204,8 @@ class room_opening:
             self.log('this room\'s id: ' + str(interaction.guild.id) + '\nopen guilds ids: ' + str(self.active_channels.keys())
             + '\nis inside? ' + str(interaction.guild.id in self.active_channels.keys()))
             if interaction.user.voice is None or interaction.guild.id not in self.active_channels.keys():
-                embed = discord.Embed(title = "צריך לפתוח משרד קודם..", description = "פשוט נכנסים למשרד ואז מנסים שוב - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
+                embed = discord.Embed(title = "צריך לפתוח משרד קודם..", description = "פשוט נכנסים למשרד ואז מנסים שוב - <#" + \
+                                       str(this_server_config.get_param(VC_FOR_VC)) + ">", color = 0xe74c3c)
                 embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
                 await interaction.response.send_message(embed = embed, ephemeral = True)
                 return
@@ -196,20 +216,23 @@ class room_opening:
                     # check if user is in his active channel
                     if interaction.user.id != self.active_channels[interaction.guild.id][interaction.user.voice.channel.id]:
                         self.log('user doesn\'t have an active channel, sending error message')
-                        embed = discord.Embed(title = "אופס.. זה לא המשרד שלך", description = "במשרד שלך זה יעבוד - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
+                        embed = discord.Embed(title = "אופס.. זה לא המשרד שלך", description = "במשרד שלך זה יעבוד - <#" +
+                                               str(this_server_config.get_param(VC_FOR_VC)) + ">", color = 0xe74c3c)
                         embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
                         await interaction.response.send_message(embed = embed, ephemeral = True)
                         return
                 else:
                     self.log('user doesn\'t have an active channel, sending error message')
-                    embed = discord.Embed(title = "אופס.. זה לא המשרד שלך", description = "במשרד שלך זה יעבוד - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
+                    embed = discord.Embed(title = "אופס.. זה לא המשרד שלך", description = "במשרד שלך זה יעבוד - <#" +
+                                           str(this_server_config.get_param(VC_FOR_VC)) + ">", color = 0xe74c3c)
                     embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
                     await interaction.response.send_message(embed = embed, ephemeral = True)
                     return
             # if user doesnt have a channel
             if interaction.user.id not in self.active_channels[interaction.guild.id].values():
                 # if user is in a channel which is not hes own
-                    embed = discord.Embed(title = "צריך לפתוח משרד קודם..", description = "פשוט פותחים משרד ואז מנסים שוב - <#" + str(this_server_config.get_vc_for_vc()) + ">", color = 0xe74c3c)
+                    embed = discord.Embed(title = "צריך לפתוח משרד קודם..", description = "פשוט פותחים משרד ואז מנסים שוב - <#" +
+                                           str(this_server_config.get_param(VC_FOR_VC)) + ">", color = 0xe74c3c)
                     embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
                     await interaction.response.send_message(embed = embed, ephemeral = True)
                     return
@@ -280,7 +303,7 @@ class room_opening:
             seconds = time % 60
             embed_response = discord.Embed(title = "לאט לאט...", description = "שינית את שם החדר יותר מדיי פעמים \
             \nיש להמתין "+ str(time) +" שניות, \
-            \nאו לפתוח משרד חדש - <#" + str(this_server_config.get_vc_for_vc()) + ">")
+            \nאו לפתוח משרד חדש - <#" + str(this_server_config.get_param(VC_FOR_VC)) + ">")
             await interaction.response.send_message(embed = embed_response, ephemeral = True)
             #await interaction.response.send_message(f'please wait {minutes} minutes and {seconds} seconds before changing the channel again', ephemeral = True)
         else:
@@ -350,32 +373,33 @@ class room_opening:
             self.logger.log_guild_instance(message, guild.id, self)
 
     async def clean_previous_channel(self, this_server_config):
-        previous_channel = self.bot_client.get_channel(int(this_server_config.get_creation_vc_channel()))
+        previous_channel = self.bot_client.get_channel(int(this_server_config.get_param(EDITING_VC_CHANNEL)))
         if previous_channel is not None:
             await channel_modifier.remove_readonly(previous_channel)
             await self.clean_previous_static_message(this_server_config)
     
     async def clean_previous_static_message(self, this_server_config):
-        previous_channel = self.bot_client.get_channel(int(this_server_config.get_creation_vc_channel()))
+        previous_channel = self.bot_client.get_channel(int(this_server_config.get_param(EDITING_VC_CHANNEL)))
         if previous_channel is not None:
-            if this_server_config.get_static_message_id() != ' ':
-                previous_message = await self.bot_client.get_message(this_server_config.get_static_message_id(), previous_channel, 50)
+            if this_server_config.get_param(STATIC_MESSAGE_ID) is not None:
+                previous_message = await self.bot_client.get_message(this_server_config.get_param(STATIC_MESSAGE_ID), previous_channel, 50)
                 if previous_message is not None:
                     await previous_message.delete()
-                    this_server_config.set_static_message_id(' ')
+                    this_server_config.set_params(static_message_id = None)
 
     async def initialize_creation_channel(self, channel, this_server_config):
-        this_server_config.set_creation_vc_channel(channel.id)
+        this_server_config.set_params(editing_vc_channel=channel.id)
         await channel_modifier.set_readonly(channel)
         await self.initialize_static_message(this_server_config)
 
     async def initialize_static_message(self, this_server_config): # creates a static message in the channel
-        if this_server_config.get_static_message() == ' ':
+        if this_server_config.get_param(STATIC_MESSAGE) is None:
             return
-        creation_channel = self.bot_client.get_channel(int(this_server_config.get_creation_vc_channel()))
+        creation_channel = self.bot_client.get_channel(int(this_server_config.get_param(EDITING_VC_CHANNEL)))
 
-        embed = discord.Embed(title = 'Edit voice channel', description = this_server_config.get_static_message())
-        
-        message = await creation_channel.send(embed = embed, view = room_opening_ui.get_InstantButtonView(self, this_server_config.get_button_style()))
+        embed = discord.Embed(title = 'Edit voice channel', description = this_server_config.get_param(STATIC_MESSAGE))
+        button_color = ui_tools.string_to_color(this_server_config.get_param(BUTTON_STYLE))
+        button_view = room_opening_ui.get_InstantButtonView(self, button_color)
+        message = await creation_channel.send(embed = embed, view = button_view)
         message_id = message.id
-        this_server_config.set_static_message_id(message_id)
+        this_server_config.set_params(static_message_id=message_id)
