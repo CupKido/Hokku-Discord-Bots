@@ -8,7 +8,7 @@ from funcs_loader import add_functionality
 
 def main():
     # stat the bot
-    CoffeeBot = GenericBot_client(extract_key(1))
+    CoffeeBot = GenericBot_client(extract_key(2))
     funcs = add_functionality(CoffeeBot, room_opening = room_opening, logger=logger, event_logger=event_logger)
     CoffeeBot.activate()
 
