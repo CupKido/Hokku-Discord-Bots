@@ -1,11 +1,12 @@
 import discord
 from discord import app_commands
 import asyncio
-
+from DB_instances.generic_config_interface import server_config
 class GenericBot_client(discord.Client):
-    def __init__(self, secret_key, alert_when_online : bool = False):
+    def __init__(self, secret_key, db_method='M', config_uri = None, alert_when_online : bool = False):
         # bot init
         super().__init__(intents = discord.Intents.all())
+        server_config.set_method(db_method, config_uri)
         self.tree = app_commands.CommandTree(self)
         self.synced = False
         # bot options
@@ -20,7 +21,7 @@ class GenericBot_client(discord.Client):
     
     
 
-    async def get_message(self, message_id, channel, limit):
+    async def get_message(self, message_id, channel : discord.TextChannel, limit : int):
         async for message in channel.history(limit=limit):
             if int(message.id) == int(message_id):
                 return message
