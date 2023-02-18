@@ -7,25 +7,48 @@ class event_logger:
         
         self.logger.log('event_logger extension loading...')
 
+        # bot events
+
         self.bot_client.add_on_ready_callback(self.on_ready)
-        self.bot_client.add_on_voice_state_update_callback(self.on_voice_state_update)
-        self.bot_client.add_on_guild_channel_delete_callback(self.on_guild_channel_delete)
         self.bot_client.add_on_session_resumed_callback(self.on_session_resumed)
+
+        # message events
+
         self.bot_client.add_on_message_callback(self.on_message)
         self.bot_client.add_on_message_delete_callback(self.on_message_delete)
         self.bot_client.add_on_message_edit_callback(self.on_message_edit)
+
+        # invite events
         self.bot_client.add_on_invite_create_callback(self.on_invite_create)
         self.bot_client.add_on_invite_delete_callback(self.on_invite_delete)
+
+        # members events
+
         self.bot_client.add_on_member_join_callback(self.on_member_join)
         self.bot_client.add_on_member_remove_callback(self.on_member_remove)
         self.bot_client.add_on_member_update_callback(self.on_member_update)
         self.bot_client.add_on_member_ban_callback(self.on_member_ban)
         self.bot_client.add_on_member_unban_callback(self.on_member_unban)
+
+        # roles events
+
         self.bot_client.add_on_guild_role_create_callback(self.on_guild_role_create)
         self.bot_client.add_on_guild_role_delete_callback(self.on_guild_role_delete)
         self.bot_client.add_on_guild_role_update_callback(self.on_guild_role_update)
+
+        # channels events
         self.bot_client.add_on_guild_channel_create_callback(self.on_guild_channel_create)
+        self.bot_client.add_on_guild_channel_delete_callback(self.on_guild_channel_delete)
         self.bot_client.add_on_guild_channel_update_callback(self.on_guild_channel_update)
+
+        # vc events
+        self.bot_client.add_on_voice_state_update_callback(self.on_voice_state_update)
+
+        # bot in guild events
+        self.bot_client.add_on_guild_join_callback(self.on_guild_join)
+        # self.bot_client.add_on_guild_remove_callback(self.on_guild_remove)
+
+
         self.class_name = 'event_logger'
         @bot_client.tree.command(name = 'get_todays_event_logs', description='get todays event logs')
         async def get_todays_event_logs(interaction: discord.Interaction):
@@ -47,35 +70,28 @@ class event_logger:
                     await interaction.response.send_message('logs are too long, sending as file on dms', ephemeral=True)
                     await interaction.user.send(file=discord.File(io.BytesIO(event_logs.encode()), filename='event_logs.txt'))
 
+    # bot events
 
     async def on_ready(self):
         self.log("on_ready")
 
-    async def on_voice_state_update(self, member, before, after):
-        if before.channel is None and after.channel is not None:
-            self.log_guild("on_voice_state_update. member name: " + member.name + 
-            ". before: None. after: " + after.channel.name,
-            member.guild)
-        elif before.channel is not None and after.channel is None:
-            self.log_guild("on_voice_state_update. member name: " + member.name + 
-            ". before: " + before.channel.name + ". after: None",
-            member.guild)
-        elif before.channel is not None and after.channel is not None:
-            self.log_guild("on_voice_state_update. member name: " + member.name + 
-                ". before: " + before.channel.name + ". after: " + after.channel.name,
-                member.guild)
 
 
-        if channel is not None:
-            self.log_guild("on_guild_channel_delete. channel name: " + channel.name, channel.guild)
 
-        pass
+        
 
     async def on_session_resumed(self):
         self.log("on_session_resumed")
 
+    # bot in guild events
+
     async def on_guild_join(self, guild):
         self.log("on_guild_join " + guild.name)
+
+    async def on_guild_remove(self, guild):
+        self.log("on_guild_remove " + guild.name)
+
+    # members events
 
     async def on_message(self, message):
         # check if message is not None
@@ -105,11 +121,15 @@ class event_logger:
         except:
             pass
     
+    # invite events
+
     async def on_invite_create(self, invite):
         self.log("on_invite_create")
     
     async def on_invite_delete(self, invite):
         self.log("on_invite_delete")
+
+    # members events
 
     async def on_member_join(self, member):
         self.log("on_member_join " + member.name)
@@ -128,6 +148,8 @@ class event_logger:
     async def on_member_unban(self, member):
         self.log("on_member_unban " + member.name)
     
+    # roles events
+
     async def on_guild_role_create(self, role):
         self.log("guild_role_create " + role.name)
 
@@ -137,17 +159,33 @@ class event_logger:
     async def on_guild_role_update(self, before, after):
         self.log("guild_role_update " + before.name + " to " + after.name)
 
+    # channels events
+
     async def on_guild_channel_create(self, channel):
         self.log("guild_channel_create " + channel.name)
 
     async def on_guild_channel_delete(self, channel):
-        
-        self.log("guild_channel_delete " + channel.name)
+        if channel is not None:
+            self.log_guild("on_guild_channel_delete. channel name: " + channel.name, channel.guild)
     
     async def on_guild_channel_update(self, before, after):
         self.log("guild_channel_update " + before.name + " to " + after.name)
 
+    # vc events
 
+    async def on_voice_state_update(self, member, before, after):
+        if before.channel is None and after.channel is not None:
+            self.log_guild("on_voice_state_update. member name: " + member.name + 
+            ". before: None. after: " + after.channel.name,
+            member.guild)
+        elif before.channel is not None and after.channel is None:
+            self.log_guild("on_voice_state_update. member name: " + member.name + 
+            ". before: " + before.channel.name + ". after: None",
+            member.guild)
+        elif before.channel is not None and after.channel is not None:
+            self.log_guild("on_voice_state_update. member name: " + member.name + 
+                ". before: " + before.channel.name + ". after: " + after.channel.name,
+                member.guild)
 
     def log(self, message):
         # print(message)
