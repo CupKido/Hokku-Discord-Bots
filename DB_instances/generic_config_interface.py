@@ -19,15 +19,15 @@ class server_config:
         if server_config.Method is None:
             server_config.Method = 'M'
 
-        if server_config.Method == 'M' and server_config.Mongo_client is None:
-            server_config.Mongo_client = pymongo.MongoClient(server_config.config_uri)
-            # print(server_config.Mongo_client.server_info())
-            print('database names list: \n\t' + '\n\t'.join(server_config.Mongo_client.list_database_names()))
+        server_config.confirm_db_initialized()
 
         server_id = str(server_id)
         self.server_id = server_id
         self.load_params()
         # self.save_params()
+
+    def __str__(self) -> str:
+        return "ID: " +str(self.server_id) + "   Method: " + str(server_config.Method) + "   Params: " + str(self.params)
 
     def get_param(self, param_name):
         param_name = str(param_name).lower()
@@ -114,8 +114,11 @@ class server_config:
         if config_uri is not None:
             server_config.config_uri = config_uri
         
+        server_config.confirm_db_initialized()
+
+    @staticmethod
+    def confirm_db_initialized():
         if server_config.Method == 'M' and server_config.Mongo_client is None:
             server_config.Mongo_client = pymongo.MongoClient(server_config.config_uri)
             # print(server_config.Mongo_client.server_info())
             print('MongoDB databases names list: \n\t' + '\n\t'.join(server_config.Mongo_client.list_database_names()))
-        

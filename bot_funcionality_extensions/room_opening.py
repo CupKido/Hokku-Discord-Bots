@@ -202,6 +202,7 @@ class room_opening:
         for guild in self.bot_client.guilds:
             # get all channels
             this_server_config = server_config(guild.id)
+            # print(str(this_server_config))
             creation_channel = this_server_config.get_param(EDITING_VC_CHANNEL)
             static_message = this_server_config.get_param(STATIC_MESSAGE)
             static_message_id = this_server_config.get_param(STATIC_MESSAGE_ID)
