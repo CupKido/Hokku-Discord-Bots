@@ -12,6 +12,20 @@ class event_logger:
         self.bot_client.add_on_guild_channel_delete_callback(self.on_guild_channel_delete)
         self.bot_client.add_on_session_resumed_callback(self.on_session_resumed)
         self.bot_client.add_on_message_callback(self.on_message)
+        self.bot_client.add_on_message_delete_callback(self.on_message_delete)
+        self.bot_client.add_on_message_edit_callback(self.on_message_edit)
+        self.bot_client.add_on_invite_create_callback(self.on_invite_create)
+        self.bot_client.add_on_invite_delete_callback(self.on_invite_delete)
+        self.bot_client.add_on_member_join_callback(self.on_member_join)
+        self.bot_client.add_on_member_remove_callback(self.on_member_remove)
+        self.bot_client.add_on_member_update_callback(self.on_member_update)
+        self.bot_client.add_on_member_ban_callback(self.on_member_ban)
+        self.bot_client.add_on_member_unban_callback(self.on_member_unban)
+        self.bot_client.add_on_guild_role_create_callback(self.on_guild_role_create)
+        self.bot_client.add_on_guild_role_delete_callback(self.on_guild_role_delete)
+        self.bot_client.add_on_guild_role_update_callback(self.on_guild_role_update)
+        self.bot_client.add_on_guild_channel_create_callback(self.on_guild_channel_create)
+        self.bot_client.add_on_guild_channel_update_callback(self.on_guild_channel_update)
         self.class_name = 'event_logger'
         @bot_client.tree.command(name = 'get_todays_event_logs', description='get todays event logs')
         async def get_todays_event_logs(interaction: discord.Interaction):
@@ -51,7 +65,7 @@ class event_logger:
                 ". before: " + before.channel.name + ". after: " + after.channel.name,
                 member.guild)
 
-    async def on_guild_channel_delete(self, channel):
+
         if channel is not None:
             self.log_guild("on_guild_channel_delete. channel name: " + channel.name, channel.guild)
 
@@ -59,6 +73,9 @@ class event_logger:
 
     async def on_session_resumed(self):
         self.log("on_session_resumed")
+
+    async def on_guild_join(self, guild):
+        self.log("on_guild_join " + guild.name)
 
     async def on_message(self, message):
         # check if message is not None
@@ -70,6 +87,68 @@ class event_logger:
         except:
             pass
     
+    async def on_message_delete(self, message):
+        try:
+            if message is not None:
+                # check if message is from bot
+                if message.author != self.bot_client.user:
+                    self.log_guild("on_message_deleted. length = " + str(len(message.content)), message.guild)
+        except:
+            pass
+
+    async def on_message_edit(self, before, after):
+        try:
+            if before is not None and after is not None:
+                # check if message is from bot
+                if before.author != self.bot_client.user:
+                    self.log_guild("on_message_edit. before length = " + str(len(before.content)) + ". after length = " + str(len(after.content)), before.guild)
+        except:
+            pass
+    
+    async def on_invite_create(self, invite):
+        self.log("on_invite_create")
+    
+    async def on_invite_delete(self, invite):
+        self.log("on_invite_delete")
+
+    async def on_member_join(self, member):
+        self.log("on_member_join " + member.name)
+
+    async def on_member_remove(self, member):
+        self.log("on_member_remove " + member.name)
+    
+    async def on_member_update(self, before, after):
+        if before.display_name != after.display_name:
+            self.log_guild(before.display_name + " changed his name to " + after.display_name, before.guild.id)
+        self.log("on_member_update " + before.name + " " + after.name)
+
+    async def on_member_ban(self, member): 
+        self.log("on_member_ban " + member.name)
+    
+    async def on_member_unban(self, member):
+        self.log("on_member_unban " + member.name)
+    
+    async def on_guild_role_create(self, role):
+        self.log("guild_role_create " + role.name)
+
+    async def on_guild_role_delete(self, role):
+        self.log("guild_role_delete " + role.name)
+    
+    async def on_guild_role_update(self, before, after):
+        self.log("guild_role_update " + before.name + " to " + after.name)
+
+    async def on_guild_channel_create(self, channel):
+        self.log("guild_channel_create " + channel.name)
+
+    async def on_guild_channel_delete(self, channel):
+        
+        self.log("guild_channel_delete " + channel.name)
+    
+    async def on_guild_channel_update(self, before, after):
+        self.log("guild_channel_update " + before.name + " to " + after.name)
+
+
+
     def log(self, message):
         # print(message)
         self.logger.log_instance(message, self)
