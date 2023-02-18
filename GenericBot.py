@@ -60,9 +60,31 @@ class GenericBot_client(discord.Client):
     def add_event_callback_support(self):
         self.on_voice_state_update_callbacks = []
         self.on_ready_callbacks = []
-        self.on_guild_channel_delete_callbacks = []
         self.on_session_resumed_callbacks = []
+
         self.on_message_callbacks = []
+        self.on_message_delete_callbacks = []
+        self.on_message_edit_callbacks = []
+
+        self.on_invite_create_callbacks = []
+        self.on_invite_delete_callbacks = []
+
+        self.on_member_join_callbacks = []
+        self.on_member_remove_callbacks = []
+        self.on_member_update_callbacks = []
+        self.on_member_ban_callbacks = []
+        self.on_member_unban_callbacks = []
+
+        self.on_guild_role_create_callbacks = []
+        self.on_guild_role_delete_callbacks = []
+        self.on_guild_role_update_callbacks = []
+
+        self.on_guild_channel_create_callbacks = []
+        self.on_guild_channel_delete_callbacks = []
+        self.on_guild_channel_update_callbacks = []
+
+
+
         @self.event
         async def on_voice_state_update(member, before, after):
             for callback in self.on_voice_state_update_callbacks:
@@ -87,6 +109,85 @@ class GenericBot_client(discord.Client):
             for callback in self.on_message_callbacks:
                 await callback(message)
 
+        @self.event
+        async def on_message_edit(before, after):
+            for callback in self.on_message_edit_callbacks:
+                await callback(after)
+
+
+
+        @self.event
+        async def on_invite_create(invite):
+            for callback in self.on_invite_create_callbacks:
+                await callback(invite)
+        
+        @self.event
+        async def on_invite_delete(invite):
+            for callback in self.on_invite_delete_callbacks:
+                await callback(invite)
+
+
+
+        @self.event
+        async def on_member_join(member):
+            for callback in self.on_member_join_callbacks:
+                await callback(member)
+        
+        @self.event
+        async def on_member_remove(member):
+            for callback in self.on_member_remove_callbacks:
+                await callback(member)
+        
+        @self.event
+        async def on_member_update(before, after):
+            for callback in self.on_member_update_callbacks:
+                await callback(before, after)
+
+        @self.event
+        async def on_member_ban(member):
+            for callback in self.on_member_ban_callbacks:
+                await callback(member)
+
+        @self.event
+        async def on_member_unban(member):
+            for callback in self.on_member_unban_callbacks:
+                await callback(member)
+
+
+
+        @self.event
+        async def on_guild_role_create(role):
+            for callback in self.on_guild_role_create_callbacks:
+                await callback(role)
+
+        @self.event
+        async def on_guild_role_delete(role):
+            for callback in self.on_guild_role_delete_callbacks:
+                await callback(role)
+
+        @self.event
+        async def on_guild_role_update(before, after):
+            for callback in self.on_guild_role_update_callbacks:
+                await callback(before, after)
+
+
+
+        @self.event
+        async def on_guild_channel_create(channel):
+            for callback in self.on_guild_channel_create_callbacks:
+                await callback(channel)
+        
+        @self.event
+        async def on_message_delete(message):
+            for callback in self.on_message_delete_callbacks:
+                await callback(message)
+
+        @self.event
+        async def on_guild_channel_update(before, after):
+            for callback in self.on_guild_channel_update_callbacks:
+                await callback(before, after)
+                
+
     def add_on_session_resumed_callback(self, callback):
         self.on_session_resumed_callbacks.append(callback)
         self.log("added on_session_resumed_callback: " + str(callback.__name__))
@@ -106,6 +207,75 @@ class GenericBot_client(discord.Client):
     def add_on_message_callback(self, callback):
         self.on_message_callbacks.append(callback)
         self.log("added on_message_callback: " + str(callback.__name__))
+
+    def add_on_message_delete_callback(self, callback):
+        self.on_message_delete_callbacks.append(callback)
+        self.log("added on_message_delete_callback: " + str(callback.__name__))
+
+    # need to add to event logger
+
+    # message events
+
+    def add_on_message_edit_callback(self, callback):
+        self.on_message_edit_callbacks.append(callback)
+        self.log("added on_message_edit_callback: " + str(callback.__name__))
+    
+    # invite events
+
+    def add_on_invite_create_callback(self, callback):
+        self.on_invite_create_callbacks.append(callback)
+        self.log("added on_invite_create_callback: " + str(callback.__name__))
+    
+    def add_on_invite_delete_callback(self, callback):
+        self.on_invite_delete_callbacks.append(callback)
+        self.log("added on_invite_delete_callback: " + str(callback.__name__))
+    
+    #member events
+
+    def add_on_member_join_callback(self, callback):
+        self.on_member_join_callbacks.append(callback)
+        self.log("added on_member_join_callback: " + str(callback.__name__))
+
+    def add_on_member_remove_callback(self, callback):
+        self.on_member_remove_callbacks.append(callback)
+        self.log("added on_member_remove_callback: " + str(callback.__name__))
+
+    def add_on_member_update_callback(self, callback):
+        self.on_member_update_callbacks.append(callback)
+        self.log("added on_member_update_callback: " + str(callback.__name__))
+    
+    def add_on_member_ban_callback(self, callback):
+        self.on_member_ban_callbacks.append(callback)
+        self.log("added on_member_ban_callback: " + str(callback.__name__))
+    
+    def add_on_member_unban_callback(self, callback):
+        self.on_member_unban_callbacks.append(callback)
+        self.log("added on_member_unban_callback: " + str(callback.__name__))
+    
+    # guild role events
+
+    def add_on_guild_role_create_callback(self, callback):
+        self.on_guild_role_create_callbacks.append(callback)
+        self.log("added on_guild_role_create_callback: " + str(callback.__name__))
+
+    def add_on_guild_role_delete_callback(self, callback):
+        self.on_guild_role_delete_callbacks.append(callback)
+        self.log("added on_guild_role_delete_callback: " + str(callback.__name__))
+
+    def add_on_guild_role_update_callback(self, callback):
+        self.on_guild_role_update_callbacks.append(callback)
+        self.log("added on_guild_role_update_callback: " + str(callback.__name__))
+
+    # channel events
+
+    def add_on_guild_channel_create_callback(self, callback):
+        self.on_guild_channel_create_callbacks.append(callback)
+        self.log("added on_guild_channel_create_callback: " + str(callback.__name__))
+
+    def add_on_guild_channel_update_callback(self, callback):
+        self.on_guild_channel_update_callbacks.append(callback)
+        self.log("added on_guild_channel_update_callback: " + str(callback.__name__))
+
 
     def activate(self): #
         self.run(self.secret_key)
