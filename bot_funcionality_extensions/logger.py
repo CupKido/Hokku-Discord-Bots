@@ -1,7 +1,11 @@
 import datetime
 import os
 import discord
+from discord.ext import commands
 from cleantext import clean
+from DB_instances.generic_config_interface import server_config
+
+
 class logger:
     def __init__(self, bot_client):
         bot_client.set_logger(self)
@@ -9,6 +13,14 @@ class logger:
         self.log("==================================================\n\
                 logger initialized\
                 \n==================================================")
+
+        @self.bot_client.tree.command(name = 'set_logs_cahnnel', description='sets the channel where the logs will be sent')
+        @commands.has_permissions(administrator=True)
+        def set_logs_cahnnel(interaction, channel : discord.TextChannel):
+            this_server_config = server_config(interaction.guild.id)
+            this_server_config.set_params(log_channel = channel.id)
+            self.log_guild(f'log channel set to {channel.name}', interaction.guild.id)
+            interaction.response.send_message(f'log channel set to {channel.name}', ephemeral=True)
 
     def log(self, msg):
         msg = self.remove_emojis(msg)

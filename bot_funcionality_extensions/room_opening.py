@@ -1,5 +1,4 @@
 import discord
-import discord
 from discord.ext import commands
 import ui_components_extension.room_opening_ui as room_opening_ui
 import ui_components_extension.ui_tools as ui_tools
