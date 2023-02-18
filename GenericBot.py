@@ -55,7 +55,8 @@ class GenericBot_client(discord.Client):
             # sync commands tree to discord guild
             await self.tree.sync(guild=guild)
             self.log('bot joined guild: ' + str(guild.name) + ' (' + str(guild.id) + ')')
-    
+            for callback in self.on_guild_join_callbacks:
+                await callback(guild)
 
     def add_event_callback_support(self):
         self.on_voice_state_update_callbacks = []
@@ -83,7 +84,7 @@ class GenericBot_client(discord.Client):
         self.on_guild_channel_delete_callbacks = []
         self.on_guild_channel_update_callbacks = []
 
-
+        self.on_guild_join_callbacks = []
 
         @self.event
         async def on_voice_state_update(member, before, after):
@@ -113,7 +114,6 @@ class GenericBot_client(discord.Client):
         async def on_message_edit(before, after):
             for callback in self.on_message_edit_callbacks:
                 await callback(after)
-
 
 
         @self.event
@@ -276,6 +276,9 @@ class GenericBot_client(discord.Client):
         self.on_guild_channel_update_callbacks.append(callback)
         self.log("added on_guild_channel_update_callback: " + str(callback.__name__))
 
+    def add_on_guild_join_callback(self, callback):
+        self.on_guild_join_callbacks.append(callback)
+        self.log("added on_guild_join_callback: " + str(callback.__name__))
 
     def activate(self): #
         self.run(self.secret_key)
