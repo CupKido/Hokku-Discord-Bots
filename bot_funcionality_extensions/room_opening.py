@@ -150,7 +150,7 @@ class room_opening:
                     self.load_active_channels()
                     return
                 self.save_active_channels()
-                self.log_guild(f'deleted {before.channel.name} channel because it was empty', before.channel.guild)
+                await self.log_guild(f'deleted {before.channel.name} channel because it was empty', before.channel.guild)
 
         try:
         # check if after channel is vc for vc
@@ -187,7 +187,7 @@ class room_opening:
 
             # self.log(self.active_channels)
         except discord.errors.HTTPException as e:
-            self.log_guild('Error creating channel due to error: ' + str(e), after.channel.guild)
+            await self.log_guild('Error creating channel due to error: ' + str(e), after.channel.guild)
             self.load_active_channels()
             return
 
@@ -221,7 +221,7 @@ class room_opening:
     async def on_guild_channel_delete_callback(self, channel):
         if channel.guild.id in self.active_channels.keys() and channel.id in self.active_channels[channel.guild.id].keys():
             self.active_channels[channel.guild.id].pop(channel.id)
-            self.log_guild(f'deleted {channel.name} channel from active channels because it was deleted', channel.guild)
+            await self.log_guild(f'deleted {channel.name} channel from active channels because it was deleted', channel.guild)
             self.save_active_channels()
 
     async def edit_channel_button(self, interaction):
@@ -362,7 +362,7 @@ class room_opening:
                         self.log('a channel was deleted due to it not existing')
                     elif len(channel.members) == 0:
                         to_pop.append(channel_id)
-                        self.log_guild(f'deleted {channel.name} channel due to inactivity', channel.guild)
+                        await self.log_guild(f'deleted {channel.name} channel due to inactivity', channel.guild)
                         try:
                             await channel.delete()
                         except Exception as e:
@@ -395,10 +395,10 @@ class room_opening:
         if self.logger is not None :
             self.logger.log_instance(message, self)
 
-    def log_guild(self, message, guild):
+    async def log_guild(self, message, guild):
         print(message)
         if self.logger is not None:
-            self.logger.log_guild_instance(message, guild.id, self)
+            await self.logger.log_guild_instance(message, guild.id, self)
 
     async def clean_previous_channel(self, this_server_config):
         previous_channel = self.bot_client.get_channel(int(this_server_config.get_param(EDITING_VC_CHANNEL)))

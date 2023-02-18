@@ -99,7 +99,7 @@ class event_logger:
             if message is not None:
                 # check if message is from bot
                 if message.author != self.bot_client.user:
-                    self.log_guild("on_message. length = " + str(len(message.content)), message.guild)
+                    await self.log_guild("on_message. length = " + str(len(message.content)), message.guild)
         except:
             pass
     
@@ -108,7 +108,7 @@ class event_logger:
             if message is not None:
                 # check if message is from bot
                 if message.author != self.bot_client.user:
-                    self.log_guild("on_message_deleted. length = " + str(len(message.content)), message.guild)
+                    await self.log_guild("on_message_deleted. length = " + str(len(message.content)), message.guild)
         except:
             pass
 
@@ -117,73 +117,72 @@ class event_logger:
             if before is not None and after is not None:
                 # check if message is from bot
                 if before.author != self.bot_client.user:
-                    self.log_guild("on_message_edit. before length = " + str(len(before.content)) + ". after length = " + str(len(after.content)), before.guild)
+                    await self.log_guild("on_message_edit. before length = " + str(len(before.content)) + ". after length = " + str(len(after.content)), before.guild)
         except:
             pass
     
     # invite events
 
     async def on_invite_create(self, invite):
-        self.log("on_invite_create")
+        await self.log_guild("on_invite_create", invite.guild)
     
     async def on_invite_delete(self, invite):
-        self.log("on_invite_delete")
+        await self.log_guild("on_invite_delete", invite.guild)
 
     # members events
 
     async def on_member_join(self, member):
-        self.log("on_member_join " + member.name)
+        await self.log_guild("on_member_join " + member.name, member.guild)
 
     async def on_member_remove(self, member):
-        self.log("on_member_remove " + member.name)
+        await self.log_guild("on_member_remove " + member.name, member.guild)
     
     async def on_member_update(self, before, after):
         if before.display_name != after.display_name:
-            self.log_guild(before.display_name + " changed his name to " + after.display_name, before.guild.id)
-        self.log("on_member_update " + before.name + " " + after.name)
+            await self.log_guild(before.display_name + " changed his name to " + after.display_name, before.guild)
 
     async def on_member_ban(self, member): 
-        self.log("on_member_ban " + member.name)
+        await self.log_guild("on_member_ban " + member.name, member.guild)
     
     async def on_member_unban(self, member):
-        self.log("on_member_unban " + member.name)
+        await self.log_guild("on_member_unban " + member.name, member.guild)
     
     # roles events
 
     async def on_guild_role_create(self, role):
-        self.log("guild_role_create " + role.name)
+        await self.log_guild("guild_role_create " + role.name, role.guild)
 
     async def on_guild_role_delete(self, role):
-        self.log("guild_role_delete " + role.name)
+        await self.log_guild("guild_role_delete " + role.name, role.guild)
     
     async def on_guild_role_update(self, before, after):
-        self.log("guild_role_update " + before.name + " to " + after.name)
+        await self.log_guild("guild_role_update " + before.name + " to " + after.name, before.guild)
 
     # channels events
 
     async def on_guild_channel_create(self, channel):
-        self.log("guild_channel_create " + channel.name)
+        await self.log_guild("guild_channel_create " + channel.name, channel.guild)
 
     async def on_guild_channel_delete(self, channel):
         if channel is not None:
-            self.log_guild("on_guild_channel_delete. channel name: " + channel.name, channel.guild)
+            await self.log_guild("on_guild_channel_delete. channel name: " + channel.name, channel.guild)
     
     async def on_guild_channel_update(self, before, after):
-        self.log("guild_channel_update " + before.name + " to " + after.name)
+        await self.log_guild("guild_channel_update " + before.name + " to " + after.name, before.guild)
 
     # vc events
 
     async def on_voice_state_update(self, member, before, after):
         if before.channel is None and after.channel is not None:
-            self.log_guild("on_voice_state_update. member name: " + member.name + 
+            await self.log_guild("on_voice_state_update. member name: " + member.name + 
             ". before: None. after: " + after.channel.name,
             member.guild)
         elif before.channel is not None and after.channel is None:
-            self.log_guild("on_voice_state_update. member name: " + member.name + 
+            await self.log_guild("on_voice_state_update. member name: " + member.name + 
             ". before: " + before.channel.name + ". after: None",
             member.guild)
         elif before.channel is not None and after.channel is not None:
-            self.log_guild("on_voice_state_update. member name: " + member.name + 
+            await self.log_guild("on_voice_state_update. member name: " + member.name + 
                 ". before: " + before.channel.name + ". after: " + after.channel.name,
                 member.guild)
 
@@ -191,8 +190,8 @@ class event_logger:
         # print(message)
         self.logger.log_instance(message, self)
     
-    def log_guild(self, message, guild):
+    async def log_guild(self, message, guild):
         if self.logger is not None:
-            self.logger.log_guild_instance(message, guild.id, self)
+            await self.logger.log_guild_instance(message, guild.id, self)
 
     

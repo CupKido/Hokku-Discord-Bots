@@ -4,9 +4,10 @@ import discord
 from discord.ext import commands
 from cleantext import clean
 from DB_instances.generic_config_interface import server_config
-
+from discord_modification_tools import channel_modifier
 
 class logger:
+    LOG_CHANNEL = 'log_channel'
     def __init__(self, bot_client):
         bot_client.set_logger(self)
         self.bot_client = bot_client
@@ -18,9 +19,29 @@ class logger:
         @commands.has_permissions(administrator=True)
         async def set_logs_cahnnel(interaction, channel : discord.TextChannel):
             this_server_config = server_config(interaction.guild.id)
+            last_log_channel = this_server_config.get_param(logger.LOG_CHANNEL)
+            if last_log_channel:
+                last_log_channel = self.bot_client.get_channel(int(last_log_channel))
+                if last_log_channel:
+                    await last_log_channel.send('log channel changed')
+                    await channel_modifier.remove_readonly(last_log_channel)
             this_server_config.set_params(log_channel = channel.id)
             self.log_guild(f'log channel set to {channel.name}', interaction.guild.id)
-            interaction.response.send_message(f'log channel set to {channel.name}', ephemeral=True)
+            await channel_modifier.set_readonly(channel)
+            await interaction.response.send_message(f'log channel set to {channel.name}', ephemeral=True)
+        
+        @self.bot_client.tree.command(name = 'remove_logs_cahnnel', description='changes the log channel to nothing')
+        @commands.has_permissions(administrator=True)
+        async def set_logs_cahnnel(interaction):
+            this_server_config = server_config(interaction.guild.id)
+            last_log_channel = this_server_config.get_param(logger.LOG_CHANNEL)
+            if last_log_channel:
+                last_log_channel = self.bot_client.get_channel(int(last_log_channel))
+                if last_log_channel:
+                    await last_log_channel.send('log channel cleared')
+                    await channel_modifier.remove_readonly(last_log_channel)
+            this_server_config.set_params(log_channel = None)
+            
 
     def log(self, msg):
         msg = self.remove_emojis(msg)
@@ -61,7 +82,7 @@ class logger:
             # write msg
             f.write(str(msg) + '\t(' +str(datetime.datetime.now()) + ')\n')
 
-    def log_guild_instance(self, msg, guild_id, instance):
+    async def log_guild_instance(self, msg, guild_id, instance):
         msg = self.remove_emojis(msg)
         todays_file = f'logfile_{str(guild_id)}_' + str(datetime.datetime.now().date()) + '.txt'
 
@@ -69,10 +90,21 @@ class logger:
         if not os.path.exists('logs'):
             os.makedirs('logs')
 
+        instance_name = str(type(instance).__name__)
+        message = str(msg) + '\t(' +str(datetime.datetime.now())
         # create file if not exists
         with open(f'./logs/{todays_file}', 'a+') as f:
             # write msg and time
-            f.write(str(type(instance).__name__) + ': ' + str(msg) + '\t(' +str(datetime.datetime.now()) + ')\n')
+            f.write(instance_name + ': ' + str(msg) + '\t(' +str(datetime.datetime.now()) + ')\n')
+        
+        # send to log channel
+        this_server_config = server_config(guild_id)
+        log_channel_id = this_server_config.get_param(logger.LOG_CHANNEL)
+        if log_channel_id:
+            # create embed
+            embed = discord.Embed(title=f'{instance_name} log', description=message, color=0x00ff00)
+            log_channel = self.bot_client.get_channel(int(log_channel_id))
+            await log_channel.send(embed=embed)
 
     def get_logs(self):
         todays_file = 'logfile_' + str(datetime.datetime.now().date()) + '.txt'
