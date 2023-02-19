@@ -105,7 +105,7 @@ class server_config:
         if method == server_config.MongoDB_Method:
             server_config.Method = method
             server_config.config_uri = "mongodb://localhost:27017/"
-        elif server_config.Method == server_config.Json_Method:
+        elif method == server_config.Json_Method:
             server_config.Method = method
             server_config.config_uri = './data_base/bots_config.json'
         else:
