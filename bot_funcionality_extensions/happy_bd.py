@@ -47,8 +47,9 @@ class happy_bd:
             our_view.set_callbacks(self.deactive_button_click, self.set_greetings_button_click, self.get_birthdays_button_click, self.select_changed)
             await ctx.response.send_message(embed = embed , view = our_view)
 
-
-
+        @client.tree.command(name="setup", description="to reset the rooms") 
+        async def setUp(ctx):
+            self.setup
 
     async def send_birthday_message(self, guild_id, user):
         try:
@@ -135,6 +136,26 @@ class happy_bd:
         active = not this_server_config.get_param("activated")
         this_server_config.set_params(activated = active)
         return active
+
+    async def setup(self, guild):        
+        category = await guild.create_category("Happy Birthday")
+
+        new_Set_Birthday_channel = await guild.create_text_channel("Set Birthday date", category = category)
+        await self.send_setup_message(new_Set_Birthday_channel)
+
+        new_greeting_channel = await guild.create_text_channel("party room", category = category)
+        embed = discord.Embed(title = "Welcome to the party room!", description = "Birthday messages will be sent here when celebrating" , color = 0x2ecc71)
+        await new_greeting_channel.send_message(embed = embed) 
+
+        this_server_config = server_config(guild.id)     
+        this_server_config.set_params(greeting_room_id = new_greeting_channel.id)   
+        this_server_config.set_params(birthdays_channel_id = new_Set_Birthday_channel.id)
+
+    async def Send_setup_message(self, channel):   
+        embed = discord.Embed(title = "Would you like to celebrate your birthday?", description = "Enter your date of birth to join" , color = 0x2ecc71)
+        my_view = MyView()
+        my_view.set_callbacks(self.set_bd_button_callback, self.test_button_callback)
+        await channel.send_message(embed = embed ,view = my_view)  
 
 
     async def set_greetings_button_click(self, interaction, button):
