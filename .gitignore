@@ -5,3 +5,7 @@ VSWorkspaceState.json
 *.suo
 logfile*.txt
 comments.txt
+.env
+*.json
+
+data_base/*.json

@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 import ui_components_extension.room_opening_ui as room_opening_ui
 import ui_components_extension.ui_tools as ui_tools
-import DB_instances.room_opening_config_interface as ro_server_config
 from DB_instances.generic_config_interface import server_config
 import discord_modification_tools.channel_modifier as channel_modifier
 import json

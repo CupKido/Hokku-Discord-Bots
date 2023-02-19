@@ -1,0 +1,6 @@
+services:
+  coffeebot:
+    build: .
+    image: dynamico
+    ports:
+      - "80:80"

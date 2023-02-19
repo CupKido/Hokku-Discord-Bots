@@ -107,7 +107,7 @@ class server_config:
             server_config.config_uri = "mongodb://localhost:27017/"
         elif method == server_config.Json_Method:
             server_config.Method = method
-            server_config.config_uri = './data_base/bots_config.json'
+            server_config.config_uri = './data_base/config/bots_config.json'
         else:
             print("Invalid method")
             return
@@ -122,3 +122,7 @@ class server_config:
             server_config.Mongo_client = pymongo.MongoClient(server_config.config_uri)
             # print(server_config.Mongo_client.server_info())
             print('MongoDB databases names list: \n\t' + '\n\t'.join(server_config.Mongo_client.list_database_names()))
+        if server_config.Method == 'J' and not os.path.exists(server_config.config_uri):
+            os.makedirs('data_base/config')
+            with open(server_config.config_uri, 'w+') as f:
+                f.write('{}')
