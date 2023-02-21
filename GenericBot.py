@@ -40,16 +40,12 @@ class GenericBot_client(discord.Client):
             self.log('synced \
             \n=================================')
         
-        
-            
-        
-        
-        
         # printing active guilds
         self.log('im active on: ')
         for guild in self.guilds:
             self.log('\t    ' + str(guild.name) + ' (' + str(guild.id) + ')')
 
+        # alerting when joining a guild
         @self.event
         async def on_guild_join(guild):
             # sync commands tree to discord guild
@@ -86,6 +82,7 @@ class GenericBot_client(discord.Client):
 
         self.on_guild_join_callbacks = []
 
+        # every time a member moves to a different voice channel
         @self.event
         async def on_voice_state_update(member, before, after):
             for callback in self.on_voice_state_update_callbacks:
@@ -113,7 +110,7 @@ class GenericBot_client(discord.Client):
         @self.event
         async def on_message_edit(before, after):
             for callback in self.on_message_edit_callbacks:
-                await callback(after)
+                await callback(before, after)
 
 
         @self.event
@@ -153,8 +150,6 @@ class GenericBot_client(discord.Client):
             for callback in self.on_member_unban_callbacks:
                 await callback(member)
 
-
-
         @self.event
         async def on_guild_role_create(role):
             for callback in self.on_guild_role_create_callbacks:
@@ -170,8 +165,6 @@ class GenericBot_client(discord.Client):
             for callback in self.on_guild_role_update_callbacks:
                 await callback(before, after)
 
-
-
         @self.event
         async def on_guild_channel_create(channel):
             for callback in self.on_guild_channel_create_callbacks:
@@ -186,7 +179,10 @@ class GenericBot_client(discord.Client):
         async def on_guild_channel_update(before, after):
             for callback in self.on_guild_channel_update_callbacks:
                 await callback(before, after)
-                
+        
+        ################################################################
+        # on_guild join is placed on the on_ready event function above #
+        ################################################################
 
     def add_on_session_resumed_callback(self, callback):
         self.on_session_resumed_callbacks.append(callback)
