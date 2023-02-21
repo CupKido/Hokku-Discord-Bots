@@ -19,7 +19,9 @@ EMBED_MESSAGE_TITLE = 'embed_message_title'
 EMBED_MESSAGE_DESCRIPTION = 'embed_message_description'
 INITIAL_CATEGORY_ID = 'initial_category_id'
 class room_opening:
+    clean_dead_every = 60
     def __init__(self, client):
+        self.dead_channels_counter = 0
         self.bot_client = client
         self.logger = client.get_logger()
         self.active_channels = {}
@@ -158,7 +160,10 @@ class room_opening:
     async def vc_state_update(self, member, before, after):
         # check if before channel is empty
         # print(f'{member} moved from {before.channel} to {after.channel}')
-        
+        self.dead_channels_counter += 1
+        if self.dead_channels_counter >= room_opening.clean_dead_every:
+            self.clean_dead_active_channels()
+            self.dead_channels_counter = 0
         if before.channel is not None and len(before.channel.members) == 0:
             # check if channel is active
             if before.channel.guild.id in self.active_channels.keys() and before.channel.id in self.active_channels[before.channel.guild.id].keys():
