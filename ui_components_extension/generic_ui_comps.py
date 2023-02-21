@@ -35,7 +35,8 @@ class Generic_Button(Button):
 
 
 class Generic_View(View):
-    
+    def __init__(self, timeout=None):
+        super().__init__(timeout=timeout)
     def add_generic_button(self, label=None, style=None, emoji=None, callback=None):
         new_button = Generic_Button(label=label,
                                      style=style,
