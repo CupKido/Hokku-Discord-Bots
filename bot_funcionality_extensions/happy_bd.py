@@ -9,6 +9,7 @@ from threading import Timer, Thread
 import schedule
 from DB_instances.generic_config_interface import server_config
 from ui_components_extension.HappyBD_ui import MyView, ConfigView, MyModal
+from ui_components_extension.generic_ui_comps import Generic_Button, Generic_View
 
 with open('data_base/happy_bd_static_data.json', 'r') as f: 
     EMBED_URLS = json.load(f)["embed_urls"]
@@ -43,8 +44,9 @@ class happy_bd:
         @client.tree.command(name="server_config", description="to config the bot") 
         async def toggle_bot(ctx):
             embed = discord.Embed(title = "this bot server settings:", color = 0x2ecc71)
-            our_view = ConfigView()
-            our_view.set_callbacks(self.deactive_button_click, self.set_greetings_button_click, self.get_birthdays_button_click, self.select_changed)
+            our_view = Generic_View()
+            our_view.add_generic_button("deactivate", discord.ButtonStyle.red, None, self.deactive_button_click)
+            #our_view.set_callbacks(self.deactive_button_click, self.set_greetings_button_click, self.get_birthdays_button_click, self.select_changed)
             await ctx.response.send_message(embed = embed , view = our_view)
 
         @client.tree.command(name="setup", description="to reset the rooms") 
@@ -130,12 +132,18 @@ class happy_bd:
             ########################################
 
 
-    async def deactive_button_click(self, interaction, button):
+    async def deactive_button_click(self, interaction, button, view):
         this_server_config = server_config(interaction.guild.id)    
 
         active = not this_server_config.get_param("activated")
         this_server_config.set_params(activated = active)
-        return active
+        if active: 
+            button.style = discord.ButtonStyle.red
+            button.label="Deactivate"
+        else: 
+            button.style =  discord.ButtonStyle.green 
+            button.label="Activate"
+        await interaction.response.edit_message(view=view)
 
     async def setup(self, guild):        
         category = await guild.create_category("Happy Birthday")
