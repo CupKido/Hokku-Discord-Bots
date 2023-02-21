@@ -7,5 +7,5 @@ logfile*.txt
 comments.txt
 .env
 *.json
-
+TestingBot.py
 data_base/*.json
