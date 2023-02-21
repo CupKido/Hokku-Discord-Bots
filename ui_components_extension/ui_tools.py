@@ -31,3 +31,6 @@ def color_to_string(color):
         return 'black'
     else:
         return 'blue'
+    
+def get_modal_value(interaction, index):
+    return interaction.data['components'][index]['components'][0]['value']
