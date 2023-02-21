@@ -127,7 +127,7 @@ class logger:
         if len(text) == 0:
             return text
         clean_text = clean(text, no_emoji=True, no_line_breaks=False, no_urls=False,
-                      fix_unicode=False, to_ascii=False, no_punct=False)
+                      fix_unicode=True, to_ascii=False, no_punct=False)
         
         if str(text)[0] == '\t':
             return '\t' + clean_text
