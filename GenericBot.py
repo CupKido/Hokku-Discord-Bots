@@ -81,6 +81,7 @@ class GenericBot_client(discord.Client):
         self.on_guild_channel_update_callbacks = []
 
         self.on_guild_join_callbacks = []
+        self.on_guild_remove_callbacks = []
 
         # every time a member moves to a different voice channel
         @self.event
@@ -179,7 +180,11 @@ class GenericBot_client(discord.Client):
         async def on_guild_channel_update(before, after):
             for callback in self.on_guild_channel_update_callbacks:
                 await callback(before, after)
-        
+        @self.event
+        async def on_guild_remove(guild):
+            for callback in self.on_guild_remove_callbacks:
+                await callback(guild)
+
         ################################################################
         # on_guild join is placed on the on_ready event function above #
         ################################################################
@@ -275,6 +280,10 @@ class GenericBot_client(discord.Client):
     def add_on_guild_join_callback(self, callback):
         self.on_guild_join_callbacks.append(callback)
         self.log("added on_guild_join_callback: " + str(callback.__name__))
+
+    def add_on_guild_remove_callback(self, callback):
+        self.on_guild_remove_callbacks.append(callback)
+        self.log("added on_guild_remove_callback: " + str(callback.__name__))
 
     def activate(self): #
         self.run(self.secret_key)
