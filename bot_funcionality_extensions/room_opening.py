@@ -5,6 +5,7 @@ import ui_components_extension.ui_tools as ui_tools
 from DB_instances.generic_config_interface import server_config
 import discord_modification_tools.channel_modifier as channel_modifier
 from ui_components_extension.generic_ui_comps import Generic_Button, Generic_View
+from Interfaces.IGenericBot import IGenericBot
 import json
 import os
 import requests
@@ -23,7 +24,7 @@ class room_opening:
     clean_dead_every = 60
     db_dir_path = 'data_base/room_opening'
     db_file_name = 'active_channels.json'
-    def __init__(self, client):
+    def __init__(self, client : IGenericBot):
         self.dead_channels_counter = 0
         self.bot_client = client
         self.logger = client.get_logger()

@@ -7,6 +7,7 @@ from discord import app_commands
 from discord.ui import Button, View, Modal, TextInput
 from threading import Timer, Thread
 import schedule
+from Interfaces.IGenericBot import IGenericBot
 from DB_instances.generic_config_interface import server_config
 from ui_components_extension.HappyBD_ui import MyView, ConfigView, MyModal
 from ui_components_extension.generic_ui_comps import Generic_Button, Generic_View
@@ -26,7 +27,7 @@ BIRTHDAY_GREETINGS = [
 ]
 
 class happy_bd:
-    def __init__(self, client):
+    def __init__(self, client : IGenericBot):
         self.bot_client = client
         self.logger = client.get_logger()
         self.bot_client.add_on_ready_callback(self.start_schedular)

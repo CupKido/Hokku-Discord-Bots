@@ -1,7 +1,8 @@
 import discord
+from Interfaces.IGenericBot import IGenericBot
 import io
 class event_logger:
-    def __init__(self, bot_client):
+    def __init__(self, bot_client : IGenericBot):
         self.bot_client = bot_client
         self.logger = bot_client.get_logger()
         

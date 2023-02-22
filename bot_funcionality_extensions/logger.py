@@ -5,10 +5,11 @@ from discord.ext import commands
 from cleantext import clean
 from DB_instances.generic_config_interface import server_config
 from discord_modification_tools import channel_modifier
-
-class logger:
+from Interfaces.IGenericBot import IGenericBot
+from Interfaces.ILogger import ILogger
+class logger(ILogger):
     LOG_CHANNEL = 'log_channel'
-    def __init__(self, bot_client):
+    def __init__(self, bot_client : IGenericBot):
         bot_client.set_logger(self)
         self.bot_client = bot_client
         self.log("==================================================\n\

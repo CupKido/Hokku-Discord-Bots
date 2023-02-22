@@ -1,8 +1,9 @@
 import discord
 from discord import app_commands
+from Interfaces.IGenericBot import IGenericBot
 import asyncio
 from DB_instances.generic_config_interface import server_config
-class GenericBot_client(discord.Client):
+class GenericBot_client(IGenericBot):
     def __init__(self, secret_key, db_method='M', config_uri = None, alert_when_online : bool = False):
         # bot init
         super().__init__(intents = discord.Intents.all())
