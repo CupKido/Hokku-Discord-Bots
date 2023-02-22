@@ -6,6 +6,7 @@ from DB_instances.generic_config_interface import server_config
 import discord_modification_tools.channel_modifier as channel_modifier
 from ui_components_extension.generic_ui_comps import Generic_Button, Generic_View
 import json
+import os
 import requests
 
 EDITING_VC_CHANNEL = 'editing_vc_channel'
@@ -20,6 +21,8 @@ EMBED_MESSAGE_DESCRIPTION = 'embed_message_description'
 INITIAL_CATEGORY_ID = 'initial_category_id'
 class room_opening:
     clean_dead_every = 60
+    db_dir_path = 'data_base/room_opening'
+    db_file_name = 'active_channels.json'
     def __init__(self, client):
         self.dead_channels_counter = 0
         self.bot_client = client
@@ -133,7 +136,7 @@ class room_opening:
 
         @client.tree.command(name = 'set_vc_names', description='set what name will be given to new vcs, for example: {name}\'s vc')
         @commands.has_permissions(administrator=True)
-        async def set_vc_names(interaction: discord.Interaction, name : str):
+        async def s4et_vc_names(interaction: discord.Interaction, name : str):
             if len(name) >= 100:
                 await interaction.response.send_message('name is too long, must be under 100 characters', ephemeral = True)
                 return
@@ -353,12 +356,18 @@ class room_opening:
     ######################
     
     def save_active_channels(self):
-        with open('data_base/active_channels.json', 'w') as file:
+        if not os.path.exists(room_opening.db_dir_path):
+            os.makedirs(room_opening.db_dir_path)
+        with open(room_opening.db_dir_path + '/' + room_opening.db_file_name, 'w+') as file:
             json.dump(self.active_channels, file, indent=4)
 
     def load_active_channels(self):
-        with open('data_base/active_channels.json', 'r') as file:
-            temp_dic = json.load(file)
+        try:
+            with open(room_opening.db_dir_path + '/' + room_opening.db_file_name, 'r') as file:
+                temp_dic = json.load(file)
+        except:
+            self.active_channels = {}
+            return
         temp2_dic = {}
         for guild_id in temp_dic.keys():
             temp2_dic[int(guild_id)] = {}
