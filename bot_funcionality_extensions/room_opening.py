@@ -290,7 +290,7 @@ class room_opening:
         if not await self.confirm_is_owner(interaction, this_server_config):
             return
         self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
-        await interaction.response.send_message('publishing channel', ephemeral = True)
+        await interaction.response.send_message('Your channel is now public !', ephemeral = True)
         await channel_modifier.publish_vc(interaction.user.voice.channel)
     
     async def private_channel(self, interaction, button, view):
@@ -298,7 +298,7 @@ class room_opening:
         if not await self.confirm_is_owner(interaction, this_server_config):
             return
         self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
-        await interaction.response.send_message('vc is now private' ,ephemeral = True)
+        await interaction.response.send_message('Your channel is now private !' ,ephemeral = True)
         await channel_modifier.private_vc(interaction.user.voice.channel)
 
     async def special_channel(self, interaction, button, view):
@@ -351,7 +351,7 @@ class room_opening:
         if int(interaction.user.id) != int(user_id):
             user = interaction.guild.get_member(int(user_id))
             await channel_modifier.allow_vc(interaction.user.voice.channel, user)
-            await interaction.response.send_message('<@'+user_id+'> was invited to your vc', ephemeral = True)
+            await interaction.response.send_message('<@'+user_id+'> can now connect to your channel', ephemeral = True)
         else:
             await interaction.response.send_message('you can\'t add yourself', ephemeral = True)
 
@@ -368,7 +368,7 @@ class room_opening:
         if int(interaction.user.id) != int(user_id):
             user = interaction.guild.get_member(int(user_id))
             await channel_modifier.private_vc(interaction.user.voice.channel, user)
-            await interaction.response.send_message('<@'+user_id+'> was banned from your vc', ephemeral = True)
+            await interaction.response.send_message('<@'+user_id+'> can not connect to your channel anymore', ephemeral = True)
         else:
             await interaction.response.send_message('you can\'t ban yourself', ephemeral = True) 
     
@@ -468,14 +468,13 @@ class room_opening:
             minutes = time // 60
             seconds = time % 60
             this_server_config = server_config(interaction.guild.id)
-            embed_response = discord.Embed(title = "לאט לאט...", description = "שינית את שם החדר יותר מדיי פעמים \
-            \nיש להמתין "+ str(time) +" שניות, \
-            \nאו לפתוח משרד חדש - <#" + str(this_server_config.get_param(VC_FOR_VC)) + ">")
+            embed_response = discord.Embed(title = "You renamed your channel too fast !",
+                                            description = "Please wait + str(time)" \
+                                             + "seconds until next rename \nor just open a new dynamic channel - \n<#" + str(this_server_config.get_param(VC_FOR_VC)) + ">")
             await interaction.response.send_message(embed = embed_response, ephemeral = True)
             #await interaction.response.send_message(f'please wait {minutes} minutes and {seconds} seconds before changing the channel again', ephemeral = True)
         else:
-            embed_response = discord.Embed(title = "השינויים בוצעו בהצלחה", description = "שם החדר: " + str(new_name))
-            await interaction.response.send_message(embed = embed_response, ephemeral = True)
+            await interaction.response.send_message("Your channel\'s name has changed to " + new_name, ephemeral = True)
         
 
     ######################
@@ -829,29 +828,24 @@ class room_opening:
     def get_menu_view(self, this_server_config):
         button_color = ui_tools.string_to_color(this_server_config.get_param(BUTTON_STYLE))
         gen_view = Generic_View()
-        gen_view.add_generic_button(label = 'Public',
-                                    style = ui_tools.string_to_color('green'),
+        gen_view.add_generic_button(label = '🌐 Public',
+                                    style = ui_tools.string_to_color('white'),
                                     callback = self.publish_channel
                                     )
-        gen_view.add_generic_button(label = 'Private',
-                                    style = ui_tools.string_to_color('red'),
+        gen_view.add_generic_button(label = '🚫 Private',
+                                    style = ui_tools.string_to_color('white'),
                                     callback = self.private_channel
                                     )
         
-        gen_view.add_generic_button(label = 'rename', 
-                                    style= ui_tools.string_to_color('blue'),
+        gen_view.add_generic_button(label = '✏️ Rename', 
+                                    style= ui_tools.string_to_color('white'),
                                     callback = self.rename_channel
                                     )
         
-        gen_view.add_generic_button(label='special channel',
-                                    style= ui_tools.string_to_color('white'),
+        gen_view.add_generic_button(label='🌟 Special Channel',
+                                    style= ui_tools.string_to_color('blue'),
                                     callback = self.special_channel
                                     )
-        
-        users_options = [{'label' : x.display_name,
-                    'description' : 'click here to choose ' + x.name  + '#' + x.discriminator + '!',
-                    'value' : x.id}  
-                   for x in self.bot_client.get_guild(int(this_server_config.server_id)).members if not x.bot]
         
         limit_options = [{'label' : 'unlimited',
                     'description' : '',
@@ -861,11 +855,11 @@ class room_opening:
                         'value' : x}
                          for x in range(1, 25)
                     ]
-        gen_view.add_generic_select(placeholder='select limit', options=limit_options,
+        gen_view.add_generic_select(placeholder='✋ User Limit', options=limit_options,
                                      min_values=1, max_values=1, callback=self.set_vc_limit)
         
-        gen_view.add_user_selector(placeholder='select users to add', callback=self.add_users_to_vc)
-        gen_view.add_user_selector(placeholder='select users to ban', callback=self.ban_users_from_vc)
+        gen_view.add_user_selector(placeholder='👋 Add Users', callback=self.add_users_to_vc)
+        gen_view.add_user_selector(placeholder='👊 Ban Users', callback=self.ban_users_from_vc)
 
 
         
