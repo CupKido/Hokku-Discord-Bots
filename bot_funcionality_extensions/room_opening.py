@@ -299,7 +299,7 @@ class room_opening:
 
     async def special_channel(self, interaction, button, view):
         embed = discord.Embed(title='Coming soon!')
-        interaction.response.send_message(embed=embed, ephemeral = True)
+        await interaction.response.send_message(embed=embed, ephemeral = True)
         return
         this_server_config = server_config(interaction.guild.id)
         if not await self.confirm_is_owner(interaction, this_server_config):
@@ -355,13 +355,15 @@ class room_opening:
     #################
 
     async def add_users_to_vc(self, interaction):
+        if len(interaction.data['values']) == 0: 
+            await interaction.response.defer(ephemeral = True)
+            return
+        
         this_server_config = server_config(interaction.guild.id)
         if not await self.confirm_is_owner(interaction, this_server_config):
             return
         
-        if len(interaction.data['values']) == 0: 
-            await interaction.response.defer(ephemeral = True)
-            return
+        
         user_id = interaction.data['values'][0]
         
         
@@ -375,12 +377,14 @@ class room_opening:
             await interaction.response.send_message(embed=embed, ephemeral = True)
 
     async def ban_users_from_vc(self, interaction):
-        this_server_config = server_config(interaction.guild.id)
-        if not await self.confirm_is_owner(interaction, this_server_config):
-            return
         if len(interaction.data['values']) == 0: 
             await interaction.response.defer(ephemeral = True)
             return
+        
+        this_server_config = server_config(interaction.guild.id)
+        if not await self.confirm_is_owner(interaction, this_server_config):
+            return
+        
         user_id = interaction.data['values'][0]
         
         
