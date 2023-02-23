@@ -292,11 +292,12 @@ class room_opening:
             return
         
         my_view = Generic_View()
-        options = [{'label' : x.name + '#' + x.discriminator,
-                    'description' : 'click here to invite ' + x.display_name + '!',
+        users_options = [{'label' : x.display_name,
+                    'description' : 'click here to choose ' + x.name  + '#' + x.discriminator + '!',
                     'value' : x.id} 
                    for x in interaction.guild.members if not x.bot]
-        my_view.add_generic_select(placeholder='select users to invite', options=options, callback=self.invite_user_to_vc)
+        my_view.add_generic_select(placeholder='select users to add', options=options, callback=self.add_users_to_vc)
+        my_view.add_generic_select(placeholder='select users to ban', options=options, callback=self.ban_users_from_vc)
         await interaction.response.send_message('vc is now private, choose who would you like to invite', view=my_view ,ephemeral = True)
         await channel_modifier.private_vc(interaction.user.voice.channel)
 
@@ -304,7 +305,7 @@ class room_opening:
     # select events #
     #################
 
-    async def invite_user_to_vc(self, interaction, select, view):
+    async def add_users_to_vc(self, interaction, select, view):
         this_server_config = server_config(interaction.guild.id)
         if not await self.confirm_is_owner(interaction, this_server_config):
             return
@@ -323,6 +324,23 @@ class room_opening:
             await interaction.response.send_message('<@'+interaction.data['values'][0]+'> was invited to your vc', ephemeral = True)
         else:
             await interaction.response.send_message(' '.join(['<@'+x+'>' for x in interaction.data['values']]) + ' were invited to your vc', ephemeral = True)
+
+    async def ban_users_from_vc(self, interaction, select, view):
+        this_server_config = server_config(interaction.guild.id)
+        if not await self.confirm_is_owner(interaction, this_server_config):
+            return
+        for user_id in interaction.data['values']:
+            user = interaction.guild.get_member(int(user_id))
+            await channel_modifier.private_vc(interaction.user.voice.channel, user)
+            
+        amount_selected = len(interaction.data['values'])
+        if amount_selected == 0:
+            await interaction.response.send_message('no one was banned from your vc', ephemeral = True)
+        elif amount_selected == 1:
+            await interaction.response.send_message('<@'+interaction.data['values'][0]+'> was banned from your vc', ephemeral = True)
+        else:
+            await interaction.response.send_message(' '.join(['<@'+x+'>' for x in interaction.data['values']]) + \
+            ' were banned from your vc', ephemeral = True)
     
 
     #################
