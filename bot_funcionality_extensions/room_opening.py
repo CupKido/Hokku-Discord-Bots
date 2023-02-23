@@ -674,18 +674,7 @@ class room_opening:
                         await self.initialize_creation_channel(editing_channel, this_server_config)
                 return
 
-        # set default params
-        this_server_config.set_params(is_message_embed=True, 
-                                      embed_message_title='Manage your dynamic voice channel',
-                                      embed_message_description='Here you can manage your voice \
-                                        channel and edit it as you see fit. \
-                                      \nYou must be connected to the voice channel in order to edit it.',
-                                      vc_invite_dm = False,
-                                      rate_limit_error_title='Easy does it...',
-                                      rate_limit_error_description='youv\'e renamed the channel too many times \
-                                      \nplease wait {time} seconds or open a new channel - <#{channel}>',
-                                      default_user_limit = 0
-                                      )
+        
         # add category with vc_for_vc channel and edit channel
         await self.setup_guild(guild, this_server_config)
 
@@ -693,6 +682,22 @@ class room_opening:
             self.active_channels[guild.id] = {}
 
     async def setup_guild(self, guild, this_server_config):
+        # set default params
+        if this_server_config.get_param(EMBED_MESSAGE_TITLE) is None:
+            this_server_config.set_params(is_message_embed=True, 
+                                        embed_message_title='Manage your dynamic voice channel',
+                                        embed_message_description='Here you can manage your voice \
+                                            channel and edit it as you see fit. \
+                                        \nYou must be connected to the voice channel in order to edit it.',
+                                        vc_invite_dm = False,
+                                        rate_limit_error_title='Easy does it...',
+                                        rate_limit_error_description='youv\'e renamed the channel too many times \
+                                        \nplease wait {time} seconds or open a new channel - <#{channel}>',
+                                        default_user_limit = 0
+                                        )
+
+
+
         category = await guild.create_category('⚡ Dynamic Channels')
         edit_channel = await category.create_text_channel('✍edit-channel')
         this_server_config.set_params(initial_category_id=category.id)
