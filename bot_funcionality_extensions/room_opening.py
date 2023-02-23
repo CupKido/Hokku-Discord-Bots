@@ -4,7 +4,7 @@ import ui_components_extension.room_opening_ui as room_opening_ui
 import ui_components_extension.ui_tools as ui_tools
 from DB_instances.generic_config_interface import server_config
 import discord_modification_tools.channel_modifier as channel_modifier
-from ui_components_extension.generic_ui_comps import Generic_Button, Generic_View
+from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
 from Interfaces.IGenericBot import IGenericBot
 import json
 import os
@@ -22,7 +22,9 @@ EMBED_MESSAGE_DESCRIPTION = 'embed_message_description'
 INITIAL_CATEGORY_ID = 'initial_category_id'
 VC_INVITE_DM = 'vc_invite_dm'
 SPECIAL_ROLES = 'special_roles'
-
+RATE_LIMIT_ERROR_TITLE = 'rate_limit_error_title'
+RATE_LIMIT_ERROR_DESCRIPTION = 'rate_limit_error_description'
+DEFAULT_USER_LIMIT = 'default_user_limit'
 class room_opening:
     clean_dead_every = 60
     db_dir_path = 'data_base/room_opening'
@@ -120,6 +122,7 @@ class room_opening:
 
                 # set channel
                 this_server_config.set_params(vc_for_vc = channel.id)
+                await channel_modifier.set_readonly(channel)
                 await interaction.response.send_message(f'\"{channel.name}\" was set as vc for vc', ephemeral = True)
 
             except Exception as e:
@@ -157,15 +160,47 @@ class room_opening:
                 self.log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
 
-        @client.tree.command(name = 'set_vc_names', description='set what name will be given to new vcs, for example: {name}\'s vc')
+        @client.tree.command(name = 'set_user_limit', description='set what user limit will be given to new vcs. unlimited: 0')
         @commands.has_permissions(administrator=True)
-        async def add_special_role(interaction : discord.Interaction, role : discord.Role, emoji : str):
-            this_server_config = server_config(interaction.guild.id)
-            special_roles = this_server_config.get_param(SPECIAL_ROLES)
-            if special_roles is None:
-                special_roles = []
-            special_roles.append((role.id, emoji))
-            this_server_config.set_params(special_roles=special_roles)
+        async def set_vc_names(interaction: discord.Interaction, amount : int):
+            if amount >= 100 or amount < 0:
+                await interaction.response.send_message('invalid amount, choose either unlimited (0) or 1-100', ephemeral = True)
+                return
+            try:
+                # get server config
+                this_server_config = server_config(interaction.guild.id)
+
+                # set channel
+                this_server_config.set_params(default_user_limit = amount)
+
+                await interaction.response.send_message(f'\"{amount}\" was set as new user limit', ephemeral = True)
+
+            except Exception as e:
+                self.log(str(e))
+                await interaction.response.send_message('error', ephemeral = True)
+
+        @client.tree.command(name = 'add_special_role', description='add role to special roles list')
+        @commands.has_permissions(administrator=True)
+        async def add_special_role(interaction : discord.Interaction, role : discord.Role, emoji : str = ''):
+            try:
+                this_server_config = server_config(interaction.guild.id)
+                special_roles = this_server_config.get_param(SPECIAL_ROLES)
+                if special_roles is None:
+                    special_roles = []
+                exists_flag = False
+                for x in special_roles:
+                    if x[0] == role.id:
+                        await interaction.response.send_message(f'role \"{role.name}\" is already in the list, updating emoji', ephemeral = True)
+                        special_roles.remove(x)
+                        special_roles.append((role.id, emoji))
+                        exists_flag = True
+                if not exists_flag:
+                    special_roles.append((role.id, emoji))
+                    await interaction.response.send_message(f'role \"{role.name}\" was added to the list', ephemeral = True)
+                this_server_config.set_params(special_roles=special_roles)
+            except Exception as e:
+                self.log(str(e))
+                await interaction.response.send_message('error', ephemeral = True)
 
 
 
@@ -235,48 +270,8 @@ class room_opening:
         this_server_config = server_config(interaction.guild.id)
         try:
             # if rooms are open for this guild
-            self.log('this room\'s id: ' + str(interaction.guild.id) + '\nopen guilds ids: ' + str(self.active_channels.keys())
-            + '\nis inside? ' + str(interaction.guild.id in self.active_channels.keys()))
-            if interaction.user.voice is None or interaction.guild.id not in self.active_channels.keys():
-                embed = discord.Embed(title = "צריך לפתוח משרד קודם..", description = "פשוט נכנסים למשרד ואז מנסים שוב - <#" + \
-                                       str(this_server_config.get_param(VC_FOR_VC)) + ">", color = 0xe74c3c)
-                embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
-                await interaction.response.send_message(embed = embed, ephemeral = True)
+            if not self.confirm_is_owner(interaction, this_server_config):
                 return
-            # if user is in an active channel 
-            if interaction.user.voice.channel.id in self.active_channels[interaction.guild.id].keys():
-                # check if user has an active channel
-                if interaction.user.id in self.active_channels[interaction.guild.id].values():
-                    # check if user is in his active channel
-                    if interaction.user.id != self.active_channels[interaction.guild.id][interaction.user.voice.channel.id]:
-                        self.log('user doesn\'t have an active channel, sending error message')
-                        embed = discord.Embed(title = "אופס.. זה לא המשרד שלך", description = "במשרד שלך זה יעבוד - <#" +
-                                               str(this_server_config.get_param(VC_FOR_VC)) + ">", color = 0xe74c3c)
-                        embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
-                        await interaction.response.send_message(embed = embed, ephemeral = True)
-                        return
-                else:
-                    self.log('user doesn\'t have an active channel, sending error message')
-                    embed = discord.Embed(title = "אופס.. זה לא המשרד שלך", description = "במשרד שלך זה יעבוד - <#" +
-                                           str(this_server_config.get_param(VC_FOR_VC)) + ">", color = 0xe74c3c)
-                    embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
-                    await interaction.response.send_message(embed = embed, ephemeral = True)
-                    return
-            # if user doesnt have a channel
-            if interaction.user.id not in self.active_channels[interaction.guild.id].values():
-                # if user is in a channel which is not hes own
-                    embed = discord.Embed(title = "צריך לפתוח משרד קודם..", description = "פשוט פותחים משרד ואז מנסים שוב - <#" +
-                                           str(this_server_config.get_param(VC_FOR_VC)) + ">", color = 0xe74c3c)
-                    embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
-                    await interaction.response.send_message(embed = embed, ephemeral = True)
-                    return
-            self.log('guild is open, user has active channel')
-            
-                # check if user has active channel
-            
-                
-            #check user is inside his channel
-            self.log('presenting vc editing modal')
             # edit channel
             channel = interaction.user.voice.channel
             thisModal = room_opening_ui.InstantModal(title="Edit channel")
@@ -306,9 +301,9 @@ class room_opening:
         users_options = [{'label' : x.display_name,
                     'description' : 'click here to choose ' + x.name  + '#' + x.discriminator + '!',
                     'value' : x.id}  
-                   for x in interaction.guild.members if interaction.user != x not x.bot]
-        my_view.add_generic_select(placeholder='select users to add', options=users_options, callback=self.add_users_to_vc)
-        my_view.add_generic_select(placeholder='select users to ban', options=users_options, callback=self.ban_users_from_vc)
+                   for x in interaction.guild.members if interaction.user != x and not x.bot]
+        my_view.add_user_selector(placeholder='select users to add', callback=self.add_users_to_vc)
+        
         await interaction.response.send_message('vc is now private, choose who would you like to invite', view=my_view ,ephemeral = True)
         await channel_modifier.private_vc(interaction.user.voice.channel)
 
@@ -317,57 +312,71 @@ class room_opening:
         if not await self.confirm_is_owner(interaction, this_server_config):
             return
         special_roles = this_server_config.get_param(SPECIAL_ROLES)
-        users_options = []
         if special_roles is None:
             special_roles = []
+        roles_list = []
         for x in special_roles:
-            role = interaction.guild.get_role(x[0])
+            role_id = x[0]
+            role = interaction.guild.get_role(role_id)
+            # role = [y for y in interaction.guild.roles if y.id == x[0]][0]
+            roles_list.append({'label' : x[1] + role.name, 'value' : x[0], 'description' : None})
 
-            users_option.append({'label' : x[1] + role.name, 'value' : x[0]})
         my_view = Generic_View()
-        my_view.add_generic_select(placeholder = 'choose role', options=users_options, callback=self.make_room_special)
+        if len(special_roles) == 0:
+            await interaction.response.send_message('no special roles were found', ephemeral = True)
+            return
+        my_view.add_generic_select(placeholder = 'choose role', options=roles_list, callback=self.make_room_special, max_values=1)
+        await interaction.response.send_message('choose role', view=my_view, ephemeral = True)
 
+    async def rename_channel(self, interaction, button, view):
+        this_server_config = server_config(interaction.guild.id)
+        if not await self.confirm_is_owner(interaction, this_server_config):
+            return
+
+        this_modal = Generic_Modal(title='Rename channel')
+        this_modal.add_input(label = 'Enter new name:', placeholder='new name',
+                              default=interaction.user.voice.channel.name)
+        this_modal.set_callback(self.rename_channel_callback)
+        await interaction.response.send_modal(this_modal)
 
     #################
     # select events #
     #################
 
-    async def add_users_to_vc(self, interaction, select, view):
+    async def add_users_to_vc(self, interaction):
         this_server_config = server_config(interaction.guild.id)
         if not await self.confirm_is_owner(interaction, this_server_config):
             return
-        invite = await interaction.user.voice.channel.create_invite(reason='invite to private vc by ' + interaction.user.name, unique=True)
-        for user_id in interaction.data['values']:
+        
+        if len(interaction.data['values']) == 0: 
+            await interaction.response.send_message('no users selected', ephemeral = True)
+            return
+        user_id = interaction.data['values'][0]
+        
+        
+        if int(interaction.user.id) != int(user_id):
             user = interaction.guild.get_member(int(user_id))
             await channel_modifier.allow_vc(interaction.user.voice.channel, user)
-            # send invite
-            if this_server_config.get_param(VC_INVITE_DM):
-                await user.send('you were invited to ' + interaction.user.voice.channel.name + ' by ' + interaction.user.name + '!\n' + invite.url)
-            
-        amount_selected = len(interaction.data['values'])
-        if amount_selected == 0:
-            await interaction.response.send_message('no one was invited to your vc', ephemeral = True)
-        elif amount_selected == 1:
-            await interaction.response.send_message('<@'+interaction.data['values'][0]+'> was invited to your vc', ephemeral = True)
+            await interaction.response.send_message('<@'+user_id+'> was invited to your vc', ephemeral = True)
         else:
-            await interaction.response.send_message(' '.join(['<@'+x+'>' for x in interaction.data['values']]) + ' were invited to your vc', ephemeral = True)
+            await interaction.response.send_message('you can\'t add yourself', ephemeral = True)
 
-    async def ban_users_from_vc(self, interaction, select, view):
+    async def ban_users_from_vc(self, interaction):
         this_server_config = server_config(interaction.guild.id)
         if not await self.confirm_is_owner(interaction, this_server_config):
             return
-        for user_id in interaction.data['values']:
+        if len(interaction.data['values']) == 0: 
+            await interaction.response.send_message('no users selected', ephemeral = True)
+            return
+        user_id = interaction.data['values'][0]
+        
+        
+        if int(interaction.user.id) != int(user_id):
             user = interaction.guild.get_member(int(user_id))
             await channel_modifier.private_vc(interaction.user.voice.channel, user)
-            
-        amount_selected = len(interaction.data['values'])
-        if amount_selected == 0:
-            await interaction.response.send_message('no one was banned from your vc', ephemeral = True)
-        elif amount_selected == 1:
-            await interaction.response.send_message('<@'+interaction.data['values'][0]+'> was banned from your vc', ephemeral = True)
+            await interaction.response.send_message('<@'+user_id+'> was banned from your vc', ephemeral = True)
         else:
-            await interaction.response.send_message(' '.join(['<@'+x+'>' for x in interaction.data['values']]) + \
-            ' were banned from your vc', ephemeral = True)
+            await interaction.response.send_message('you can\'t ban yourself', ephemeral = True) 
     
     async def make_room_special(self, interaction, select, view):
         this_server_config = server_config(interaction.guild.id)
@@ -377,14 +386,26 @@ class room_opening:
         if len(interaction.data['values']) == 0:
             await interaction.response.send_message('no roles selected')
         await channel_modifier.private_vc(interaction.user.voice.channel)
-        special_roles = this_server_config.get_param(SPECIAL_ROLE)
+        special_roles = this_server_config.get_param(SPECIAL_ROLES)
         if special_roles is None:
             special_roles = []
         for x in special_roles:
-            a_role = interaction.guild.get_role(int(x[1]))
-            await channel_modifier.private_vc(interaction.user.voice.channel, a_role)
+            a_role = interaction.guild.get_role(int(x[0]))
+            await channel_modifier.delete_role_permissions(interaction.user.voice.channel, a_role)
         role = interaction.guild.get_role(int(interaction.data['values'][0]))
         await channel_modifier.allow_vc(interaction.user.voice.channel, role)
+        await interaction.response.send_message('room is now special for ' + role.name, ephemeral = True)
+
+    async def set_vc_limit(self, interaction, select, view):
+        this_server_config = server_config(interaction.guild.id)
+        if not await self.confirm_is_owner(interaction, this_server_config):
+            return
+        selected_value = int(interaction.data['values'][0])
+        await interaction.user.voice.channel.edit(user_limit = selected_value)
+        if selected_value == 0:
+            await interaction.response.send_message('room is now unlimited', ephemeral = True)
+        else:
+            await interaction.response.send_message('room is now limited to ' + str(selected_value), ephemeral = True)
 
     #################
     # modal events  #
@@ -445,6 +466,28 @@ class room_opening:
             await interaction.response.send_message(embed = embed_response, ephemeral = True)
         return 
 
+    async def rename_channel_callback(self, interaction):
+        this_server_config = server_config(interaction.guild.id)
+        if not await self.confirm_is_owner(interaction, this_server_config):
+            return
+        new_name = ui_tools.get_modal_value(interaction, 0)
+        if interaction.user.voice.channel.name == new_name or new_name == '':
+            await interaction.response.send_message('no changes have been made', ephemeral = True)
+            return
+        result, time = await self.rename_channel_request(interaction.user.voice.channel, new_name)
+        if not result:
+            minutes = time // 60
+            seconds = time % 60
+            this_server_config = server_config(interaction.guild.id)
+            embed_response = discord.Embed(title = "לאט לאט...", description = "שינית את שם החדר יותר מדיי פעמים \
+            \nיש להמתין "+ str(time) +" שניות, \
+            \nאו לפתוח משרד חדש - <#" + str(this_server_config.get_param(VC_FOR_VC)) + ">")
+            await interaction.response.send_message(embed = embed_response, ephemeral = True)
+            #await interaction.response.send_message(f'please wait {minutes} minutes and {seconds} seconds before changing the channel again', ephemeral = True)
+        else:
+            embed_response = discord.Embed(title = "השינויים בוצעו בהצלחה", description = "שם החדר: " + str(new_name))
+            await interaction.response.send_message(embed = embed_response, ephemeral = True)
+        
 
     ######################
     # local db functions #
@@ -503,7 +546,8 @@ class room_opening:
                 vc_name = vc_name.replace('{name}', member.display_name)
         #create channel
         new_channel = await master_channel.category.create_voice_channel(name = vc_name, bitrate = master_channel.bitrate, 
-            overwrites=master_channel.overwrites, user_limit=master_channel.user_limit, reason='opening channel for ' + member.name)
+            overwrites=master_channel.overwrites, user_limit=this_server_config.get_param(DEFAULT_USER_LIMIT), reason='opening channel for ' + member.name)
+        await channel_modifier.remove_readonly(new_channel)
         # print(after.channel.overwrites)
         # stop category sync
         await new_channel.edit(sync_permissions=False)
@@ -595,6 +639,29 @@ class room_opening:
         message_id = message.id
         this_server_config.set_params(static_message_id=message_id)
         
+    async def rename_channel_request(self, channel, new_name):
+        url = "https://discord.com/api/v10/channels/" + str(channel.id)
+        
+        headers = {
+            "Authorization": "Bot " + self.bot_client.get_secret(),
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "name": new_name
+        }
+        # get reply from discord
+        response = requests.patch(url, headers=headers, json=payload)
+
+        # if channel is rate limited
+        if response.status_code == 429:
+            
+            time = int(response.headers["Retry-After"])
+            return False, time
+        else:
+            return True, 0
+
+
     #################
     # guild methods #
     #################
@@ -620,8 +687,12 @@ class room_opening:
                                       embed_message_description='Here you can manage your voice \
                                         channel and edit it as you see fit. \
                                       \nYou must be connected to the voice channel in order to edit it.',
-                                      vc_invite_dm = False)
-
+                                      vc_invite_dm = False,
+                                      rate_limit_error_title='Easy does it...',
+                                      rate_limit_error_description='youv\'e renamed the channel too many times \
+                                      \nplease wait {time} seconds or open a new channel - <#{channel}>',
+                                      default_user_limit = 0
+                                      )
         # add category with vc_for_vc channel and edit channel
         await self.setup_guild(guild, this_server_config)
 
@@ -636,7 +707,7 @@ class room_opening:
 
         Master_Channel = await category.create_voice_channel('➕ New Channel')
         this_server_config.set_params(vc_for_vc=Master_Channel.id)
-
+        await channel_modifier.set_readonly(Master_Channel)
         await self.initialize_creation_channel(edit_channel, this_server_config)
     
     async def clear_guild(self, guild, this_server_config):
@@ -773,7 +844,30 @@ class room_opening:
                                     callback = self.private_channel
                                     )
         gen_view.add_generic_button(label='special rooms',
-                                    style= ui_tools.string_to_color('white')
-                                    callback = self.special_channel)
+                                    style= ui_tools.string_to_color('white'),
+                                    callback = self.special_channel
+                                    )
         
+        users_options = [{'label' : x.display_name,
+                    'description' : 'click here to choose ' + x.name  + '#' + x.discriminator + '!',
+                    'value' : x.id}  
+                   for x in self.bot_client.get_guild(int(this_server_config.server_id)).members if not x.bot]
+        gen_view.add_user_selector(placeholder='select users to ban', callback=self.ban_users_from_vc)
+        #gen_view.add_generic_select(placeholder='select users to ban', cls=discord.ui.UserSelect, callback=self.ban_users_from_vc)
+        
+        limit_options = [{'label' : 'unlimited',
+                    'description' : '',
+                    'value' : 0}] + [
+                        {'label' : x,
+                        'description' : '',
+                        'value' : x}
+                         for x in range(1, 25)
+                    ]
+        gen_view.add_generic_select(placeholder='select limit', options=limit_options,
+                                     min_values=1, max_values=1, callback=self.set_vc_limit)
+
+        gen_view.add_generic_button(label = 'rename', 
+                                    style= ui_tools.string_to_color('blue'),
+                                    callback = self.rename_channel
+                                    )
         return gen_view

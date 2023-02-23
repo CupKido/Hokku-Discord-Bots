@@ -42,3 +42,8 @@ async def private_vc(channel : discord.VoiceChannel, role = None):
     if role == None:
         role = discord.utils.get(channel.guild.roles, name = "@everyone")
     await channel.set_permissions(role, connect=False, speak=False, view_channel=False)
+
+async def delete_role_permissions(channel , role : discord.Role):
+    if channel is None:
+        return
+    await channel.set_permissions(role, overwrite=None) 

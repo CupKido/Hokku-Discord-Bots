@@ -1,6 +1,6 @@
 import discord
 from discord import app_commands
-from discord.ui import View, button, Modal, Button
+from discord.ui import View, button, Modal, Button, select
 from discord.ext import commands
 from DB_instances.room_opening_config_interface import server_config
 from discord import ui
@@ -53,7 +53,7 @@ class Generic_Select(ui.Select):
         if 'options' in kwargs.keys():
             my_options = kwargs['options']
         else:
-            my_options = None
+            my_options = []
         self.callback = self.callbacks
         super().__init__(placeholder=my_placeholder,
                           min_values=my_min_values,
@@ -67,6 +67,14 @@ class Generic_Select(ui.Select):
     # def set_view(self, view):
     #     self.view = view
 
+class Generic_Selector(discord.ui.UserSelect):
+
+    def set_callback(self, callback):
+        self.func = callback
+
+    def callbacks(self, interaction, select):
+        if self.func is not None:
+            self.func(interaction, select, self.view)
 
 class Generic_View(View):
     def __init__(self, timeout=None):
@@ -97,7 +105,21 @@ class Generic_View(View):
         self.add_item(new_select)
 
         return new_select
+    
+    def add_user_selector(self, placeholder=None, min_values = 0, max_values = None, callback=None):
+        
+        user_select = discord.ui.UserSelect(placeholder=placeholder,
+                            min_values=min_values, max_values=max_values, custom_id = "user-select")
+        user_select.callback = callback
+        self.add_item(user_select)
 
+class Generic_Modal(ui.Modal):
+    def set_callback(self, callback):
+        self.on_submit = callback
+
+    def add_input(self, label='Label', placeholder='', default='', max_length=None, required=False):
+        self.add_item(ui.TextInput(label=label, placeholder=placeholder, default=default, max_length=max_length, required=required))
+        
 
 
 
