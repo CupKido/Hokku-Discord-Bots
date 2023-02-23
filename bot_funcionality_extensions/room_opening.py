@@ -144,8 +144,9 @@ class room_opening:
         @client.tree.command(name = 'set_dynamics_name', description='set what name will be given to new vcs, for example: {name}\'s vc')
         @commands.has_permissions(administrator=True)
         async def set_vc_names(interaction: discord.Interaction, name : str):
-            if len(name) >= 100:
-                await interaction.response.send_message('name is too long, must be under 100 characters', ephemeral = True)
+            if len(name) >= 80:
+                embed = discord.Embed(title='name is too long, must be under 80 characters')
+                await interaction.response.send_message(embed=embed, ephemeral = True)
                 return
             try:
                 # get server config
@@ -153,8 +154,9 @@ class room_opening:
 
                 # set channel
                 this_server_config.set_params(vc_name = name)
-
-                await interaction.response.send_message(f'\"{name}\" was set as new vc names', ephemeral = True)
+                embed = discord.Embed(title='Dynamic Channels names template has been changed',
+                                      description=f'The new template is:\n{name}')
+                await interaction.response.send_message(embed=embed, ephemeral = True)
 
             except Exception as e:
                 self.log(str(e))
@@ -397,10 +399,11 @@ class room_opening:
         if int(interaction.user.id) != int(user_id):
             user = interaction.guild.get_member(int(user_id))
             await channel_modifier.private_vc(interaction.user.voice.channel, user)
-            embed = discord.Embed(title='<@'+user_id+'> can not connect to your channel anymore')
+            embed = discord.Embed(title=user.display_name + ' can not connect to your channel anymore')
             await interaction.response.send_message(embed=embed, ephemeral = True)
         else:
-            await interaction.response.send_message('you can\'t ban yourself', ephemeral = True) 
+            embed = discord.Embed(title='You can\'t ban yourself')
+            await interaction.response.send_message(embed=embed, ephemeral = True) 
     
     async def make_room_special(self, interaction, select, view):
         this_server_config = server_config(interaction.guild.id)
@@ -428,7 +431,7 @@ class room_opening:
         selected_value = int(interaction.data['values'][0])
         await interaction.user.voice.channel.edit(user_limit = selected_value)
         if selected_value == 0:
-            embed= discord.Embed(title='Your channel\'s user limit has changed to unlimited')
+            embed= discord.Embed(title='Your channel\'s user limit has changed to Unlimited')
             await interaction.response.send_message(embed=embed, ephemeral = True)
         else:
             embed= discord.Embed(title='Your channel\'s user limit has changed to ' + str(selected_value))
@@ -499,7 +502,8 @@ class room_opening:
             return
         new_name = ui_tools.get_modal_value(interaction, 0)
         if interaction.user.voice.channel.name == new_name or new_name == '':
-            await interaction.response.send_message('no changes have been made', ephemeral = True)
+            embed= discord.Embed(title='No changes have been made')
+            await interaction.response.send_message(embed=embed, ephemeral = True)
             return
         result, time = await self.rename_channel_request(interaction.user.voice.channel, new_name)
         if not result:
@@ -507,7 +511,7 @@ class room_opening:
             seconds = time % 60
             this_server_config = server_config(interaction.guild.id)
             embed_response = discord.Embed(title = "You renamed your channel too fast !",
-                                            description = "Please wait" + str(time) \
+                                            description = "Please wait " + str(time) \
                                              + " seconds until next rename, \nor just open a new dynamic channel - \n<#" + str(this_server_config.get_param(VC_FOR_VC)) + ">")
             await interaction.response.send_message(embed = embed_response, ephemeral = True)
             #await interaction.response.send_message(f'please wait {minutes} minutes and {seconds} seconds before changing the channel again', ephemeral = True)
