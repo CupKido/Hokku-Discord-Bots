@@ -140,6 +140,7 @@ class room_opening:
             await interaction.response.send_message(embed=embed, ephemeral = True)
             this_server_config = server_config(interaction.guild.id)
             await self.clear_guild(interaction.guild, this_server_config)
+            this_server_config.set_params(vc_name='{name}\'s Channel')
 
         @client.tree.command(name = 'set_dynamics_name', description='set what name will be given to new vcs, for example: {name}\'s vc')
         @commands.has_permissions(administrator=True)
@@ -154,7 +155,7 @@ class room_opening:
 
                 # set channel
                 this_server_config.set_params(vc_name = name)
-                embed = discord.Embed(title='Dynamic Channels names template has been changed',
+                embed = discord.Embed(title='Dynamic Channels name template has been changed',
                                       description=f'The new template is:\n{name}')
                 await interaction.response.send_message(embed=embed, ephemeral = True)
 
