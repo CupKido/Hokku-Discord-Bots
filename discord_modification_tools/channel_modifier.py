@@ -27,21 +27,21 @@ async def allow_vc(channel : discord.VoiceChannel, role = None):
         return
     if role == None:
         role = discord.utils.get(channel.guild.roles, name = "@everyone")
-    await channel.set_permissions(role, connect=True, speak=True, view_channel=True)
+    await channel.set_permissions(role, connect=True, speak=True)
 
 async def publish_vc(channel : discord.VoiceChannel, role = None):
     if channel is None:
         return
     if role == None:
         role = discord.utils.get(channel.guild.roles, name = "@everyone")
-    await channel.set_permissions(role, connect=None, speak=None, view_channel=None)
+    await channel.set_permissions(role, connect=None, speak=None)
 
 async def private_vc(channel : discord.VoiceChannel, role = None):
     if channel is None:
         return
     if role == None:
         role = discord.utils.get(channel.guild.roles, name = "@everyone")
-    await channel.set_permissions(role, connect=False, speak=False, view_channel=False)
+    await channel.set_permissions(role, connect=False, speak=False)
 
 async def delete_role_permissions(channel , role : discord.Role):
     if channel is None:

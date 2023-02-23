@@ -289,6 +289,7 @@ class room_opening:
         this_server_config = server_config(interaction.guild.id)
         if not await self.confirm_is_owner(interaction, this_server_config):
             return
+        self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
         await interaction.response.send_message('publishing channel', ephemeral = True)
         await channel_modifier.publish_vc(interaction.user.voice.channel)
     
@@ -296,15 +297,8 @@ class room_opening:
         this_server_config = server_config(interaction.guild.id)
         if not await self.confirm_is_owner(interaction, this_server_config):
             return
-        
-        my_view = Generic_View()
-        users_options = [{'label' : x.display_name,
-                    'description' : 'click here to choose ' + x.name  + '#' + x.discriminator + '!',
-                    'value' : x.id}  
-                   for x in interaction.guild.members if interaction.user != x and not x.bot]
-        my_view.add_user_selector(placeholder='select users to add', callback=self.add_users_to_vc)
-        
-        await interaction.response.send_message('vc is now private, choose who would you like to invite', view=my_view ,ephemeral = True)
+        self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
+        await interaction.response.send_message('vc is now private' ,ephemeral = True)
         await channel_modifier.private_vc(interaction.user.voice.channel)
 
     async def special_channel(self, interaction, button, view):
@@ -386,12 +380,7 @@ class room_opening:
         if len(interaction.data['values']) == 0:
             await interaction.response.send_message('no roles selected')
         await channel_modifier.private_vc(interaction.user.voice.channel)
-        special_roles = this_server_config.get_param(SPECIAL_ROLES)
-        if special_roles is None:
-            special_roles = []
-        for x in special_roles:
-            a_role = interaction.guild.get_role(int(x[0]))
-            await channel_modifier.delete_role_permissions(interaction.user.voice.channel, a_role)
+        self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
         role = interaction.guild.get_role(int(interaction.data['values'][0]))
         await channel_modifier.allow_vc(interaction.user.voice.channel, role)
         await interaction.response.send_message('room is now special for ' + role.name, ephemeral = True)
@@ -661,6 +650,11 @@ class room_opening:
         else:
             return True, 0
 
+    async def clean_special_roles(self, channel, guild, this_server_config): #
+        special_roles = this_server_config.get_param(SPECIAL_ROLES)
+        for x in special_roles:
+            a_role = guild.get_role(int(x[0]))
+            await channel_modifier.delete_role_permissions(channel, a_role)
 
     #################
     # guild methods #
@@ -843,7 +837,13 @@ class room_opening:
                                     style = ui_tools.string_to_color('red'),
                                     callback = self.private_channel
                                     )
-        gen_view.add_generic_button(label='special rooms',
+        
+        gen_view.add_generic_button(label = 'rename', 
+                                    style= ui_tools.string_to_color('blue'),
+                                    callback = self.rename_channel
+                                    )
+        
+        gen_view.add_generic_button(label='special channel',
                                     style= ui_tools.string_to_color('white'),
                                     callback = self.special_channel
                                     )
@@ -852,8 +852,6 @@ class room_opening:
                     'description' : 'click here to choose ' + x.name  + '#' + x.discriminator + '!',
                     'value' : x.id}  
                    for x in self.bot_client.get_guild(int(this_server_config.server_id)).members if not x.bot]
-        gen_view.add_user_selector(placeholder='select users to ban', callback=self.ban_users_from_vc)
-        #gen_view.add_generic_select(placeholder='select users to ban', cls=discord.ui.UserSelect, callback=self.ban_users_from_vc)
         
         limit_options = [{'label' : 'unlimited',
                     'description' : '',
@@ -865,9 +863,10 @@ class room_opening:
                     ]
         gen_view.add_generic_select(placeholder='select limit', options=limit_options,
                                      min_values=1, max_values=1, callback=self.set_vc_limit)
+        
+        gen_view.add_user_selector(placeholder='select users to add', callback=self.add_users_to_vc)
+        gen_view.add_user_selector(placeholder='select users to ban', callback=self.ban_users_from_vc)
 
-        gen_view.add_generic_button(label = 'rename', 
-                                    style= ui_tools.string_to_color('blue'),
-                                    callback = self.rename_channel
-                                    )
+
+        
         return gen_view
