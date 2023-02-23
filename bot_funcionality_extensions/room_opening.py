@@ -125,13 +125,19 @@ class room_opening:
             
         @client.tree.command(name = 'setup', description='create default category with master and edit channels')
         async def setup_command(interaction):
-            await interaction.response.send_message('setting up...', ephemeral = True)
             this_server_config = server_config(interaction.guild.id)
             await self.setup_guild(interaction.guild, this_server_config)
+            category = '<#' + str(this_server_config.get_param(INITIAL_CATEGORY_ID)) + '>'
+            edit = '<#' + str(this_server_config.get_param(EDITING_VC_CHANNEL)) + '>'
+            master = '<#' + str(this_server_config.get_param(VC_FOR_VC)) + '>'
+            embed = discord.Embed(title='Dynamico has been set up successfully !',
+                                   description=f'Created: \nCategory: {category}\nEdit Channel: {edit}\nMaster Channel: {master}')
+            await interaction.response.send_message(embed=embed, ephemeral = True)
 
         @client.tree.command(name = 'clear', description='clears master and edit channels, with the default category')
         async def clear_command(interaction):
-            await interaction.response.send_message('clearing...', ephemeral = True)
+            embed = discord.Embed(title='Dynamico has cleared successfully !')
+            await interaction.response.send_message(embed=embed, ephemeral = True)
             this_server_config = server_config(interaction.guild.id)
             await self.clear_guild(interaction.guild, this_server_config)
 
