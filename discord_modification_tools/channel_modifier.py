@@ -5,14 +5,14 @@ async def set_readonly(channel, role = None):
         return
     if role == None:
         role = discord.utils.get(channel.guild.roles, name = "@everyone")
-    await channel.set_permissions(role, send_messages=False, create_public_threads=False, create_private_threads=False)
+    await channel.set_permissions(role, send_messages=False, create_public_threads=False, create_private_threads=False, add_reactions=False)
 
 async def remove_readonly(channel, role = None):
     if channel is None:
         return
     if role == None:
         role = discord.utils.get(channel.guild.roles, name = "@everyone")
-    await channel.set_permissions(role, send_messages=None, read_messages=None, create_public_threads=None, create_private_threads=None)
+    await channel.set_permissions(role, send_messages=None, read_messages=None, create_public_threads=None, create_private_threads=None, add_reactions=None)
 
 async def give_management(channel : discord.VoiceChannel, role = None):
     if channel is None:
