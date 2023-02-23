@@ -567,7 +567,8 @@ class room_opening:
                 vc_name = vc_name.replace('{name}', member.display_name)
         #create channel
         new_channel = await master_channel.category.create_voice_channel(name = vc_name, bitrate = master_channel.bitrate, 
-            overwrites=master_channel.overwrites, user_limit=this_server_config.get_param(DEFAULT_USER_LIMIT), reason='opening channel for ' + member.name)
+            overwrites=master_channel.overwrites, user_limit=master_channel.user_limit, reason='opening channel for ' + member.name,
+            rtc_region=master_channel.rtc_region, video_quality_mode=master_channel.video_quality_mode)
         await channel_modifier.remove_readonly(new_channel)
         # print(after.channel.overwrites)
         # stop category sync
@@ -734,11 +735,11 @@ class room_opening:
 
 
         category = await guild.create_category('⚡ Dynamic Channels')
-        edit_channel = await category.create_text_channel('✍edit-channel')
+        edit_channel = await category.create_text_channel('✍edit-channel', overwrites=None)
         this_server_config.set_params(initial_category_id=category.id)
         this_server_config.set_params(editing_vc_channel=edit_channel.id)
 
-        Master_Channel = await category.create_voice_channel('➕ New Channel')
+        Master_Channel = await category.create_voice_channel('➕ New Channel', overwrites=None)
         this_server_config.set_params(vc_for_vc=Master_Channel.id)
         await channel_modifier.set_readonly(Master_Channel)
         await self.initialize_creation_channel(edit_channel, this_server_config)
