@@ -46,7 +46,7 @@ class room_opening:
         self.bot_client.add_on_guild_join_callback(self.on_guild_join_callback)
         self.bot_client.add_on_guild_remove_callback(self.on_guild_remove_callback)
         @client.tree.command(name = 'edit_channel', description='choose a channel for editing new voice channels')
-        async def choose_editing_channel(interaction: discord.Interaction, channel : discord.TextChannel):
+        async def choose_editing_channel(interaction: discord.Interaction):
 
             try:
                 # get server config
@@ -348,7 +348,7 @@ class room_opening:
         gen_view.add_generic_select(placeholder='✋ User Limit', options=limit_options,
                                      min_values=0, max_values=1, callback=self.set_vc_limit)
         embed = discord.Embed(title='Choose user limit:')
-        await interaction.response.send_message(embed=embed, view = gen_view)
+        await interaction.response.send_message(embed=embed, view = gen_view, ephemeral = True)
         
     #################
     # select events #
