@@ -289,7 +289,7 @@ class room_opening:
         this_server_config = server_config(interaction.guild.id)
         if not await self.confirm_is_owner(interaction, this_server_config):
             return
-        self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
+        await self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
         embed = discord.Embed(title='Your channel is now public !')
         await interaction.response.send_message(embed=embed, ephemeral = True)
         await channel_modifier.publish_vc(interaction.user.voice.channel)
@@ -298,7 +298,7 @@ class room_opening:
         this_server_config = server_config(interaction.guild.id)
         if not await self.confirm_is_owner(interaction, this_server_config):
             return
-        self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
+        await self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
         embed = discord.Embed(title='Your channel is now private !')
         await interaction.response.send_message(embed=embed, ephemeral = True)
         await channel_modifier.private_vc(interaction.user.voice.channel)
@@ -386,7 +386,7 @@ class room_opening:
             await interaction.response.send_message(embed=embed)
             return
         await channel_modifier.private_vc(interaction.user.voice.channel)
-        self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
+        await self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
         role = interaction.guild.get_role(int(interaction.data['values'][0]))
         await channel_modifier.allow_vc(interaction.user.voice.channel, role)
         embed= discord.Embed(title='room is now special for ' + role.name)
