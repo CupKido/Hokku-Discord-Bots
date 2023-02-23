@@ -20,6 +20,7 @@ IS_MESSAGE_EMBED = 'is_message_embed'
 EMBED_MESSAGE_TITLE = 'embed_message_title'
 EMBED_MESSAGE_DESCRIPTION = 'embed_message_description'
 INITIAL_CATEGORY_ID = 'initial_category_id'
+VC_INVITE_DM = 'vc_invite_dm'
 class room_opening:
     clean_dead_every = 60
     db_dir_path = 'data_base/room_opening'
@@ -289,8 +290,40 @@ class room_opening:
         this_server_config = server_config(interaction.guild.id)
         if not await self.confirm_is_owner(interaction, this_server_config):
             return
-        await interaction.response.send_message('making channel private', ephemeral = True)
+        
+        my_view = Generic_View()
+        options = [{'label' : x.name + '#' + x.discriminator,
+                    'description' : 'click here to invite ' + x.display_name + '!',
+                    'value' : x.id} 
+                   for x in interaction.guild.members if not x.bot]
+        my_view.add_generic_select(placeholder='select users to invite', options=options, callback=self.invite_user_to_vc)
+        await interaction.response.send_message('vc is now private, choose who would you like to invite', view=my_view ,ephemeral = True)
         await channel_modifier.private_vc(interaction.user.voice.channel)
+
+    #################
+    # select events #
+    #################
+
+    async def invite_user_to_vc(self, interaction, select, view):
+        this_server_config = server_config(interaction.guild.id)
+        if not await self.confirm_is_owner(interaction, this_server_config):
+            return
+        invite = await interaction.user.voice.channel.create_invite(reason='invite to private vc by ' + interaction.user.name, unique=True)
+        for user_id in interaction.data['values']:
+            user = interaction.guild.get_member(int(user_id))
+            await channel_modifier.allow_vc(interaction.user.voice.channel, user)
+            # send invite
+            if this_server_config.get_param(VC_INVITE_DM):
+                await user.send('you were invited to ' + interaction.user.voice.channel.name + ' by ' + interaction.user.name + '!\n' + invite.url)
+            
+        amount_selected = len(interaction.data['values'])
+        if amount_selected == 0:
+            await interaction.response.send_message('no one was invited to your vc', ephemeral = True)
+        elif amount_selected == 1:
+            await interaction.response.send_message('<@'+interaction.data['values'][0]+'> was invited to your vc', ephemeral = True)
+        else:
+            await interaction.response.send_message(' '.join(['<@'+x+'>' for x in interaction.data['values']]) + ' were invited to your vc', ephemeral = True)
+    
 
     #################
     # modal events  #
@@ -521,11 +554,13 @@ class room_opening:
                 return
 
         # set default params
-        this_server_config.set_params(is_message_embed=True)
-        this_server_config.set_params(embed_message_title='Manage your dynamic voice channel')
-        this_server_config.set_params(embed_message_description='Here you can manage your voice channel and edit it as you see fit. \
-                                      \nYou must be connected to the voice channel in order to edit it.')
-        
+        this_server_config.set_params(is_message_embed=True, 
+                                      embed_message_title='Manage your dynamic voice channel',
+                                      embed_message_description='Here you can manage your voice \
+                                        channel and edit it as you see fit. \
+                                      \nYou must be connected to the voice channel in order to edit it.',
+                                      vc_invite_dm = False)
+
         # add category with vc_for_vc channel and edit channel
         await self.setup_guild(guild, this_server_config)
 
@@ -644,6 +679,7 @@ class room_opening:
         
         return True
 
+    
     ################
     # embed errors #
     ################
