@@ -290,7 +290,8 @@ class room_opening:
         if not await self.confirm_is_owner(interaction, this_server_config):
             return
         self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
-        await interaction.response.send_message('Your channel is now public !', ephemeral = True)
+        embed = discord.Embed(title='Your channel is now public !')
+        await interaction.response.send_message(embed=embed, ephemeral = True)
         await channel_modifier.publish_vc(interaction.user.voice.channel)
     
     async def private_channel(self, interaction, button, view):
@@ -298,7 +299,8 @@ class room_opening:
         if not await self.confirm_is_owner(interaction, this_server_config):
             return
         self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
-        await interaction.response.send_message('Your channel is now private !' ,ephemeral = True)
+        embed = discord.Embed(title='Your channel is now private !')
+        await interaction.response.send_message(embed=embed, ephemeral = True)
         await channel_modifier.private_vc(interaction.user.voice.channel)
 
     async def special_channel(self, interaction, button, view):
@@ -351,7 +353,8 @@ class room_opening:
         if int(interaction.user.id) != int(user_id):
             user = interaction.guild.get_member(int(user_id))
             await channel_modifier.allow_vc(interaction.user.voice.channel, user)
-            await interaction.response.send_message('<@'+user_id+'> can now connect to your channel', ephemeral = True)
+            embed = discord.Embed(title='<@'+user_id+'> can now connect to your channel')
+            await interaction.response.send_message(embed=embed, ephemeral = True)
         else:
             await interaction.response.send_message('you can\'t add yourself', ephemeral = True)
 
@@ -368,7 +371,8 @@ class room_opening:
         if int(interaction.user.id) != int(user_id):
             user = interaction.guild.get_member(int(user_id))
             await channel_modifier.private_vc(interaction.user.voice.channel, user)
-            await interaction.response.send_message('<@'+user_id+'> can not connect to your channel anymore', ephemeral = True)
+            embed = discord.Embed(title='<@'+user_id+'> can not connect to your channel anymore')
+            await interaction.response.send_message(embed=embed, ephemeral = True)
         else:
             await interaction.response.send_message('you can\'t ban yourself', ephemeral = True) 
     
@@ -378,12 +382,15 @@ class room_opening:
             return
         
         if len(interaction.data['values']) == 0:
-            await interaction.response.send_message('no roles selected')
+            embed= discord.Embed(title='no roles selected')
+            await interaction.response.send_message(embed=embed)
+            return
         await channel_modifier.private_vc(interaction.user.voice.channel)
         self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
         role = interaction.guild.get_role(int(interaction.data['values'][0]))
         await channel_modifier.allow_vc(interaction.user.voice.channel, role)
-        await interaction.response.send_message('room is now special for ' + role.name, ephemeral = True)
+        embed= discord.Embed(title='room is now special for ' + role.name)
+        await interaction.response.send_message(embed=embed, ephemeral = True)
 
     async def set_vc_limit(self, interaction, select, view):
         this_server_config = server_config(interaction.guild.id)
@@ -392,9 +399,11 @@ class room_opening:
         selected_value = int(interaction.data['values'][0])
         await interaction.user.voice.channel.edit(user_limit = selected_value)
         if selected_value == 0:
-            await interaction.response.send_message('room is now unlimited', ephemeral = True)
+            embed= discord.Embed(title='room is now unlimited')
+            await interaction.response.send_message(embed=embed, ephemeral = True)
         else:
-            await interaction.response.send_message('room is now limited to ' + str(selected_value), ephemeral = True)
+            embed= discord.Embed(title='room is now limited to ' + str(selected_value))
+            await interaction.response.send_message(embed=embed, ephemeral = True)
 
     #################
     # modal events  #
@@ -474,8 +483,9 @@ class room_opening:
             await interaction.response.send_message(embed = embed_response, ephemeral = True)
             #await interaction.response.send_message(f'please wait {minutes} minutes and {seconds} seconds before changing the channel again', ephemeral = True)
         else:
-            await interaction.response.send_message("Your channel\'s name has changed to " + new_name, ephemeral = True)
-        
+            embed = discord.Embed(title = "Your channel\'s name has changed to " + new_name)
+            await interaction.response.send_message(embed=embed, ephemeral = True)
+    
 
     ######################
     # local db functions #
@@ -816,14 +826,14 @@ class room_opening:
     ################
 
     def get_need_to_open_channel(self, user, guild_id, this_server_config):
-        embed = discord.Embed(title = "צריך לפתוח משרד קודם..", description = "פשוט נכנסים למשרד ואז מנסים שוב - <#" + \
-                                str(this_server_config.get_param(VC_FOR_VC)) + ">", color = 0xe74c3c)
+        embed = discord.Embed(title = "you are not connected to any channel", description = "You should open your own channel and try again - \
+                              \n<#" + str(this_server_config.get_param(VC_FOR_VC)) + ">", color = 0xe74c3c)
         embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
         return embed
     
     def get_not_owned_channel(self, user, guild_id, this_server_config):
-        embed = discord.Embed(title = "אופס.. זה לא המשרד שלך", description = "במשרד שלך זה יעבוד - <#" +
-                                str(this_server_config.get_param(VC_FOR_VC)) + ">", color = 0xe74c3c)
+        embed = discord.Embed(title = "Oops, this is not your channel !", description = "It will not happen in your channel - \
+                            \n<#" + str(this_server_config.get_param(VC_FOR_VC)) + ">", color = 0xe74c3c)
         embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
         return embed
     
@@ -834,23 +844,27 @@ class room_opening:
     def get_menu_view(self, this_server_config):
         button_color = ui_tools.string_to_color(this_server_config.get_param(BUTTON_STYLE))
         gen_view = Generic_View()
-        gen_view.add_generic_button(label = '🌐 Public',
+        gen_view.add_generic_button(label = ' Public',
                                     style = ui_tools.string_to_color('white'),
-                                    callback = self.publish_channel
+                                    callback = self.publish_channel,
+                                    emoji='🌐'
                                     )
-        gen_view.add_generic_button(label = '🚫 Private',
+        gen_view.add_generic_button(label = ' Private',
                                     style = ui_tools.string_to_color('white'),
-                                    callback = self.private_channel
+                                    callback = self.private_channel,
+                                    emoji= '🚫'
                                     )
         
-        gen_view.add_generic_button(label = '✏️ Rename', 
+        gen_view.add_generic_button(label = ' Rename', 
                                     style= ui_tools.string_to_color('white'),
-                                    callback = self.rename_channel
+                                    callback = self.rename_channel,
+                                    emoji= '✏️'
                                     )
         
-        gen_view.add_generic_button(label='🌟 Special Channel',
+        gen_view.add_generic_button(label=' Special Channel',
                                     style= ui_tools.string_to_color('blue'),
-                                    callback = self.special_channel
+                                    callback = self.special_channel,
+                                    emoji='🌟'
                                     )
         
         limit_options = [{'label' : 'unlimited',
