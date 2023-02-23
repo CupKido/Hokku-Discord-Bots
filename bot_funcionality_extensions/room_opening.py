@@ -735,11 +735,11 @@ class room_opening:
 
 
         category = await guild.create_category('⚡ Dynamic Channels')
-        edit_channel = await category.create_text_channel('✍edit-channel', overwrites=None)
+        edit_channel = await category.create_text_channel('✍edit-channel')
         this_server_config.set_params(initial_category_id=category.id)
         this_server_config.set_params(editing_vc_channel=edit_channel.id)
 
-        Master_Channel = await category.create_voice_channel('➕ New Channel', overwrites=None)
+        Master_Channel = await category.create_voice_channel('➕ New Channel')
         this_server_config.set_params(vc_for_vc=Master_Channel.id)
         await channel_modifier.set_readonly(Master_Channel)
         await self.initialize_creation_channel(edit_channel, this_server_config)
