@@ -21,6 +21,8 @@ EMBED_MESSAGE_TITLE = 'embed_message_title'
 EMBED_MESSAGE_DESCRIPTION = 'embed_message_description'
 INITIAL_CATEGORY_ID = 'initial_category_id'
 VC_INVITE_DM = 'vc_invite_dm'
+SPECIAL_ROLES = 'special_roles'
+
 class room_opening:
     clean_dead_every = 60
     db_dir_path = 'data_base/room_opening'
@@ -138,7 +140,7 @@ class room_opening:
 
         @client.tree.command(name = 'set_vc_names', description='set what name will be given to new vcs, for example: {name}\'s vc')
         @commands.has_permissions(administrator=True)
-        async def s4et_vc_names(interaction: discord.Interaction, name : str):
+        async def set_vc_names(interaction: discord.Interaction, name : str):
             if len(name) >= 100:
                 await interaction.response.send_message('name is too long, must be under 100 characters', ephemeral = True)
                 return
@@ -155,6 +157,15 @@ class room_opening:
                 self.log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
 
+        @client.tree.command(name = 'set_vc_names', description='set what name will be given to new vcs, for example: {name}\'s vc')
+        @commands.has_permissions(administrator=True)
+        async def add_special_role(interaction : discord.Interaction, role : discord.Role, emoji : str):
+            this_server_config = server_config(interaction.guild.id)
+            special_roles = this_server_config.get_param(SPECIAL_ROLES)
+            if special_roles is None:
+                special_roles = []
+            special_roles.append((role.id, emoji))
+            this_server_config.set_params(special_roles=special_roles)
 
 
 
@@ -294,12 +305,28 @@ class room_opening:
         my_view = Generic_View()
         users_options = [{'label' : x.display_name,
                     'description' : 'click here to choose ' + x.name  + '#' + x.discriminator + '!',
-                    'value' : x.id} 
-                   for x in interaction.guild.members if not x.bot]
-        my_view.add_generic_select(placeholder='select users to add', options=options, callback=self.add_users_to_vc)
-        my_view.add_generic_select(placeholder='select users to ban', options=options, callback=self.ban_users_from_vc)
+                    'value' : x.id}  
+                   for x in interaction.guild.members if interaction.user != x not x.bot]
+        my_view.add_generic_select(placeholder='select users to add', options=users_options, callback=self.add_users_to_vc)
+        my_view.add_generic_select(placeholder='select users to ban', options=users_options, callback=self.ban_users_from_vc)
         await interaction.response.send_message('vc is now private, choose who would you like to invite', view=my_view ,ephemeral = True)
         await channel_modifier.private_vc(interaction.user.voice.channel)
+
+    async def special_channel(self, interaction, button, view):
+        this_server_config = server_config(interaction.guild.id)
+        if not await self.confirm_is_owner(interaction, this_server_config):
+            return
+        special_roles = this_server_config.get_param(SPECIAL_ROLES)
+        users_options = []
+        if special_roles is None:
+            special_roles = []
+        for x in special_roles:
+            role = interaction.guild.get_role(x[0])
+
+            users_option.append({'label' : x[1] + role.name, 'value' : x[0]})
+        my_view = Generic_View()
+        my_view.add_generic_select(placeholder = 'choose role', options=users_options, callback=self.make_room_special)
+
 
     #################
     # select events #
@@ -342,6 +369,22 @@ class room_opening:
             await interaction.response.send_message(' '.join(['<@'+x+'>' for x in interaction.data['values']]) + \
             ' were banned from your vc', ephemeral = True)
     
+    async def make_room_special(self, interaction, select, view):
+        this_server_config = server_config(interaction.guild.id)
+        if not await self.confirm_is_owner(interaction, this_server_config):
+            return
+        
+        if len(interaction.data['values']) == 0:
+            await interaction.response.send_message('no roles selected')
+        await channel_modifier.private_vc(interaction.user.voice.channel)
+        special_roles = this_server_config.get_param(SPECIAL_ROLE)
+        if special_roles is None:
+            special_roles = []
+        for x in special_roles:
+            a_role = interaction.guild.get_role(int(x[1]))
+            await channel_modifier.private_vc(interaction.user.voice.channel, a_role)
+        role = interaction.guild.get_role(int(interaction.data['values'][0]))
+        await channel_modifier.allow_vc(interaction.user.voice.channel, role)
 
     #################
     # modal events  #
@@ -722,12 +765,15 @@ class room_opening:
         button_color = ui_tools.string_to_color(this_server_config.get_param(BUTTON_STYLE))
         gen_view = Generic_View()
         gen_view.add_generic_button(label = 'Public',
-                                    style = button_color,
+                                    style = ui_tools.string_to_color('green'),
                                     callback = self.publish_channel
                                     )
         gen_view.add_generic_button(label = 'Private',
-                                    style = button_color,
+                                    style = ui_tools.string_to_color('red'),
                                     callback = self.private_channel
                                     )
+        gen_view.add_generic_button(label='special rooms',
+                                    style= ui_tools.string_to_color('white')
+                                    callback = self.special_channel)
         
         return gen_view
