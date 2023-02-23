@@ -109,7 +109,7 @@ class Generic_View(View):
     def add_user_selector(self, placeholder=None, min_values = 0, max_values = None, callback=None):
         
         user_select = discord.ui.UserSelect(placeholder=placeholder,
-                            min_values=min_values, max_values=max_values, custom_id = "user-select")
+                            min_values=min_values, max_values=max_values)
         user_select.callback = callback
         self.add_item(user_select)
 

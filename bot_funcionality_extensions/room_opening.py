@@ -684,6 +684,7 @@ class room_opening:
     async def setup_guild(self, guild, this_server_config):
         # set default params
         if this_server_config.get_param(EMBED_MESSAGE_TITLE) is None:
+            self.log('setting default params for ' + guild.name)
             this_server_config.set_params(is_message_embed=True, 
                                         embed_message_title='Manage your dynamic voice channel',
                                         embed_message_description='Here you can manage your voice \
