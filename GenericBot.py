@@ -20,7 +20,7 @@ class GenericBot_client(IGenericBot):
         # adding event callbacks support
         self.add_event_callback_support()
     
-        @self.tree.command(name = 'get_invite_link', description='get invite link for this bot')
+        #@self.tree.command(name = 'get_invite_link', description='get invite link for this bot')
         async def get_invite_link(interaction):
             await interaction.response.send_message(f'https://discord.com/api/oauth2/authorize?client_id={self.user.id}&permissions=8&scope=bot', ephemeral=True)
     
