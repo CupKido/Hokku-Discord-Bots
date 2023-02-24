@@ -342,6 +342,7 @@ class room_opening:
             self.load_active_channels()
 
     async def publish_channel(self, interaction, button, view):
+        # print('public channel button pressed')
         this_server_config = server_config(interaction.guild.id)
         if not await self.confirm_is_owner(interaction, this_server_config):
             return
@@ -349,15 +350,24 @@ class room_opening:
         embed = discord.Embed(title='Your channel is now public !')
         await interaction.response.send_message(embed=embed, ephemeral = True)
         await channel_modifier.publish_vc(interaction.user.voice.channel)
+        self.log_guild(f'published {interaction.user.voice.channel.name} channel', interaction.guild)
+
     
     async def private_channel(self, interaction, button, view):
+        # print('public channel button pressed')
         this_server_config = server_config(interaction.guild.id)
+        # print('server config loaded' + str(this_server_config))
         if not await self.confirm_is_owner(interaction, this_server_config):
+            print('owner not confirmed')
             return
+        # print('owner confirmed, cleaning roles')
         await self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
+        # print('roles cleaned, sending message')
         embed = discord.Embed(title='Your channel is now private !')
         await interaction.response.send_message(embed=embed, ephemeral = True)
+        # print('message sent, changing channel premisions')
         await channel_modifier.private_vc(interaction.user.voice.channel)
+        self.log_guild(f'private {interaction.user.voice.channel.name} channel', interaction.guild)
 
     async def special_channel(self, interaction, button, view):
         embed = discord.Embed(title='Coming soon!')
@@ -749,6 +759,8 @@ class room_opening:
 
     async def clean_special_roles(self, channel, guild, this_server_config): #
         special_roles = this_server_config.get_param(SPECIAL_ROLES)
+        if special_roles is None:
+            return
         for x in special_roles:
             a_role = guild.get_role(int(x[0]))
             await channel_modifier.delete_role_permissions(channel, a_role)
@@ -781,7 +793,7 @@ class room_opening:
 
     async def setup_guild(self, guild, this_server_config):
         # set default params
-        if this_server_config.get_param(EMBED_MESSAGE_TITLE) is None:
+        if this_server_config.get_param(STATIC_MESSAGE_ID) is None:
             self.log('setting default params for ' + guild.name)
             this_server_config.set_params(is_message_embed=True, 
                                         embed_message_title='Manage your dynamic voice channel',
@@ -793,7 +805,8 @@ class room_opening:
                                         rate_limit_error_description='youv\'e renamed the channel too many times \
                                         \nplease wait {time} seconds or open a new channel - <#{channel}>',
                                         default_user_limit = 0,
-                                        vc_name='{name}\'s Channel'
+                                        vc_name='{name}\'s Channel',
+                                        special_roles = []
                                         )
 
 
