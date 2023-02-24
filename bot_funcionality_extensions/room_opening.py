@@ -350,7 +350,7 @@ class room_opening:
         embed = discord.Embed(title='Your channel is now public !')
         await interaction.response.send_message(embed=embed, ephemeral = True)
         await channel_modifier.publish_vc(interaction.user.voice.channel)
-        self.log_guild(f'published {interaction.user.voice.channel.name} channel', interaction.guild)
+        await self.log_guild(f'published {interaction.user.voice.channel.name} channel', interaction.guild)
 
     
     async def private_channel(self, interaction, button, view):
@@ -367,7 +367,7 @@ class room_opening:
         await interaction.response.send_message(embed=embed, ephemeral = True)
         # print('message sent, changing channel premisions')
         await channel_modifier.private_vc(interaction.user.voice.channel)
-        self.log_guild(f'private {interaction.user.voice.channel.name} channel', interaction.guild)
+        await self.log_guild(f'private {interaction.user.voice.channel.name} channel', interaction.guild)
 
     async def special_channel(self, interaction, button, view):
         embed = discord.Embed(title='Coming soon!')
