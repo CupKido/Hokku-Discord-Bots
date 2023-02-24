@@ -233,6 +233,7 @@ class room_opening:
                     last_message_id = last_message.id
                     this_server_config.set_params(is_message_embed = False, static_message=last_message_content,
                                                   editing_vc_channel=channel.id)
+                    await channel_modifier.set_readonly(channel)
                     await last_message.delete()
                     if interaction.guild.id == 393669487666266113:
                         try:
