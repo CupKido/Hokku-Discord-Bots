@@ -45,8 +45,8 @@ class room_opening:
         self.bot_client.add_on_guild_channel_delete_callback(self.on_guild_channel_delete_callback)
         self.bot_client.add_on_guild_join_callback(self.on_guild_join_callback)
         self.bot_client.add_on_guild_remove_callback(self.on_guild_remove_callback)
-        @client.tree.command(name = 'edit_channel', description='choose a channel for editing new voice channels')
-        async def choose_editing_channel(interaction: discord.Interaction):
+        @client.tree.command(name = 'edit_channel', description='present the channel editing menu')
+        async def show_editing_menu(interaction: discord.Interaction):
 
             try:
                 # get server config
@@ -163,6 +163,8 @@ class room_opening:
                 self.log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
 
+
+
         #@client.tree.command(name = 'set_user_limit', description='set what user limit will be given to new vcs. unlimited: 0')
         #@commands.has_permissions(administrator=True)
         async def set_vc_names(interaction: discord.Interaction, amount : int):
@@ -205,7 +207,57 @@ class room_opening:
                 self.log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
 
+        @client.tree.command(name = 'choose_editing_channel', description='choose a channel for editing new voice channels')
+        @commands.has_permissions(administrator=True)
+        async def choose_editing_channel(interaction: discord.Interaction, channel : discord.TextChannel, use_last_message : bool = False):
+            try:
+                # get server config
+                this_server_config = server_config(interaction.guild.id)
 
+                # set last message if needed
+                
+
+                if channel.id == this_server_config.get_param(EDITING_VC_CHANNEL) and not use_last_message:
+                    await interaction.response.send_message('this channel is already set as editing channel', ephemeral = True)
+                    return
+
+                
+
+                # check if channel is set, and if so, remove readonly and delete static message
+                if this_server_config.get_param(EDITING_VC_CHANNEL) is not None:
+                    await self.clean_previous_channel(this_server_config)
+
+                if use_last_message:
+                    last_message = await self.get_last_valid_message(channel)
+                    last_message_content = last_message.content
+                    last_message_id = last_message.id
+                    this_server_config.set_params(is_message_embed = False, static_message=last_message_content,
+                                                  editing_vc_channel=channel.id)
+                    await last_message.delete()
+                    if interaction.guild.id == 393669487666266113:
+                        try:
+                            await channel.send(file=discord.File('data_base/room_opening/servers_assets/' + str(interaction.guild.id) + '_outline.png'))
+                            await channel.send(file=discord.File('data_base/room_opening/servers_assets/' + str(interaction.guild.id) + '_header.png'))
+                        except:
+                            print('couldnt send a file')
+                            pass
+                        #with open('data_base/room_opening/servers_assets/' + str(interaction.guild.id) + '_outline.png', 'rb'):
+
+                    static_message = await channel.send(content=last_message_content,
+                                                         view=self.get_menu_view(this_server_config))
+                    this_server_config.set_params(static_message_id=static_message.id)
+                    if interaction.guild.id == 393669487666266113 or interaction.guild.id == 857155958974316555:
+                        try:
+                            await channel.send(file=discord.File('data_base/room_opening/servers_assets/' + str(393669487666266113) + '_outline.png'))
+                        except:
+                            pass
+                else:
+                    # set announcement channel
+                    await self.initialize_creation_channel(channel, this_server_config)
+                await interaction.response.send_message(f'\"{channel.name}\" was set as vc editing channel', ephemeral = True)
+            except Exception as e:
+                self.log(str(e))
+                await interaction.response.send_message('Ops.. Something went wrong', ephemeral = True)
 
     ################
     # guild events #
@@ -809,7 +861,10 @@ class room_opening:
                         await self.initialize_creation_channel(creation_channel, this_server_config)
                     else:
                         # updating view
-                        new_msg = await msg.edit(content = msg.content, view = self.get_menu_view(this_server_config))
+                        if this_server_config.get_param(IS_MESSAGE_EMBED):
+                            new_msg = await msg.edit(content = msg.content, view = self.get_menu_view(this_server_config))
+                        else:
+                            new_msg = await msg.edit(view = self.get_menu_view(this_server_config))
 
                         # updating server config
                         this_server_config.set_params(static_message_id=new_msg.id)
@@ -859,7 +914,11 @@ class room_opening:
         
         return True
 
-    
+    async def get_last_valid_message(self, channel : discord.TextChannel):
+        async for message in channel.history(limit=100):
+            if message is not None and message.content is not None:
+                return message
+        return None
     ################
     # embed errors #
     ################
