@@ -32,9 +32,9 @@ class room_opening:
     db_dir_path = 'data_base/room_opening'
     db_file_name = 'active_channels.json'
     def __init__(self, client : IGenericBot):
-        self.dead_channels_counter = 0
         self.bot_client = client
         self.logger = client.get_logger()
+        self.dead_channels_counter = 0
         self.active_channels = {}
         self.logger.log('room_opening extension loading...')
         self.bot_client.add_on_ready_callback(self.resume_buttons)
@@ -167,7 +167,7 @@ class room_opening:
 
         #@client.tree.command(name = 'set_user_limit', description='set what user limit will be given to new vcs. unlimited: 0')
         #@commands.has_permissions(administrator=True)
-        async def set_vc_names(interaction: discord.Interaction, amount : int):
+        async def set_user_limit(interaction: discord.Interaction, amount : int):
             if amount >= 100 or amount < 0:
                 await interaction.response.send_message('invalid amount, choose either unlimited (0) or 1-100', ephemeral = True)
                 return
@@ -351,8 +351,7 @@ class room_opening:
         await interaction.response.send_message(embed=embed, ephemeral = True)
         await channel_modifier.publish_vc(interaction.user.voice.channel)
         await self.log_guild(f'published {interaction.user.voice.channel.name} channel', interaction.guild)
-
-    
+ 
     async def private_channel(self, interaction, button, view):
         # print('public channel button pressed')
         this_server_config = server_config(interaction.guild.id)
@@ -422,6 +421,36 @@ class room_opening:
         embed = discord.Embed(title='Choose user limit:')
         await interaction.response.send_message(embed=embed, view = gen_view, ephemeral = True)
         
+    async def claim_active_channel(self, interaction, button, view):
+        this_server_config = server_config(interaction.guild.id)
+
+        # check user is in a channel
+        if not self.user_in_active_channel(interaction.user, interaction.guild.id):
+            await interaction.response.send_message(embed=self.get_need_to_open_channel(interaction.user,
+                                                                                         interaction.guild.id,
+                                                                                         this_server_config),
+                                                     ephemeral = True)
+            return
+        channel_owner_id = self.active_channels[interaction.guild.id][interaction.user.voice.channel.id]
+        if channel_owner_id == interaction.user.id:
+            await interaction.response.defer(ephemeral = True)
+            return
+        channel_owner_user = interaction.guild.get_member(channel_owner_id)
+        if channel_owner_user.voice is not None and channel_owner_user.voice.channel is not None:
+            if channel_owner_user.voice.channel.id == interaction.user.voice.channel.id:
+                await interaction.response.send_message(embed=self.get_channel_taken(interaction.user,
+                                                                                    interaction.guild.id,
+                                                                                    this_server_config),
+                                                        ephemeral = True)
+                return
+        
+        # claim channel
+        self.active_channels[interaction.guild.id].pop(interaction.user.voice.channel.id)
+        self.active_channels[interaction.guild.id][interaction.user.voice.channel.id] = interaction.user.id
+        self.save_active_channels()
+        embed = discord.Embed(title='Channel claimed !')
+        await interaction.response.send_message(embed=embed, ephemeral = True)
+            
     #################
     # select events #
     #################
@@ -850,41 +879,43 @@ class room_opening:
 
         # get all guilds
         for guild in self.bot_client.guilds:
-            # get all channels
-            this_server_config = server_config(guild.id)
-            # print(str(this_server_config))
-            creation_channel = this_server_config.get_param(EDITING_VC_CHANNEL)
-            if this_server_config.get_param(IS_MESSAGE_EMBED):
-                static_message = this_server_config.get_param(EMBED_MESSAGE_TITLE)
-            else:
-                static_message = this_server_config.get_param(STATIC_MESSAGE)
-            static_message_id = this_server_config.get_param(STATIC_MESSAGE_ID)
-            # if all necessary params are set
-            if creation_channel is not None and static_message is not None and static_message_id is not None:
-                # get channel with saved id
-                creation_channel = self.bot_client.get_channel(int(this_server_config.get_param(EDITING_VC_CHANNEL)))
-                # if channel exists
-                if creation_channel is not None:
-
-                    # get message with saved id
-                    msg = await self.bot_client.get_message(static_message_id, creation_channel, 20)
-
-                    # if message doesnt exist
-                    if msg is None:
-                        self.log('could not find message, creating new one')
-                        await self.initialize_creation_channel(creation_channel, this_server_config)
-                    else:
-                        # updating view
-                        if this_server_config.get_param(IS_MESSAGE_EMBED):
-                            new_msg = await msg.edit(content = msg.content, view = self.get_menu_view(this_server_config))
-                        else:
-                            new_msg = await msg.edit(view = self.get_menu_view(this_server_config))
-
-                        # updating server config
-                        this_server_config.set_params(static_message_id=new_msg.id)
-
-                        self.log('button initialized for ' + guild.name)
+            await self.resume_buttons_for_guild(guild.id)
     
+    async def resume_buttons_for_guild(self, guild_id):
+        this_server_config = server_config(guild_id)
+        # print(str(this_server_config))
+        creation_channel = this_server_config.get_param(EDITING_VC_CHANNEL)
+        if this_server_config.get_param(IS_MESSAGE_EMBED):
+            static_message = this_server_config.get_param(EMBED_MESSAGE_TITLE)
+        else:
+            static_message = this_server_config.get_param(STATIC_MESSAGE)
+        static_message_id = this_server_config.get_param(STATIC_MESSAGE_ID)
+        # if all necessary params are set
+        if creation_channel is not None and static_message is not None and static_message_id is not None:
+            # get channel with saved id
+            creation_channel = self.bot_client.get_channel(int(this_server_config.get_param(EDITING_VC_CHANNEL)))
+            # if channel exists
+            if creation_channel is not None:
+
+                # get message with saved id
+                msg = await self.bot_client.get_message(static_message_id, creation_channel, 20)
+
+                # if message doesnt exist
+                if msg is None:
+                    self.log('could not find message, creating new one')
+                    await self.initialize_creation_channel(creation_channel, this_server_config)
+                else:
+                    # updating view
+                    if this_server_config.get_param(IS_MESSAGE_EMBED):
+                        new_msg = await msg.edit(content = msg.content, view = self.get_menu_view(this_server_config))
+                    else:
+                        new_msg = await msg.edit(view = self.get_menu_view(this_server_config))
+
+                    # updating server config
+                    this_server_config.set_params(static_message_id=new_msg.id)
+
+                    self.log('button initialized for ' + creation_channel.guild.name)
+
     ##################
     # util functions #
     ##################
@@ -949,6 +980,13 @@ class room_opening:
         embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
         return embed
     
+    def get_channel_taken(self, user, guild_id, this_server_config):
+        embed = discord.Embed(title = "Oops, this channel is already taken !", description = "Wait until owner leaves,\
+                            \nor open your own channel - \n<#" + str(this_server_config.get_param(VC_FOR_VC)) + ">",
+                            color = 0xe74c3c)
+        embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
+        return embed
+    
     #############
     # get views #
     #############
@@ -984,7 +1022,11 @@ class room_opening:
                                     callback = self.special_channel,
                                     emoji='🌟'
                                     )
-        
+        gen_view.add_generic_button(label=' Claim Channel',
+                                    style= ui_tools.string_to_color('white'),
+                                    callback = self.claim_active_channel,
+                                    emoji='🙋🏻‍♂️')
+
         gen_view.add_user_selector(placeholder='👋 Add Users', callback=self.add_users_to_vc)
         gen_view.add_user_selector(placeholder='👊 Ban Users', callback=self.ban_users_from_vc)
 
