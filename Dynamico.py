@@ -12,7 +12,7 @@ def main():
     # stat the bot
     dynamico_token = config['DYNAMICO_TOKEN']
     CoffeeBot = GenericBot_client(dynamico_token, 'J')
-    funcs = add_functionality(CoffeeBot, room_opening = room_opening, logger=logger, event_logger=event_logger)
+    funcs = add_functionality(CoffeeBot, room_opening = room_opening, logger=logger)
     CoffeeBot.activate()
 
 def extract_key(index):
