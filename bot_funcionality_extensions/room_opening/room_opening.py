@@ -473,6 +473,7 @@ class room_opening:
         if int(interaction.user.id) != int(user_id):
             user = interaction.guild.get_member(int(user_id))
             await channel_modifier.allow_vc(interaction.user.voice.channel, user)
+            self.add_to_added_users(interaction.guild.id, interaction.user.voice.channel.id, user.id)
             embed = discord.Embed(title=user.display_name + ' can now connect to your channel')
             await interaction.response.send_message(embed=embed, ephemeral = True)
         else:
@@ -495,6 +496,7 @@ class room_opening:
             user = interaction.guild.get_member(int(user_id))
             await channel_modifier.private_vc(interaction.user.voice.channel, user)
             embed = discord.Embed(title=user.display_name + ' can not connect to your channel anymore')
+            self.add_to_banned_users(interaction.guild.id, interaction.user.voice.channel.id, user.id)
             await interaction.response.send_message(embed=embed, ephemeral = True)
         else:
             embed = discord.Embed(title='You can\'t ban yourself')
@@ -1101,6 +1103,13 @@ class room_opening:
         if 'added_users' not in self.active_channels[guild_id][channel_id].keys():
             self.active_channels[guild_id][channel_id]['added_users'] = []
         self.active_channels[guild_id][channel_id]['added_users'].append(user_id)
+
+        if 'banned_users' not in self.active_channels[guild_id][channel_id].keys():
+            self.active_channels[guild_id][channel_id]['banned_users'] = []
+
+        if user_id in self.active_channels[guild_id][channel_id]['banned_users']:
+            self.active_channels[guild_id][channel_id]['banned_users'].remove(user_id)
+
         self.save_active_channels()
     
     def add_to_banned_users(self, guild_id, channel_id, user_id):
@@ -1112,4 +1121,10 @@ class room_opening:
         if 'banned_users' not in self.active_channels[guild_id][channel_id].keys():
             self.active_channels[guild_id][channel_id]['banned_users'] = []
         self.active_channels[guild_id][channel_id]['banned_users'].append(user_id)
+
+        if 'added_users' not in self.active_channels[guild_id][channel_id].keys():
+            self.active_channels[guild_id][channel_id]['added_users'] = []
+
+        if user_id in self.active_channels[guild_id][channel_id]['added_users']:
+            self.active_channels[guild_id][channel_id]['added_users'].remove(user_id)
         self.save_active_channels()
