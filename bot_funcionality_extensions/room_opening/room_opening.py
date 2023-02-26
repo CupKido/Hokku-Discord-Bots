@@ -270,7 +270,7 @@ class room_opening:
         # print(f'{member} moved from {before.channel} to {after.channel}')
         self.dead_channels_counter += 1
         if self.dead_channels_counter >= room_opening.clean_dead_every:
-            self.clean_dead_active_channels()
+            await self.clean_dead_active_channels()
             self.dead_channels_counter = 0
         if before.channel is not None and len(before.channel.members) == 0:
             # check if channel is active
