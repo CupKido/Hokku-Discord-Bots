@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from bot_funcionality_extensions.room_opening.active_channel_states import ChannelState
 import ui_components_extension.room_opening_ui as room_opening_ui
 import ui_components_extension.ui_tools as ui_tools
 from DB_instances.generic_config_interface import server_config
@@ -350,6 +351,7 @@ class room_opening:
         embed = discord.Embed(title='Your channel is now public !')
         await interaction.response.send_message(embed=embed, ephemeral = True)
         await channel_modifier.publish_vc(interaction.user.voice.channel)
+        self.set_active_channel_state(interaction.guild.id, interaction.user.voice.channel.id, ChannelState.PUBLIC)
         await self.log_guild(f'published {interaction.user.voice.channel.name} channel', interaction.guild)
  
     async def private_channel(self, interaction, button, view):
@@ -366,6 +368,7 @@ class room_opening:
         await interaction.response.send_message(embed=embed, ephemeral = True)
         # print('message sent, changing channel premisions')
         await channel_modifier.private_vc(interaction.user.voice.channel)
+        self.set_active_channel_state(interaction.guild.id, interaction.user.voice.channel.id, ChannelState.PRIVATE)
         await self.log_guild(f'private {interaction.user.voice.channel.name} channel', interaction.guild)
 
     async def special_channel(self, interaction, button, view):
@@ -431,7 +434,7 @@ class room_opening:
                                                                                          this_server_config),
                                                      ephemeral = True)
             return
-        channel_owner_id = self.active_channels[interaction.guild.id][interaction.user.voice.channel.id]
+        channel_owner_id = self.get_active_channel_owner(interaction.guild.id, interaction.user.voice.channel.id)
         if channel_owner_id == interaction.user.id:
             await interaction.response.defer(ephemeral = True)
             return
@@ -446,8 +449,7 @@ class room_opening:
         
         # claim channel
         self.active_channels[interaction.guild.id].pop(interaction.user.voice.channel.id)
-        self.active_channels[interaction.guild.id][interaction.user.voice.channel.id] = interaction.user.id
-        self.save_active_channels()
+        self.set_active_channel_owner(interaction.guild.id, interaction.user.voice.channel.id, interaction.user.id)
         embed = discord.Embed(title='Channel claimed !')
         await interaction.response.send_message(embed=embed, ephemeral = True)
             
@@ -512,6 +514,7 @@ class room_opening:
         role = interaction.guild.get_role(int(interaction.data['values'][0]))
         await channel_modifier.allow_vc(interaction.user.voice.channel, role)
         embed= discord.Embed(title='room is now special for ' + role.name)
+        self.set_active_channel_state(interaction.guild.id, interaction.user.voice.channel.id, ChannelState.SPECIAL)
         await interaction.response.send_message(embed=embed, ephemeral = True)
 
     async def set_vc_limit(self, interaction, select, view):
@@ -634,7 +637,7 @@ class room_opening:
         for guild_id in temp_dic.keys():
             temp2_dic[int(guild_id)] = {}
             for channel_id in temp_dic[guild_id].keys():
-                temp2_dic[int(guild_id)][int(channel_id)] = int(temp_dic[guild_id][channel_id])
+                temp2_dic[int(guild_id)][int(channel_id)] = temp_dic[guild_id][channel_id]
         self.active_channels = temp2_dic
     
     #####################
@@ -681,9 +684,8 @@ class room_opening:
         #print(after.channel.overwrites)
 
         await member.move_to(new_channel)
-        self.active_channels[master_channel.guild.id][new_channel.id] = member.id
+        self.set_active_channel_owner(master_channel.guild.id, new_channel.id, member.id)
 
-        self.save_active_channels()
 
     async def clean_previous_channel(self, this_server_config):
         previous_channel = self.bot_client.get_channel(int(this_server_config.get_param(EDITING_VC_CHANNEL)))
@@ -712,11 +714,15 @@ class room_opening:
                 to_pop = []
                 for channel_id in self.active_channels[guild_id].keys():
 
+                    # get channel from id
                     channel = self.bot_client.get_channel(channel_id)
-                    # delete if channel is empty
+
+                    # if channel was deleted
                     if channel is None:
                         to_pop.append(channel_id)
                         self.log('a channel was deleted due to it not existing')
+
+                    # if channel is empty
                     elif len(channel.members) == 0:
                         to_pop.append(channel_id)
                         await self.log_guild(f'deleted {channel.name} channel due to inactivity', channel.guild)
@@ -725,8 +731,13 @@ class room_opening:
                         except Exception as e:
                             self.log('could not delete channel due to error: \n' + str(e))
                             pass
+
+                    # if channel is not empty
                     else:
-                        await channel_modifier.give_management(channel, self.bot_client.get_user(self.active_channels[guild_id][channel_id]))
+                        # give management to owner
+                        owner_id = self.get_active_channel_owner(guild_id, channel_id)
+                        await channel_modifier.give_management(channel, self.bot_client.get_user(owner_id))
+
                 for channel_id in to_pop:
                     self.active_channels[guild_id].pop(channel_id)
         except Exception as e:
@@ -920,23 +931,20 @@ class room_opening:
     # util functions #
     ##################
 
-    def rooms_exist_in_guild(self, guild_id):
-        return guild_id in self.active_channels.keys()
-
     def user_in_active_channel(self, user, guild_id):
         if user.voice is None:
             return False
         if self.rooms_exist_in_guild(guild_id):
-            if user.voice.channel.id in self.active_channels[guild_id]:
+            if user.voice.channel.id in self.active_channels[guild_id].keys():
                 return True
         return False
     
     def user_has_active_channel(self, user, guild_id):
-        return user.id in self.active_channels[guild_id].values()
+        return user.id in self.get_all_channels_owners(guild_id)
     
     def user_inside_owned_active_channel(self, user, guild_id):
         if self.user_in_active_channel(user, guild_id):
-            if self.active_channels[guild_id][user.voice.channel.id] == user.id:
+            if self.get_active_channel_owner(guild_id, user.voice.channel.id) == user.id:
                 return True
         return False
 
@@ -1033,3 +1041,52 @@ class room_opening:
 
         
         return gen_view
+
+    ########################
+    # active channel logic #
+    ########################
+
+
+    def rooms_exist_in_guild(self, guild_id):
+        return guild_id in self.active_channels.keys()
+    
+    def is_active_channel(self, guild_id, channel_id):
+        if self.rooms_exist_in_guild(guild_id):
+            if channel_id in self.active_channels[guild_id]:
+                return True
+        return False
+    
+    def get_active_channel_owner(self, guild_id, channel_id):
+        if self.is_active_channel(guild_id, channel_id):
+            return self.active_channels[guild_id][channel_id]['owner_id']
+        return None
+    
+    def set_active_channel_owner(self, guild_id, channel_id, owner_id):
+        if not self.rooms_exist_in_guild(guild_id):
+            self.active_channels[guild_id] = {}
+        
+        if channel_id not in self.active_channels[guild_id].keys():
+         self.active_channels[guild_id][channel_id] = {}
+        self.active_channels[guild_id][channel_id]['owner_id'] = owner_id
+        self.save_active_channels()
+    
+
+    def get_all_channels_owners(self, guild_id):
+        owners = []
+        if self.rooms_exist_in_guild(guild_id):
+            for channel_id in self.active_channels[guild_id].keys():
+                owners.append(self.get_active_channel_owner(guild_id, channel_id))
+        return owners
+    
+    def set_active_channel_state(self, guild_id, channel_id, state : ChannelState, special_role_id = None):
+        if not self.rooms_exist_in_guild(guild_id):
+            self.active_channels[guild_id] = {}
+        
+        if channel_id not in self.active_channels[guild_id].keys():
+         self.active_channels[guild_id][channel_id] = {}
+        self.active_channels[guild_id][channel_id]['state'] = state
+        if special_role_id is not None:
+            self.active_channels[guild_id][channel_id]['special_role_id'] = special_role_id
+        else:
+            self.active_channels[guild_id][channel_id]['special_role_id'] = None
+        self.save_active_channels()
