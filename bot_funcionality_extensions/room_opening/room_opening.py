@@ -919,15 +919,18 @@ class room_opening:
                     self.log('could not find message, creating new one')
                     await self.initialize_creation_channel(creation_channel, this_server_config)
                 else:
-                    # updating view
-                    if this_server_config.get_param(IS_MESSAGE_EMBED):
-                        new_msg = await msg.edit(content = msg.content, view = self.get_menu_view(this_server_config))
-                    else:
-                        new_msg = await msg.edit(view = self.get_menu_view(this_server_config))
+                    try:
+                        # updating view
+                        if this_server_config.get_param(IS_MESSAGE_EMBED):
+                            new_msg = await msg.edit(content = msg.content, view = self.get_menu_view(this_server_config))
+                        else:
+                            new_msg = await msg.edit(view = self.get_menu_view(this_server_config))
 
-                    # updating server config
-                    this_server_config.set_params(static_message_id=new_msg.id)
-
+                        # updating server config
+                        this_server_config.set_params(static_message_id=new_msg.id)
+                    except:
+                        self.log('could not find message, creating new one')
+                        await self.initialize_creation_channel(creation_channel, this_server_config)    
                     self.log('button initialized for ' + creation_channel.guild.name)
 
     ##################
