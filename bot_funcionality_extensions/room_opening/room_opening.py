@@ -685,6 +685,7 @@ class room_opening:
 
         await member.move_to(new_channel)
         self.set_active_channel_owner(master_channel.guild.id, new_channel.id, member.id)
+        self.set_active_channel_state(master_channel.guild.id, new_channel.id, ChannelState.PUBLIC)
 
 
     async def clean_previous_channel(self, this_server_config):
@@ -972,6 +973,7 @@ class room_opening:
             if message is not None and message.content is not None:
                 return message
         return None
+    
     ################
     # embed errors #
     ################
@@ -1069,7 +1071,6 @@ class room_opening:
          self.active_channels[guild_id][channel_id] = {}
         self.active_channels[guild_id][channel_id]['owner_id'] = owner_id
         self.save_active_channels()
-    
 
     def get_all_channels_owners(self, guild_id):
         owners = []
@@ -1084,9 +1085,31 @@ class room_opening:
         
         if channel_id not in self.active_channels[guild_id].keys():
          self.active_channels[guild_id][channel_id] = {}
-        self.active_channels[guild_id][channel_id]['state'] = state
+        self.active_channels[guild_id][channel_id]['state'] = state.value
         if special_role_id is not None:
             self.active_channels[guild_id][channel_id]['special_role_id'] = special_role_id
         else:
             self.active_channels[guild_id][channel_id]['special_role_id'] = None
+        self.save_active_channels()
+
+    def add_to_added_users(self, guild_id, channel_id, user_id):
+        if not self.rooms_exist_in_guild(guild_id):
+            self.active_channels[guild_id] = {}
+        
+        if channel_id not in self.active_channels[guild_id].keys():
+         self.active_channels[guild_id][channel_id] = {}
+        if 'added_users' not in self.active_channels[guild_id][channel_id].keys():
+            self.active_channels[guild_id][channel_id]['added_users'] = []
+        self.active_channels[guild_id][channel_id]['added_users'].append(user_id)
+        self.save_active_channels()
+    
+    def add_to_banned_users(self, guild_id, channel_id, user_id):
+        if not self.rooms_exist_in_guild(guild_id):
+            self.active_channels[guild_id] = {}
+        
+        if channel_id not in self.active_channels[guild_id].keys():
+         self.active_channels[guild_id][channel_id] = {}
+        if 'banned_users' not in self.active_channels[guild_id][channel_id].keys():
+            self.active_channels[guild_id][channel_id]['banned_users'] = []
+        self.active_channels[guild_id][channel_id]['banned_users'].append(user_id)
         self.save_active_channels()

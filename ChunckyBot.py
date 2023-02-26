@@ -10,7 +10,7 @@ config = dotenv_values('.env')
 
 def main():
     # stat the bot
-    highschoolbot_token = config['HIGHSCHOOLBOT_TOKEN']
+    highschoolbot_token = config['CHUNKY_TOKEN']
     CoffeeBot = GenericBot_client(highschoolbot_token, 'J')
     funcs = add_functionality(CoffeeBot, room_opening = room_opening, logger=logger, event_logger=event_logger)
     CoffeeBot.activate()
