@@ -13,7 +13,7 @@ class actions_tester:
         async def join_a_vc(interaction: discord.Interaction, channel : discord.VoiceChannel):
             self.voice_clients[interaction.guild.id] = await channel.connect()
             await interaction.response.send_message('joined vc', ephemeral=True)
-            self.voice_clients[interaction.guild.id].play(discord.FFmpegPCMAudio('data_base/actions_tester/songLofi.mp3'), after=lambda e: print('done'))
+            self.voice_clients[interaction.guild.id].play(discord.FFmpegPCMAudio('data_base/actions_tester/songJoJo.mp3'), after=lambda e: print('done'))
         
         @client.tree.command(name = 'leave_vc', description='leave a vc')
         @commands.has_permissions(administrator=True)
