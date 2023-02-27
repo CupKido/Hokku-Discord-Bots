@@ -107,30 +107,69 @@ class room_opening:
                 self.log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
         
-        #@client.tree.command(name = 'choose_vc_for_vc', description='set a channel for vc creation')
-        #@commands.has_permissions(administrator=True)
-        async def choose_vc_for_vc(interaction: discord.Interaction, channel : discord.VoiceChannel):
+        @client.tree.command(name = 'add_master_channel', description='add a channel to master channel list')
+        @commands.has_permissions(administrator=True)
+        async def add_master_channel(interaction: discord.Interaction, channel : discord.VoiceChannel):
+
+            try:
+                if self.is_active_channel(interaction.guild.id, channel.id):
+                    embed = discord.Embed(title = 'Cant add dynamic channel as a master channel!')
+                    await interaction.response.send_message(embed=embed, ephemeral = True)
+                    return
+                # get server config
+                this_server_config = server_config(interaction.guild.id)
+
+                # set channel
+                # make sure channel is a list
+                if this_server_config.get_param(VC_FOR_VC) is not None and type(this_server_config.get_param(VC_FOR_VC)) is not list:
+                    this_server_config.set_params(vc_for_vc = [this_server_config.get_param(VC_FOR_VC)])
+                if this_server_config.get_param(VC_FOR_VC) is None:
+                    this_server_config.set_params(vc_for_vc = [channel.id])
+                else:
+                    this_server_config.set_params(vc_for_vc = this_server_config.get_param(VC_FOR_VC) + [channel.id])
+                await channel_modifier.set_readonly(channel)
+                embed = discord.Embed(title=f'\"{channel.name}\" was set as vc for vc')
+                await interaction.response.send_message(embed=embed, ephemeral = True)
+
+            except Exception as e:
+                self.log(str(e))
+                await interaction.response.send_message('error', ephemeral = True)
+            
+        @client.tree.command(name = 'remove_master_channel', description='remove a channel from master channel list')
+        @commands.has_permissions(administrator=True)
+        async def remove_master_channel(interaction: discord.Interaction, channel : discord.VoiceChannel):
 
             try:
                 # get server config
                 this_server_config = server_config(interaction.guild.id)
 
                 # set channel
-                this_server_config.set_params(vc_for_vc = channel.id)
-                await channel_modifier.set_readonly(channel)
-                await interaction.response.send_message(f'\"{channel.name}\" was set as vc for vc', ephemeral = True)
+                # make sure channel is a list
+                if this_server_config.get_param(VC_FOR_VC) is not None and type(this_server_config.get_param(VC_FOR_VC)) is not list:
+                    this_server_config.set_params(vc_for_vc = [this_server_config.get_param(VC_FOR_VC)])
+                if this_server_config.get_param(VC_FOR_VC) is None:
+                    this_server_config.set_params(vc_for_vc = [])
+                else:
+                    this_server_config.get_param(VC_FOR_VC).remove(channel.id)
+                    this_server_config.set_params(vc_for_vc = this_server_config.get_param(VC_FOR_VC))
+                    await channel_modifier.remove_readonly(channel)
+                    await interaction.response.send_message(f'\"{channel.name}\" was removed from master channels list',
+                                                         ephemeral = True)
+                    return
+                await interaction.response.defer(ephemeral = True)
 
             except Exception as e:
                 self.log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
-            
+
+
         @client.tree.command(name = 'setup', description='create default category with master and edit channels')
         async def setup_command(interaction):
             this_server_config = server_config(interaction.guild.id)
             await self.setup_guild(interaction.guild, this_server_config)
             category = '<#' + str(this_server_config.get_param(INITIAL_CATEGORY_ID)) + '>'
             edit = '<#' + str(this_server_config.get_param(EDITING_VC_CHANNEL)) + '>'
-            master = '<#' + str(this_server_config.get_param(VC_FOR_VC)) + '>'
+            master = '<#' + str(this_server_config.get_param(VC_FOR_VC)[0]) + '>'
             embed = discord.Embed(title='Dynamico has been set up successfully !',
                                    description=f'Created: \nCategory: {category}\nEdit Channel: {edit}\nMaster Channel: {master}')
             await interaction.response.send_message(embed=embed, ephemeral = True)
@@ -293,7 +332,7 @@ class room_opening:
             if after.channel is None:
                 return
             this_server_config = server_config(after.channel.guild.id)
-            if this_server_config.get_param(VC_FOR_VC) is not None and after.channel.id == this_server_config.get_param(VC_FOR_VC):
+            if this_server_config.get_param(VC_FOR_VC) is not None and after.channel.id in this_server_config.get_param(VC_FOR_VC):
                 await self.create_dynamic_channel(member, after.channel, this_server_config)
 
             # self.log(self.active_channels)
@@ -585,7 +624,7 @@ class room_opening:
             seconds = time % 60
             embed_response = discord.Embed(title = "לאט לאט...", description = "שינית את שם החדר יותר מדיי פעמים \
             \nיש להמתין "+ str(time) +" שניות, \
-            \nאו לפתוח משרד חדש - <#" + str(this_server_config.get_param(VC_FOR_VC)) + ">")
+            \nאו לפתוח משרד חדש - <#" + str(this_server_config.get_param(VC_FOR_VC)[0]) + ">")
             await interaction.response.send_message(embed = embed_response, ephemeral = True)
             #await interaction.response.send_message(f'please wait {minutes} minutes and {seconds} seconds before changing the channel again', ephemeral = True)
         else:
@@ -610,7 +649,7 @@ class room_opening:
             this_server_config = server_config(interaction.guild.id)
             embed_response = discord.Embed(title = "You renamed your channel too fast !",
                                             description = "Please wait " + str(time) \
-                                             + " seconds until next rename, \nor just open a new dynamic channel - \n<#" + str(this_server_config.get_param(VC_FOR_VC)) + ">")
+                                             + " seconds until next rename, \nor just open a new dynamic channel - \n<#" + str(this_server_config.get_param(VC_FOR_VC)[0]) + ">")
             await interaction.response.send_message(embed = embed_response, ephemeral = True)
             #await interaction.response.send_message(f'please wait {minutes} minutes and {seconds} seconds before changing the channel again', ephemeral = True)
         else:
@@ -819,7 +858,7 @@ class room_opening:
 
         # check if guild is already initialized
         if this_server_config.get_param(VC_FOR_VC) is not None:
-            if guild.get_channel(int(this_server_config.get_param(VC_FOR_VC))) is not None:
+            if guild.get_channel(int(this_server_config.get_param(VC_FOR_VC)[0])) is not None:
                 editing_channel_id = this_server_config.get_param(EDITING_VC_CHANNEL)
                 if editing_channel_id is not None:
                     editing_channel = guild.get_channel(int(editing_channel_id))
@@ -860,12 +899,12 @@ class room_opening:
         this_server_config.set_params(editing_vc_channel=edit_channel.id)
 
         Master_Channel = await category.create_voice_channel('➕ New Channel')
-        this_server_config.set_params(vc_for_vc=Master_Channel.id)
+        this_server_config.set_params(vc_for_vc=[Master_Channel.id])
         await channel_modifier.set_readonly(Master_Channel)
         await self.initialize_creation_channel(edit_channel, this_server_config)
     
     async def clear_guild(self, guild, this_server_config):
-        master_channel = guild.get_channel(int(this_server_config.get_param(VC_FOR_VC)))
+        
         initial_category_id = this_server_config.get_param(INITIAL_CATEGORY_ID)
         my_category = None
         if initial_category_id is not None:
@@ -873,8 +912,10 @@ class room_opening:
                 if category.id == int(initial_category_id):
                     my_category = category
                     break
-        if master_channel is not None:
-            await master_channel.delete()
+        for x in this_server_config.get_param(VC_FOR_VC):
+            master_channel = guild.get_channel(int(x))
+            if master_channel is not None:
+                await master_channel.delete()
         edit_channel = guild.get_channel(int(this_server_config.get_param(EDITING_VC_CHANNEL)))
         if edit_channel is not None:
             await edit_channel.delete()
@@ -985,19 +1026,19 @@ class room_opening:
 
     def get_need_to_open_channel(self, user, guild_id, this_server_config):
         embed = discord.Embed(title = "you are not connected to any channel", description = "You should open your own channel and try again - \
-                              \n<#" + str(this_server_config.get_param(VC_FOR_VC)) + ">", color = 0xe74c3c)
+                              \n<#" + str(this_server_config.get_param(VC_FOR_VC)[0]) + ">", color = 0xe74c3c)
         embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
         return embed
     
     def get_not_owned_channel(self, user, guild_id, this_server_config):
         embed = discord.Embed(title = "Oops, this is not your channel !", description = "It will not happen in your channel - \
-                            \n<#" + str(this_server_config.get_param(VC_FOR_VC)) + ">", color = 0xe74c3c)
+                            \n<#" + str(this_server_config.get_param(VC_FOR_VC)[0]) + ">", color = 0xe74c3c)
         embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
         return embed
     
     def get_channel_taken(self, user, guild_id, this_server_config):
         embed = discord.Embed(title = "Oops, this channel is already taken !", description = "Wait until owner leaves,\
-                            \nor open your own channel - \n<#" + str(this_server_config.get_param(VC_FOR_VC)) + ">",
+                            \nor open your own channel - \n<#" + str(this_server_config.get_param(VC_FOR_VC)[0]) + ">",
                             color = 0xe74c3c)
         embed.set_thumbnail(url = "https://i.imgur.com/epJbz6n.gif")
         return embed
@@ -1059,7 +1100,7 @@ class room_opening:
     
     def is_active_channel(self, guild_id, channel_id):
         if self.rooms_exist_in_guild(guild_id):
-            if channel_id in self.active_channels[guild_id]:
+            if channel_id in self.active_channels[guild_id].keys():
                 return True
         return False
     
