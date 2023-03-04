@@ -203,29 +203,8 @@ class room_opening:
                 self.log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
 
-
-
-        #@client.tree.command(name = 'set_user_limit', description='set what user limit will be given to new vcs. unlimited: 0')
-        #@commands.has_permissions(administrator=True)
-        async def set_user_limit(interaction: discord.Interaction, amount : int):
-            if amount >= 100 or amount < 0:
-                await interaction.response.send_message('invalid amount, choose either unlimited (0) or 1-100', ephemeral = True)
-                return
-            try:
-                # get server config
-                this_server_config = server_config(interaction.guild.id)
-
-                # set channel
-                this_server_config.set_params(default_user_limit = amount)
-
-                await interaction.response.send_message(f'\"{amount}\" was set as new user limit', ephemeral = True)
-
-            except Exception as e:
-                self.log(str(e))
-                await interaction.response.send_message('error', ephemeral = True)
-
-        #@client.tree.command(name = 'add_special_role', description='add role to special roles list')
-        #@commands.has_permissions(administrator=True)
+        @client.tree.command(name = 'add_special_role', description='add role to special roles list')
+        @commands.has_permissions(administrator=True)
         async def add_special_role(interaction : discord.Interaction, role : discord.Role, emoji : str = ''):
             try:
                 this_server_config = server_config(interaction.guild.id)
@@ -411,9 +390,9 @@ class room_opening:
         await self.log_guild(f'private {interaction.user.voice.channel.name} channel', interaction.guild)
 
     async def special_channel(self, interaction, button, view):
-        embed = discord.Embed(title='Coming soon!')
-        await interaction.response.send_message(embed=embed, ephemeral = True)
-        return
+        # embed = discord.Embed(title='Coming soon!')
+        # await interaction.response.send_message(embed=embed, ephemeral = True)
+        # return
         this_server_config = server_config(interaction.guild.id)
         if not await self.confirm_is_owner(interaction, this_server_config):
             return
@@ -548,14 +527,14 @@ class room_opening:
         
         if len(interaction.data['values']) == 0:
             embed= discord.Embed(title='no roles selected')
-            await interaction.response.send_message(embed=embed)
+            await interaction.response.send_message(embed=embed, ephemeral = True)
             return
         await channel_modifier.private_vc(interaction.user.voice.channel)
         await self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
         role = interaction.guild.get_role(int(interaction.data['values'][0]))
         await channel_modifier.allow_vc(interaction.user.voice.channel, role)
         embed= discord.Embed(title='room is now special for ' + role.name)
-        self.set_active_channel_state(interaction.guild.id, interaction.user.voice.channel.id, ChannelState.SPECIAL)
+        self.set_active_channel_state(interaction.guild.id, interaction.user.voice.channel.id, ChannelState.SPECIAL, role.id)
         await interaction.response.send_message(embed=embed, ephemeral = True)
 
     async def set_vc_limit(self, interaction, select, view):
@@ -655,7 +634,6 @@ class room_opening:
         else:
             embed = discord.Embed(title = "Your channel\'s name has changed to " + new_name)
             await interaction.response.send_message(embed=embed, ephemeral = True)
-    
 
     ######################
     # local db functions #
@@ -840,12 +818,22 @@ class room_opening:
             return True, 0
 
     async def clean_special_roles(self, channel, guild, this_server_config): #
-        special_roles = this_server_config.get_param(SPECIAL_ROLES)
+        role_id = self.get_active_channel_special_role_id(guild.id, channel.id)
+        if role_id is None:
+            return
+        role = guild.get_role(role_id)
+        if role is None:
+            return
+        await channel_modifier.delete_role_permissions(channel, role)
+        #self.clean_all_special_roles(channel, guild, this_server_config)
+
+    async def clean_all_special_roles(self, channel, guild, this_server_config): #
+        special_roles = [x[0] for x in this_server_config.get_param(SPECIAL_ROLES)]
         if special_roles is None:
             return
-        for x in special_roles:
-            a_role = guild.get_role(int(x[0]))
-            await channel_modifier.delete_role_permissions(channel, a_role)
+        for role in channel.overwrites:
+            if role.id in special_roles:
+                await channel_modifier.delete_role_permissions(channel, role)
 
     #################
     # guild methods #
@@ -1172,3 +1160,8 @@ class room_opening:
         if user_id in self.active_channels[guild_id][channel_id]['added_users']:
             self.active_channels[guild_id][channel_id]['added_users'].remove(user_id)
         self.save_active_channels()
+    
+    def get_active_channel_special_role_id(self, guild_id, channel_id):
+        if self.is_active_channel(guild_id, channel_id):
+            return self.active_channels[guild_id][channel_id]['special_role_id']
+        return None
