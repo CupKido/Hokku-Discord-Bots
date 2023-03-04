@@ -404,7 +404,7 @@ class room_opening:
             role_id = x[0]
             role = interaction.guild.get_role(role_id)
             # role = [y for y in interaction.guild.roles if y.id == x[0]][0]
-            roles_list.append({'label' : x[1] + role.name, 'value' : x[0], 'description' : None})
+            roles_list.append({'label' : role.name, 'value' : x[0], 'description' : None})
 
         my_view = Generic_View()
         if len(special_roles) == 0:
