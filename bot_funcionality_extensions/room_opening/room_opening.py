@@ -411,7 +411,8 @@ class room_opening:
             await interaction.response.send_message('no special roles were found', ephemeral = True)
             return
         my_view.add_generic_select(placeholder = 'choose role', options=roles_list, callback=self.make_room_special, max_values=1)
-        await interaction.response.send_message('choose role', view=my_view, ephemeral = True)
+        embed = discord.Embed(title='Choose a special role:')
+        await interaction.response.send_message(embed=embed, view=my_view, ephemeral = True)
 
     async def rename_channel(self, interaction, button, view):
         this_server_config = server_config(interaction.guild.id)
