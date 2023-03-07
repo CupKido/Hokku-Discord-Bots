@@ -3,6 +3,31 @@ from discord import app_commands
 from Interfaces.IGenericBot import IGenericBot
 import asyncio
 from DB_instances.generic_config_interface import server_config
+
+
+############################################
+# this is a generic bot that lets you sign #
+# to events the bot receives from discord. #
+# you may sign to events by using the      #
+# add_<event name>_callback method.        #
+# Type of events and their parameters:     #
+#   general event ()                       #
+#   changes event (before, after)          #
+#       (for voice, (<member>, before,     #
+#       after))                            #
+#   one time event (<item>) (for messages, #
+#       on_guild join...)                  #
+# the idea is that you create a new        #
+# features by creating a new class that    #
+# recieves the bot as a parameter and      #
+# then signs to the events it needs.       #
+# that way you can create a new feature    #
+# without changing the bot code.           #
+############################################
+
+
+
+
 class GenericBot_client(IGenericBot):
     def __init__(self, secret_key, db_method='M', config_uri = None, alert_when_online : bool = False):
         # bot init
