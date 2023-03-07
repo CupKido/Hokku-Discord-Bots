@@ -11,6 +11,21 @@ import json
 import os
 import requests
 
+########################################
+# a feature for the GenericBot that    #
+# allows users to open a voice channel #
+# by entering into a pre-chosen voice  #
+# channel, and lets them customize it  #
+# to their needs.                      #
+#################################################
+# the feature signs up to the following events: #
+# - on_ready                                    #
+# - on_session_resumed                          #
+# - on_voice_state_update                       #
+# - on_guild_channel_delete                     #
+# - on_guild_join                               #
+#################################################
+
 EDITING_VC_CHANNEL = 'editing_vc_channel'
 STATIC_MESSAGE_ID = 'static_message_id'
 STATIC_MESSAGE = 'static_message'
@@ -45,7 +60,6 @@ class room_opening:
         self.bot_client.add_on_voice_state_update_callback(self.vc_state_update)
         self.bot_client.add_on_guild_channel_delete_callback(self.on_guild_channel_delete_callback)
         self.bot_client.add_on_guild_join_callback(self.on_guild_join_callback)
-        self.bot_client.add_on_guild_remove_callback(self.on_guild_remove_callback)
         @client.tree.command(name = 'edit_channel', description='present the channel editing menu')
         async def show_editing_menu(interaction: discord.Interaction):
 
