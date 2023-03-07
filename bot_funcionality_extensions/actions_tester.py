@@ -4,6 +4,23 @@ from discord.ext import commands
 from Interfaces.IGenericBot import IGenericBot
 import asyncio
 
+##################################
+# a feature for simulating a     #
+# user to test results of        #
+# actions of other features.     #
+# for example, joins to chosen   #
+# vc and plays a song to         # 
+# simulate a user.               #
+##################################
+# WARNING: this feature is cant  #
+# be used in a production bot,   #
+# as it can be used to spam      #
+# ALSO, this feature cant use    #
+# any commands of other bots,    #
+# as well as its own commands!   #
+##################################
+
+
 class actions_tester:
     def __init__(self, client : IGenericBot):
         self.bot_client = client
