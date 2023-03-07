@@ -7,6 +7,15 @@ from DB_instances.generic_config_interface import server_config
 from discord_modification_tools import channel_modifier
 from Interfaces.IGenericBot import IGenericBot
 from Interfaces.ILogger import ILogger
+
+######################################
+# logger feature for the GenericBot. #
+# lets you log messages to a file,   #
+# and if a log channel is set, it    #
+# will also send the logs to that    #
+# channel.                           #
+######################################
+
 class logger(ILogger):
     LOG_CHANNEL = 'log_channel'
     def __init__(self, bot_client : IGenericBot):
