@@ -3,13 +3,14 @@ from discord import app_commands
 from Interfaces.IGenericBot import IGenericBot
 import asyncio
 from DB_instances.generic_config_interface import server_config
-
+from bot_funcionality_extensions.logger import logger
 
 ############################################
 # this is a generic bot that lets you sign #
 # to events the bot receives from discord. #
 # you may sign to events by using the      #
 # add_<event name>_callback method.        #
+############################################
 # Type of events and their parameters:     #
 #   general event ()                       #
 #   changes event (before, after)          #
@@ -17,12 +18,17 @@ from DB_instances.generic_config_interface import server_config
 #       after))                            #
 #   one time event (<item>) (for messages, #
 #       on_guild join...)                  #
+############################################
 # the idea is that you create a new        #
 # features by creating a new class that    #
 # recieves the bot as a parameter and      #
 # then signs to the events it needs.       #
 # that way you can create a new feature    #
 # without changing the bot code.           #
+############################################
+# the bot comes with a pre-made logger,    #
+# that lets you log either general logs or #
+# guild specific logs.                     #
 ############################################
 
 
@@ -39,12 +45,12 @@ class GenericBot_client(IGenericBot):
         self.added = False
         self.alert_when_online = alert_when_online
         # bot logger
-        self.logger = None 
+        self.logger = logger(self) 
         # bot secret key
         self.secret_key = secret_key
         # adding event callbacks support
         self.add_event_callback_support()
-    
+
         #@self.tree.command(name = 'get_invite_link', description='get invite link for this bot')
         async def get_invite_link(interaction):
             await interaction.response.send_message(f'https://discord.com/api/oauth2/authorize?client_id={self.user.id}&permissions=8&scope=bot', ephemeral=True)
