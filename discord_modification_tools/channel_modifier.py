@@ -19,7 +19,7 @@ async def give_management(channel : discord.VoiceChannel, role = None):
         return
     # if role is None:
     #     role = channel.guild.default_role
-    await channel.set_permissions(role, manage_channels=True, move_members=True)
+    await channel.set_permissions(role, manage_channels=True, move_members=True, connect=True, speak=True, mute_members=True)
 
 async def allow_vc(channel : discord.VoiceChannel, role = None):
     if channel is None:
