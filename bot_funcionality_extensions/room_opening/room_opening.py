@@ -244,6 +244,28 @@ class room_opening:
                 self.log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
 
+        @client.tree.command(name = 'remove_special_role', description='remove role from special roles list')
+        @commands.has_permissions(administrator=True)
+        async def remove_special_role(interaction : discord.Interaction, role : discord.Role):
+            try:
+                this_server_config = server_config(interaction.guild.id)
+                special_roles = this_server_config.get_param(SPECIAL_ROLES)
+                if special_roles is None:
+                    special_roles = []
+                exists_flag = False
+                for x in special_roles:
+                    if x[0] == role.id:
+                        special_roles.remove(x)
+                        await interaction.response.send_message(f'role \"{role.name}\" was removed from the list', ephemeral = True)
+                        exists_flag = True
+                if not exists_flag:
+                    await interaction.response.send_message(f'role \"{role.name}\" is not in the list', ephemeral = True)
+                this_server_config.set_params(special_roles=special_roles)
+            except Exception as e:
+                self.log(str(e))
+                await interaction.response.send_message('error', ephemeral = True)
+
+
         @client.tree.command(name = 'choose_editing_channel', description='choose a channel for editing new voice channels')
         @commands.has_permissions(administrator=True)
         async def choose_editing_channel(interaction: discord.Interaction, channel : discord.TextChannel, use_last_message : bool = False):
