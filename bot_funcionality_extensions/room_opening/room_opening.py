@@ -626,6 +626,7 @@ class room_opening:
         
         if len(interaction.data['values']) == 0:
             embed= discord.Embed(title='no roles selected')
+            await self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
             await interaction.response.send_message(embed=embed, ephemeral = True)
             return
         await channel_modifier.private_vc(interaction.user.voice.channel)
