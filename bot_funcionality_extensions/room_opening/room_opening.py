@@ -41,7 +41,7 @@ SPECIAL_ROLES = 'special_roles'
 RATE_LIMIT_ERROR_TITLE = 'rate_limit_error_title'
 RATE_LIMIT_ERROR_DESCRIPTION = 'rate_limit_error_description'
 DEFAULT_USER_LIMIT = 'default_user_limit'
-
+USE_BUTTONS = 'use_buttons'
 
 class room_opening:
     clean_dead_every = 60
@@ -219,8 +219,12 @@ class room_opening:
 
         @client.tree.command(name = 'add_special_role', description='add role to special roles list')
         @commands.has_permissions(administrator=True)
-        async def add_special_role(interaction : discord.Interaction, role : discord.Role, emoji : str = ''):
+        async def add_special_role(interaction : discord.Interaction, role : discord.Role, emoji : str = '', color : str = ''):
             try:
+                button_color = ui_tools.string_to_color(color)
+                if not button_color:
+                    await interaction.response.send_message('invalid color', ephemeral = True)
+                    return
                 this_server_config = server_config(interaction.guild.id)
                 special_roles = this_server_config.get_param(SPECIAL_ROLES)
                 if special_roles is None:
@@ -230,10 +234,10 @@ class room_opening:
                     if x[0] == role.id:
                         await interaction.response.send_message(f'role \"{role.name}\" is already in the list, updating emoji', ephemeral = True)
                         special_roles.remove(x)
-                        special_roles.append((role.id, emoji))
+                        special_roles.append((role.id, emoji, color))
                         exists_flag = True
                 if not exists_flag:
-                    special_roles.append((role.id, emoji))
+                    special_roles.append((role.id, emoji, color))
                     await interaction.response.send_message(f'role \"{role.name}\" was added to the list', ephemeral = True)
                 this_server_config.set_params(special_roles=special_roles)
             except Exception as e:
@@ -293,6 +297,17 @@ class room_opening:
                 self.log(str(e))
                 await interaction.response.send_message('Ops.. Something went wrong', ephemeral = True)
 
+        @client.tree.command(name = 'set_special_as_buttons', description='displays special roles as buttons, otherwise its a list')
+        @commands.has_permissions(administrator=True)
+        async def set_special_as_buttons(interaction: discord.Interaction, use_buttons : bool = True):
+            try:
+                # get server config
+                this_server_config = server_config(interaction.guild.id)
+                this_server_config.set_params(use_buttons = use_buttons)
+                await interaction.response.send_message(f'Buttons mode was set to {use_buttons}', ephemeral = True)
+            except Exception as e:
+                self.log(str(e))
+                await interaction.response.send_message('Ops.. Something went wrong', ephemeral = True)
     ################
     # guild events #
     ################
@@ -424,7 +439,29 @@ class room_opening:
         if len(special_roles) == 0:
             await interaction.response.send_message('no special roles were found', ephemeral = True)
             return
-        my_view.add_generic_select(placeholder = 'choose role', options=roles_list, callback=self.make_room_special, max_values=1)
+        
+        use_buttons = this_server_config.get_param(USE_BUTTONS)
+        if use_buttons is not None and use_buttons:
+            # add button for each special role
+            for x in special_roles:
+                role_id = x[0]
+                role = interaction.guild.get_role(role_id)
+                # role = [y for y in interaction.guild.roles if y.id == x[0]][0]
+                if x[1] == '':
+                    emoji = None
+                else:
+                    emoji = x[1]
+                if len(x) > 2:
+                    color = x[2]
+                    if color is None:
+                        color = discord.ButtonStyle.primary
+                    else:
+                        color = ui_tools.string_to_color(color)
+                else:
+                    color = discord.ButtonStyle.primary
+                my_view.add_generic_button(label = role.name, callback=self.make_room_special_button(role_id), style=color, emoji=emoji)
+        else:
+            my_view.add_generic_select(placeholder = 'choose role', options=roles_list, callback=self.make_room_special, max_values=1)
         embed = discord.Embed(title='Choose a special role:')
         await interaction.response.send_message(embed=embed, view=my_view, ephemeral = True)
 
@@ -485,7 +522,32 @@ class room_opening:
         self.set_active_channel_owner(interaction.guild.id, interaction.user.voice.channel.id, interaction.user.id)
         embed = discord.Embed(title='Channel claimed !')
         await interaction.response.send_message(embed=embed, ephemeral = True)
+
+    def make_room_special_button(self, role_id):
+        async def action(interaction, button, view):
+            this_server_config = server_config(interaction.guild.id)
+            if not await self.confirm_is_owner(interaction, this_server_config):
+                return
             
+            if role_id is None:
+                embed= discord.Embed(title='no roles selected')
+                await interaction.response.send_message(embed=embed, ephemeral = True)
+                return
+            await channel_modifier.private_vc(interaction.user.voice.channel)
+            await self.clean_special_roles(interaction.user.voice.channel, interaction.guild, this_server_config)
+            role = interaction.guild.get_role(int(role_id))
+            if role is None:
+                embed= discord.Embed(title='role not found')
+                await interaction.response.send_message(embed=embed, ephemeral = True)
+                return
+            await channel_modifier.allow_vc(interaction.user.voice.channel, role)
+            embed= discord.Embed(title='room is now special for ' + role.name)
+            self.set_active_channel_state(interaction.guild.id, interaction.user.voice.channel.id, ChannelState.SPECIAL, role.id)
+            await interaction.response.send_message(embed=embed, ephemeral = True)
+        
+        return action
+
+
     #################
     # select events #
     #################
@@ -891,7 +953,8 @@ class room_opening:
                                         \nplease wait {time} seconds or open a new channel - <#{channel}>',
                                         default_user_limit = 0,
                                         vc_name='{name}\'s Channel',
-                                        special_roles = []
+                                        special_roles = [],
+                                        use_buttons = False
                                         )
 
 
