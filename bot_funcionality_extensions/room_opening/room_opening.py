@@ -362,10 +362,11 @@ class room_opening:
             if after.channel is None:
                 return
             this_server_config = server_config(after.channel.guild.id)
-            if this_server_config.get_param(VC_FOR_VC) is not None and \
-            (type(this_server_config.get_param(VC_FOR_VC)) is not list and after.channel.id == this_server_config.get_param(VC_FOR_VC) \
-             or after.channel.id in this_server_config.get_param(VC_FOR_VC)):
-                await self.create_dynamic_channel(member, after.channel, this_server_config)
+            if this_server_config.get_param(VC_FOR_VC) is not None:
+                if type(this_server_config.get_param(VC_FOR_VC)) is not list:
+                    this_server_config.set_params(VC_FOR_VC = [this_server_config.get_param(VC_FOR_VC)])
+                if after.channel.id in this_server_config.get_param(VC_FOR_VC):
+                    await self.create_dynamic_channel(member, after.channel, this_server_config)
 
             # self.log(self.active_channels)
         except discord.errors.HTTPException as e:
