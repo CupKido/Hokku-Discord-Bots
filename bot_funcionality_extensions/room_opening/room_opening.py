@@ -330,6 +330,21 @@ class room_opening:
             except Exception as e:
                 self.log(str(e))
                 await interaction.response.send_message('Ops.. Something went wrong', ephemeral = True)
+
+
+        # add command for resuming buttons on a soecific guild
+        @client.tree.command(name = 'resume_buttons', description='resumes buttons on a specific guild')
+        @commands.has_permissions(administrator=True)
+        async def resume_buttons(interaction: discord.Interaction):
+            try:
+                await self.resume_buttons_for_guild(interaction.guild.id)
+                await interaction.response.send_message(f'Buttons were resumed', ephemeral = True)
+            except Exception as e:
+                self.log(str(e))
+                await interaction.response.send_message('Ops.. Something went wrong', ephemeral = True)
+
+
+
     ################
     # guild events #
     ################
