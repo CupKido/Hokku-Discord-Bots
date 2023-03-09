@@ -5,6 +5,13 @@ from discord.ext import commands
 from DB_instances.room_opening_config_interface import server_config
 from discord import ui
 
+
+####################################
+# A Generic Button, that lets you  #
+# add a callback, and to store a   #
+# value. send it's view as a       #
+# parameter to the callback.       #
+####################################
 class Generic_Button(Button):
     def __init__(self, **kwargs):
         if 'callback' in kwargs:
@@ -22,6 +29,10 @@ class Generic_Button(Button):
             my_emoji = kwargs['emoji']
         else: 
             my_emoji = None
+        if 'value' in kwargs.keys():
+            self.value = kwargs['value']
+        else:
+            self.value = None
         self.callback = self.callbacks
         super().__init__(label=my_label, style=my_style, emoji=my_emoji)
     
@@ -76,14 +87,22 @@ class Generic_Selector(discord.ui.UserSelect):
         if self.func is not None:
             self.func(interaction, select, self.view)
 
+
+
+####################################
+# A Generic View, that easily lets #
+# you add buttons and selects,     #
+# with callbacks, and more options #
+####################################
 class Generic_View(View):
     def __init__(self, timeout=None):
         super().__init__(timeout=timeout)
-    def add_generic_button(self, label=None, style=None, emoji=None, callback=None):
+    def add_generic_button(self, label=None, style=None, emoji=None, callback=None, value=None):
         new_button = Generic_Button(label=label,
                                      style=style,
                                      emoji=emoji,
-                                     callback=callback)
+                                     callback=callback,
+                                     value=value)
         #new_button.set_view(self)
         self.add_item(new_button)
 

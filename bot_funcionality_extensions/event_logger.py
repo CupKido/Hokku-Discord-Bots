@@ -52,8 +52,8 @@ class event_logger:
 
 
         self.class_name = 'event_logger'
-        #@bot_client.tree.command(name = 'get_todays_event_logs', description='get todays event logs')
-        #@commands.has_permissions(administrator=True)
+        @bot_client.tree.command(name = 'get_todays_event_logs', description='get todays event logs')
+        @commands.has_permissions(administrator=True)
         async def get_todays_event_logs(interaction: discord.Interaction):
             if interaction.guild is None:
                 await interaction.response.send_message('this command is only available on servers', ephemeral=True)
