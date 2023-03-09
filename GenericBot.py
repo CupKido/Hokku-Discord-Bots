@@ -25,6 +25,10 @@ from bot_funcionality_extensions.logger import logger
 # then signs to the events it needs.       #
 # that way you can create a new feature    #
 # without changing the bot code.           #
+# in order to add a feature to the bot,    #
+# you need to use the add_feature method.  #
+# if you want to add multiple features,    #
+# you can use the add_features method.     #
 ############################################
 # the bot comes with a pre-made logger,    #
 # that lets you log either general logs or #
@@ -48,8 +52,11 @@ class GenericBot_client(IGenericBot):
         self.logger = logger(self) 
         # bot secret key
         self.secret_key = secret_key
+        # create features dict
+        self.features = {}
         # adding event callbacks support
         self.add_event_callback_support()
+
 
         #@self.tree.command(name = 'get_invite_link', description='get invite link for this bot')
         async def get_invite_link(interaction):
@@ -341,3 +348,22 @@ class GenericBot_client(IGenericBot):
                 print(message)
             except:
                 print('failed to print message')
+    
+    def add_features(self, *features):
+        self.log('================================================================')
+        for feature in features:
+            if feature != features[0]:
+                self.log('----------------------------------------------------------------')
+            self.add_feature(feature)
+
+        self.log('================================================================')
+
+    def add_feature(self, feature):
+        # print feature class name
+        self.log("| adding feature: " + str(feature)+ ' |')
+        if type(self.features) is not dict:
+            self.features = {}
+        
+        self.features[str(feature)] = feature(self)
+
+    
