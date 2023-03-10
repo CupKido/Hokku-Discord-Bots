@@ -37,3 +37,11 @@ class actions_tester:
         async def leave_a_vc(interaction: discord.Interaction):
             await self.voice_clients[interaction.guild.id].disconnect()
             await interaction.response.send_message('left vc', ephemeral=True)
+
+        @client.tree.command(name = 'send', description='sends a message')
+        @commands.has_permissions(administrator=True)
+        async def send_a_message(interaction: discord.Interaction, message : str):
+            await interaction.channel.send(message)
+            await interaction.response.send_message('sent message', ephemeral=True)
+
+        
