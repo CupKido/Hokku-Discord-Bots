@@ -2,7 +2,6 @@ import discord
 from discord import app_commands
 from discord.ui import View, button, Modal, Button
 from discord.ext import commands
-from DB_instances.room_opening_config_interface import server_config
 from discord import ui
 
 class CustomButton(Button):
