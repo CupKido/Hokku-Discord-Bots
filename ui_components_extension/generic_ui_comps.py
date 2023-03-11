@@ -135,6 +135,9 @@ class Generic_Modal(ui.Modal):
     def set_callback(self, callback):
         self.on_submit = callback
 
+    def set_value(self, value):
+        self.value = value
+        
     def add_input(self, label='Label', placeholder='', default='', max_length=None, required=False):
         self.add_item(ui.TextInput(label=label, placeholder=placeholder, default=default, max_length=max_length, required=required))
         
