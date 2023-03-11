@@ -4,6 +4,7 @@ from Interfaces.IGenericBot import IGenericBot
 import asyncio
 from DB_instances.generic_config_interface import server_config
 from bot_funcionality_extensions.logger import logger
+from discord.ext import commands
 
 ############################################
 # this is a generic bot that lets you sign #
@@ -62,6 +63,16 @@ class GenericBot_client(IGenericBot):
         async def get_invite_link(interaction):
             await interaction.response.send_message(f'https://discord.com/api/oauth2/authorize?client_id={self.user.id}&permissions=8&scope=bot', ephemeral=True)
     
+        @self.tree.command(name = 'get_guild_config', description='get guild config')
+        @commands.has_permissions(administrator=True)
+        async def get_guild_config(interaction):
+            this_server_config = server_config(interaction.guild.id)
+            res = 'guild config: \n'
+            guild_config = this_server_config.get_params()
+            for key in guild_config:
+                res += f'\t{key} : {guild_config[key]}\n'
+            await interaction.response.send_message(res, ephemeral=True)
+
 
     async def get_message(self, message_id, channel : discord.TextChannel, limit : int):
         async for message in channel.history(limit=limit):
