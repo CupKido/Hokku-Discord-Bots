@@ -9,7 +9,7 @@ def main():
     # stat the bot
     HitokuBot_token = config['HITOKUBOT']
     HitokuBot = GenericBot_client(HitokuBot_token, 'J')
-    HitokuBot.add_features(confessions, event_logger)
+    HitokuBot.add_features(confessions)
     HitokuBot.activate()
 
 main()
