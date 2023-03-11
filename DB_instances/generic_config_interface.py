@@ -35,6 +35,9 @@ class server_config:
             return self.params[param_name]
         return None
 
+    def get_params(self):
+        return self.params
+
     def set_params(self, **kwargs):
         for x in kwargs.keys():
             self.params[str(x).lower()] = kwargs[x]
