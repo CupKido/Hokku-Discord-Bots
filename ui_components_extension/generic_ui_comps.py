@@ -11,6 +11,11 @@ from discord import ui
 # value. send it's view as a       #
 # parameter to the callback.       #
 ####################################
+# callback arguments:              #
+#       (interaction)              #
+#       (button)                   #
+#       (view)                     #
+####################################
 class Generic_Button(Button):
     def __init__(self, **kwargs):
         if 'callback' in kwargs:
@@ -93,6 +98,17 @@ class Generic_Selector(discord.ui.UserSelect):
 # you add buttons and selects,     #
 # with callbacks, and more options #
 ####################################
+# callback arguments:              #
+#   button:                        #
+#       (interaction)              #
+#       (button)                   #
+#       (view)                     #
+#   select:                        #
+#       (interaction)              #
+#       (select)                   #
+#       (view)                     #
+####################################
+
 class Generic_View(View):
     def __init__(self, timeout=None):
         super().__init__(timeout=timeout)
@@ -131,6 +147,16 @@ class Generic_View(View):
         user_select.callback = callback
         self.add_item(user_select)
 
+
+####################################
+# A Generic Modal, that lets you   #
+# add a callback, and to store a   #
+# value.                           #
+####################################
+# callback arguments:              #
+# (interaction)                    #
+####################################
+
 class Generic_Modal(ui.Modal):
     def set_callback(self, callback):
         self.on_submit = callback
@@ -141,8 +167,3 @@ class Generic_Modal(ui.Modal):
     def add_input(self, label='Label', placeholder='', default='', max_length=None, required=False):
         self.add_item(ui.TextInput(label=label, placeholder=placeholder, default=default, max_length=max_length, required=required))
         
-
-
-
-
-
