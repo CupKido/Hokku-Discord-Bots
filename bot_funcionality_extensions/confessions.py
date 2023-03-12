@@ -11,6 +11,7 @@ class confessions:
     CONFESSIONS_CHANNEL = 'confessions_channel'
     REPORT_COUNT = 'report_count'
 
+
     db_name = 'confessions_db'
 
     def __init__(self, bot):
@@ -30,26 +31,17 @@ class confessions:
                                                     ephemeral=True)
 
         @bot.tree.command(name = 'confess', description='confess your thoughts')
-        async def confess_command(interaction: discord.Interaction, message : str):
-            this_server_config = server_config(interaction.guild.id)
-            channel_id = this_server_config.get_param(confessions.CONFESSIONS_CHANNEL)
-            if channel_id == None:
-                await interaction.response.send_message('confessions channel is not set', ephemeral=True)
-                return
-            channel = self.bot_client.get_channel(channel_id)
-            if channel is None:
-                await interaction.response.send_message('confessions channel is not set', ephemeral=True)
-                return
-            embed = discord.Embed(title='Anonymous Confession', description=message, color=0x00ff00)
-           
-            
-            message = await channel.send(embed=embed)
-            await self.add_options_buttons(message)
-            embed = discord.Embed(title='sent confession', color=0x70aaff)
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-            db = per_server_generic_db(interaction.guild.id, confessions.db_name)
-            db.set_param(message.id, {'original_user' : message.author.id})
+        async def confess__message_command(interaction: discord.Interaction, message : str):
+            await self.confess_with_message(interaction, message)
     
+        @bot.tree.command(name = 'confess_form', description='confess your thoughts, by filling up a form')
+        async def confess_form_command(interaction: discord.Interaction):
+            this_modal = Generic_Modal(title='Create confession')
+            this_modal.add_input(label = 'Enter confession:', placeholder='your confession', long=True)
+            this_modal.set_callback(self.send_confession)
+            await interaction.response.send_modal(this_modal)
+
+
     async def reply(self, interaction, button, view):
         message_id = button.value['message']
         this_modal = Generic_Modal(title='Reply to confession')
@@ -58,6 +50,10 @@ class confessions:
         this_modal.set_value(message_id)
         this_modal.set_callback(self.send_reply)
         await interaction.response.send_modal(this_modal)
+
+    ###################
+    # modal callbacks #
+    ###################
 
     async def send_reply(self, interaction):
         reply = ui_tools.get_modal_value(interaction, 0)
@@ -72,6 +68,15 @@ class confessions:
         db = per_server_generic_db(interaction.guild.id, confessions.db_name)
         db.set_param(message.id, {'reply_to' : message_id, 'original_user' : message.author.id})
     
+    async def send_confession(self, interaction):
+        message = ui_tools.get_modal_value(interaction, 0)
+        await self.confess_with_message(interaction, message)
+
+
+
+
+
+
     async def add_options_buttons(self, message):
         my_view = Generic_View()
         my_view.add_generic_button(label=' Reply',
@@ -117,3 +122,22 @@ class confessions:
         embed = discord.Embed(title='reported message', color=0xff5555)
         await interaction.response.send_message(embed=embed, ephemeral=True)
     
+    async def confess_with_message(self, interaction, message):
+        this_server_config = server_config(interaction.guild.id)
+        channel_id = this_server_config.get_param(confessions.CONFESSIONS_CHANNEL)
+        if channel_id == None:
+            await interaction.response.send_message('confessions channel is not set', ephemeral=True)
+            return
+        channel = self.bot_client.get_channel(channel_id)
+        if channel is None:
+            await interaction.response.send_message('confessions channel is not set', ephemeral=True)
+            return
+        embed = discord.Embed(title='Anonymous Confession', description=message, color=0x00ff00)
+        
+        
+        message = await channel.send(embed=embed)
+        await self.add_options_buttons(message)
+        embed = discord.Embed(title='sent confession', color=0x70aaff)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        db = per_server_generic_db(interaction.guild.id, confessions.db_name)
+        db.set_param(message.id, {'original_user' : message.author.id})
