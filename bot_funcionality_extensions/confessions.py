@@ -2,6 +2,7 @@ from Interfaces.IGenericBot import IGenericBot
 from GenericBot import GenericBot_client
 import discord
 from DB_instances.generic_config_interface import server_config
+from DB_instances.generic_db_instance import per_server_generic_db
 from discord.ext import commands
 from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
 import ui_components_extension.ui_tools as ui_tools
@@ -9,12 +10,15 @@ import ui_components_extension.ui_tools as ui_tools
 class confessions:
     CONFESSIONS_CHANNEL = 'confessions_channel'
     REPORT_COUNT = 'report_count'
+
+    db_name = 'confessions_db'
+
     def __init__(self, bot):
         self.bot_client = bot
 
         @bot.tree.command(name = 'set_confess_channel', description='set a channel for confessions')
         @commands.has_permissions(administrator=True)
-        async def set_confess_channel(interaction: discord.Interaction, channel : discord.TextChannel,
+        async def set_confess_channel_command(interaction: discord.Interaction, channel : discord.TextChannel,
                                        report_count : int = 3):
             this_server_config = server_config(interaction.guild.id)
             this_server_config.set_params(confessions_channel=channel.id)
@@ -26,7 +30,7 @@ class confessions:
                                                     ephemeral=True)
 
         @bot.tree.command(name = 'confess', description='confess your thoughts')
-        async def confess(interaction: discord.Interaction, message : str):
+        async def confess_command(interaction: discord.Interaction, message : str):
             this_server_config = server_config(interaction.guild.id)
             channel_id = this_server_config.get_param(confessions.CONFESSIONS_CHANNEL)
             if channel_id == None:
@@ -42,6 +46,8 @@ class confessions:
             message = await channel.send(embed=embed)
             await self.add_options_buttons(message)
             await interaction.response.send_message('sent confession', ephemeral=True)
+            db = per_server_generic_db(interaction.guild.id, confessions.db_name)
+            db.set_param(message.id, {'report_count' : 0})
     
     async def reply(self, interaction, button, view):
         message_id = button.value['message']
@@ -80,6 +86,12 @@ class confessions:
         count = int(button.value['count'])
         count += 1
         button.value['count'] = count 
+        db = per_server_generic_db(interaction.guild.id, confessions.db_name)
+        message_data = db.get_param(message_id)
+        if message_data is None:
+            message_data = {}
+        message_data['report_count'] = count
+        db.set_param(message_id, message_data)
         this_server_config = server_config(interaction.guild.id)
         if count == int(this_server_config.get_param(confessions.REPORT_COUNT)):
             message = await self.bot_client.get_message(message_id, interaction.channel, 50)
@@ -87,5 +99,6 @@ class confessions:
                 await interaction.response.defer(ephemeral=True)
                 return
             await message.delete()
+            db.set_param(message_id, None)
         await interaction.response.send_message('reported message', ephemeral=True)
     
