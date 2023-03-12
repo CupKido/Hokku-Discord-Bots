@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 from bot_funcionality_extensions.room_opening.active_channel_states import ChannelState
-import ui_components_extension.room_opening_ui as room_opening_ui
 import ui_components_extension.ui_tools as ui_tools
 from DB_instances.generic_config_interface import server_config
 import discord_modification_tools.channel_modifier as channel_modifier
@@ -409,25 +408,25 @@ class room_opening:
     # button events #
     #################
 
-    async def edit_channel_button(self, interaction, button, view):
-        self.log('edit channel button pressed')
-        this_server_config = server_config(interaction.guild.id)
-        try:
-            # if rooms are open for this guild
-            if not self.confirm_is_owner(interaction, this_server_config):
-                return
-            # edit channel
-            channel = interaction.user.voice.channel
-            thisModal = room_opening_ui.InstantModal(title="Edit channel")
-            thisModal.set_callback_func(self.change_channel_details)
-            thisModal.set_fields(channel.name, channel.user_limit, channel.bitrate)
-            # thisModal.set_pre_fileds(channel.name, channel.user_limit, channel.bitrate)
-            await interaction.response.send_modal(thisModal)
+    # async def edit_channel_button(self, interaction, button, view):
+    #     self.log('edit channel button pressed')
+    #     this_server_config = server_config(interaction.guild.id)
+    #     try:
+    #         # if rooms are open for this guild
+    #         if not self.confirm_is_owner(interaction, this_server_config):
+    #             return
+    #         # edit channel
+    #         channel = interaction.user.voice.channel
+    #         thisModal = room_opening_ui.InstantModal(title="Edit channel")
+    #         thisModal.set_callback_func(self.change_channel_details)
+    #         thisModal.set_fields(channel.name, channel.user_limit, channel.bitrate)
+    #         # thisModal.set_pre_fileds(channel.name, channel.user_limit, channel.bitrate)
+    #         await interaction.response.send_modal(thisModal)
                     
-                    # await interaction.response.send_message('you don\'t have an active channel, please open one first', ephemeral = True)
-        except Exception as e:
-            self.log('Error editing channel due to error: ' + str(e))
-            self.load_active_channels()
+    #                 # await interaction.response.send_message('you don\'t have an active channel, please open one first', ephemeral = True)
+    #     except Exception as e:
+    #         self.log('Error editing channel due to error: ' + str(e))
+    #         self.load_active_channels()
 
     async def publish_channel(self, interaction, button, view):
         # print('public channel button pressed')
