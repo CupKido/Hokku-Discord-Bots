@@ -4,7 +4,6 @@ from bot_funcionality_extensions.confessions import confessions
 
 from dotenv import dotenv_values
 config = dotenv_values('.env')
-
 def main():
     # stat the bot
     HitokuBot_token = config['HITOKUBOT']

@@ -118,7 +118,6 @@ class Generic_View(View):
                                      emoji=emoji,
                                      callback=callback,
                                      value=value)
-        #new_button.set_view(self)
         self.add_item(new_button)
 
         return new_button
