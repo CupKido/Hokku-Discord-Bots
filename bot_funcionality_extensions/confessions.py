@@ -45,9 +45,10 @@ class confessions:
             
             message = await channel.send(embed=embed)
             await self.add_options_buttons(message)
-            await interaction.response.send_message('sent confession', ephemeral=True)
+            embed = discord.Embed(title='sent confession', color=0x0000ff)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
             db = per_server_generic_db(interaction.guild.id, confessions.db_name)
-            db.set_param(message.id, {'report_count' : 0})
+            db.set_param(message.id, {'original_user' : message.author.id})
     
     async def reply(self, interaction, button, view):
         message_id = button.value['message']
@@ -60,7 +61,7 @@ class confessions:
 
     async def send_reply(self, interaction):
         reply = ui_tools.get_modal_value(interaction, 0)
-        message_id = ui_tools.get_modal_value(interaction, 1)
+        message_id = int(ui_tools.get_modal_value(interaction, 1))
         message = await self.bot_client.get_message(message_id, interaction.channel, 50)
         if message is None:
             await interaction.response.send_message('failed to find message', ephemeral=True)
@@ -68,6 +69,8 @@ class confessions:
         message = await message.reply(reply)
         await self.add_options_buttons(message)
         await interaction.response.defer(ephemeral=True)
+        db = per_server_generic_db(interaction.guild.id, confessions.db_name)
+        db.set_param(message.id, {'reply_to' : message_id, 'original_user' : message.author.id})
     
     async def add_options_buttons(self, message):
         my_view = Generic_View()
@@ -82,23 +85,35 @@ class confessions:
         await message.edit(view=my_view)
 
     async def report(self, interaction, button, view):
+        
         message_id = button.value['message']
-        count = int(button.value['count'])
-        count += 1
-        button.value['count'] = count 
         db = per_server_generic_db(interaction.guild.id, confessions.db_name)
         message_data = db.get_param(message_id)
         if message_data is None:
             message_data = {}
-        message_data['report_count'] = count
+        if 'report_by' not in message_data:
+            message_data['report_by'] = []
+        if interaction.user.id in message_data['report_by']:
+            embed = discord.Embed(title='Already reported', description='you have already reported this message', color=0xff0000)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+        
+        count = int(button.value['count'])
+        count += 1
+        button.value['count'] = count 
+        
+        if type(message_data['report_by']) is not list:
+            message_data['report_by'] = []
+        message_data['report_by'].append(interaction.user.id)
         db.set_param(message_id, message_data)
         this_server_config = server_config(interaction.guild.id)
-        if count == int(this_server_config.get_param(confessions.REPORT_COUNT)):
+        if len(message_data['report_by']) == int(this_server_config.get_param(confessions.REPORT_COUNT)):
             message = await self.bot_client.get_message(message_id, interaction.channel, 50)
             if message is None:
                 await interaction.response.defer(ephemeral=True)
                 return
             await message.delete()
             db.set_param(message_id, None)
-        await interaction.response.send_message('reported message', ephemeral=True)
+        embed = discord.Embed(title='reported message', color=0xff0000)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
     
