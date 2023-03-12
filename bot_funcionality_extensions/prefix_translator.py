@@ -1,14 +1,16 @@
-class prefix_translator():
+from Interfaces.BotFeature import BotFeature
+
+class prefix_translator(BotFeature):
     
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         bot.add_on_ready_callback(self.on_ready)
         self.commands = {}
 
     async def on_ready(self):
         
-        self.bot.add_on_message_callback(self.on_message)
-        for x in self.bot.tree.get_commands():
+        self.bot_client.add_on_message_callback(self.on_message)
+        for x in self.bot_client.tree.get_commands():
             if len(x.parameters) != 0: continue
             print(x)
             self.commands[x.qualified_name] = x._callback
@@ -16,7 +18,7 @@ class prefix_translator():
         print('Prefix translator is ready')
     
     async def on_message(self, message):
-        if message.author == self.bot.user:
+        if message.author == self.bot_client.user:
             return
 
         if message.content.startswith('!'):

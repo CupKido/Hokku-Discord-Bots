@@ -1,4 +1,5 @@
 from Interfaces.IGenericBot import IGenericBot
+from Interfaces.BotFeature import BotFeature
 from GenericBot import GenericBot_client
 import discord
 from DB_instances.generic_config_interface import server_config
@@ -7,7 +8,7 @@ from discord.ext import commands
 from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
 import ui_components_extension.ui_tools as ui_tools
 # a feature with 'confess' command
-class confessions:
+class confessions(BotFeature):
     CONFESSIONS_CHANNEL = 'confessions_channel'
     REPORT_COUNT = 'report_count'
 
@@ -15,7 +16,7 @@ class confessions:
     db_name = 'confessions_db'
 
     def __init__(self, bot):
-        self.bot_client = bot
+        super().__init__(bot)
 
         @bot.tree.command(name = 'set_confess_channel', description='set a channel for confessions')
         @commands.has_permissions(administrator=True)

@@ -6,6 +6,7 @@ from DB_instances.generic_config_interface import server_config
 import discord_modification_tools.channel_modifier as channel_modifier
 from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
 from Interfaces.IGenericBot import IGenericBot
+from Interfaces.BotFeature import BotFeature
 import json
 import os
 import requests
@@ -42,12 +43,12 @@ RATE_LIMIT_ERROR_DESCRIPTION = 'rate_limit_error_description'
 DEFAULT_USER_LIMIT = 'default_user_limit'
 USE_BUTTONS = 'use_buttons'
 
-class room_opening:
+class room_opening(BotFeature):
     clean_dead_every = 60
     db_dir_path = 'data_base/room_opening'
     db_file_name = 'active_channels.json'
     def __init__(self, client : IGenericBot):
-        self.bot_client = client
+        super().__init__(client)
         self.logger = client.get_logger()
         self.dead_channels_counter = 0
         self.active_channels = {}

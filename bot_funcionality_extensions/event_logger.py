@@ -1,10 +1,11 @@
 import discord
 from Interfaces.IGenericBot import IGenericBot
+from Interfaces.BotFeature import BotFeature
 from discord.ext import commands
 import io
-class event_logger:
+class event_logger(BotFeature):
     def __init__(self, bot_client : IGenericBot):
-        self.bot_client = bot_client
+        super().__init__(bot_client)
         self.logger = bot_client.get_logger()
         
         self.logger.log('event_logger extension loading...')

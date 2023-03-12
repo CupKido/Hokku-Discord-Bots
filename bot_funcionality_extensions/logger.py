@@ -7,6 +7,7 @@ from DB_instances.generic_config_interface import server_config
 from discord_modification_tools import channel_modifier
 from Interfaces.IGenericBot import IGenericBot
 from Interfaces.ILogger import ILogger
+from Interfaces.BotFeature import BotFeature
 
 ######################################
 # logger feature for the GenericBot. #
@@ -16,11 +17,11 @@ from Interfaces.ILogger import ILogger
 # channel.                           #
 ######################################
 
-class logger(ILogger):
+class logger(BotFeature, ILogger):
     LOG_CHANNEL = 'log_channel'
     def __init__(self, bot_client : IGenericBot):
         bot_client.set_logger(self)
-        self.bot_client = bot_client
+        super().__init__(bot_client)
         self.log("==================================================\n\
                 logger initialized\
                 \n==================================================")

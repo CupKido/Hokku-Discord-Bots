@@ -3,6 +3,7 @@ import nacl
 from discord.ext import commands
 from Interfaces.IGenericBot import IGenericBot
 import asyncio
+from Interfaces.BotFeature import BotFeature
 
 ##################################
 # a feature for simulating a     #
@@ -21,9 +22,9 @@ import asyncio
 ##################################
 
 
-class actions_tester:
+class actions_tester(BotFeature):
     def __init__(self, client : IGenericBot):
-        self.bot_client = client
+        super().__init__(client)
         self.voice_clients = {}
         @client.tree.command(name = 'join_vc', description='join a vc')
         @commands.has_permissions(administrator=True)
