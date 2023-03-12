@@ -165,7 +165,17 @@ class Generic_Modal(ui.Modal):
         
     def add_input(self, label='Label', placeholder='', default='', max_length=None, required=False, long=False):
         if long:
-            self.add_item(ui.TextInput(label=label, placeholder=placeholder, default=default, max_length=max_length, required=required, style=discord.TextStyle.paragraph))
+            self.add_item(ui.TextInput(label=label,
+                                        placeholder=placeholder,
+                                        default=default,
+                                        max_length=max_length,
+                                        required=required,
+                                        style=discord.TextStyle.paragraph))
         else:
-            self.add_item(ui.TextInput(label=label, placeholder=placeholder, default=default, max_length=max_length, required=required, style=discord.TextStyle.short))
+            self.add_item(ui.TextInput(label=label, 
+                                       placeholder=placeholder, 
+                                       default=default, 
+                                       max_length=max_length, 
+                                       required=required, 
+                                       style=discord.TextStyle.short))
         
