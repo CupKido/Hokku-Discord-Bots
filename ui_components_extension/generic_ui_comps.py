@@ -163,6 +163,9 @@ class Generic_Modal(ui.Modal):
     def set_value(self, value):
         self.value = value
         
-    def add_input(self, label='Label', placeholder='', default='', max_length=None, required=False):
-        self.add_item(ui.TextInput(label=label, placeholder=placeholder, default=default, max_length=max_length, required=required))
+    def add_input(self, label='Label', placeholder='', default='', max_length=None, required=False, long=False):
+        if long:
+            self.add_item(ui.TextInput(label=label, placeholder=placeholder, default=default, max_length=max_length, required=required, style=discord.TextStyle.paragraph))
+        else:
+            self.add_item(ui.TextInput(label=label, placeholder=placeholder, default=default, max_length=max_length, required=required, style=discord.TextStyle.short))
         
