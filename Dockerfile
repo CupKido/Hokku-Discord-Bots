@@ -11,4 +11,4 @@ WORKDIR /usr/src/bot
 COPY . .
 
 EXPOSE 80
-CMD [ "python3", "Dynamico.py" ]
+CMD [ "python3", "HokkuBot.py" ]
