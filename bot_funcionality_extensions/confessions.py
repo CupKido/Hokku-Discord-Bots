@@ -45,7 +45,7 @@ class confessions:
             
             message = await channel.send(embed=embed)
             await self.add_options_buttons(message)
-            embed = discord.Embed(title='sent confession', color=0x0000ff)
+            embed = discord.Embed(title='sent confession', color=0x70aaff)
             await interaction.response.send_message(embed=embed, ephemeral=True)
             db = per_server_generic_db(interaction.guild.id, confessions.db_name)
             db.set_param(message.id, {'original_user' : message.author.id})
@@ -94,7 +94,7 @@ class confessions:
         if 'report_by' not in message_data:
             message_data['report_by'] = []
         if interaction.user.id in message_data['report_by']:
-            embed = discord.Embed(title='Already reported', description='you have already reported this message', color=0xff0000)
+            embed = discord.Embed(title='Already reported', description='you have already reported this message', color=0xff1111)
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
         
@@ -114,6 +114,6 @@ class confessions:
                 return
             await message.delete()
             db.set_param(message_id, None)
-        embed = discord.Embed(title='reported message', color=0xff0000)
+        embed = discord.Embed(title='reported message', color=0xff5555)
         await interaction.response.send_message(embed=embed, ephemeral=True)
     
