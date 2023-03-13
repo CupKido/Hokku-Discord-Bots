@@ -26,6 +26,8 @@ class actions_tester(BotFeature):
     def __init__(self, client : IGenericBot):
         super().__init__(client)
         self.voice_clients = {}
+        client.add_every_hour_callback(self.print_hi)
+        client.add_every_5_hours_callback(self.print_hi2)
         @client.tree.command(name = 'join_vc', description='join a vc')
         @commands.has_permissions(administrator=True)
         async def join_a_vc(interaction: discord.Interaction, channel : discord.VoiceChannel):

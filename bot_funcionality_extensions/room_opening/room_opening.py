@@ -60,6 +60,7 @@ class room_opening(BotFeature):
         self.bot_client.add_on_voice_state_update_callback(self.vc_state_update)
         self.bot_client.add_on_guild_channel_delete_callback(self.on_guild_channel_delete_callback)
         self.bot_client.add_on_guild_join_callback(self.on_guild_join_callback)
+        self.bot_client.add_every_5_hours_callback(self.resume_buttons)
         @client.tree.command(name = 'edit_channel', description='present the channel editing menu')
         async def show_editing_menu(interaction: discord.Interaction):
 
