@@ -400,8 +400,9 @@ class GenericBot_client(IGenericBot):
         for callback in self.every_hour_callbacks:
             self.log('----------------------------------------')
             self.log('\tactivating\t' + str(callback.__name__) + '()')
-            await callback()
             self.log('----------------------------------------')
+            await callback()
+            
         self.log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
 
     @tasks.loop(hours=5)
@@ -411,8 +412,9 @@ class GenericBot_client(IGenericBot):
         for callback in self.every_5_hours_callbacks:
             self.log('----------------------------------------')
             self.log('\tactivating\t' + str(callback.__name__) + '()')
-            await callback()
             self.log('----------------------------------------')
+            await callback()
+            
         self.log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
 
     @tasks.loop(hours=24)
@@ -422,8 +424,9 @@ class GenericBot_client(IGenericBot):
         for callback in self.every_day_callbacks:
             self.log('----------------------------------------')
             self.log('\tactivating\t' + str(callback.__name__) + '()')
-            await callback()
             self.log('----------------------------------------')
+            await callback()
+            
         self.log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
 
     def add_every_hour_callback(self, callback):
