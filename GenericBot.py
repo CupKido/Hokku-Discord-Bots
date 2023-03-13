@@ -4,7 +4,8 @@ from Interfaces.IGenericBot import IGenericBot
 import asyncio
 from DB_instances.generic_config_interface import server_config
 from bot_funcionality_extensions.logger import logger
-from discord.ext import commands
+from discord.ext import commands, tasks
+import time
 
 ############################################
 # this is a generic bot that lets you sign #
@@ -56,7 +57,9 @@ class GenericBot_client(IGenericBot):
         # create features dict
         self.features = {}
         # adding event callbacks support
+        self.add_scheduler_events()
         self.add_event_callback_support()
+
 
 
         @self.tree.command(name = 'get_invite_link', description='get invite link for this bot')
@@ -97,6 +100,14 @@ class GenericBot_client(IGenericBot):
         self.log('im active on: ')
         for guild in self.guilds:
             self.log('\t    ' + str(guild.name) + ' (' + str(guild.id) + ')')
+        # starting scheduler
+        print('starting scheduler')
+        self.go_every_hour.start()
+        self.go_every_5_hours.start()
+        self.go_every_day.start()
+
+
+
 
         # alerting when joining a guild
         @self.event
@@ -377,4 +388,35 @@ class GenericBot_client(IGenericBot):
         
         self.features[str(feature)] = feature(self)
 
+    def add_scheduler_events(self):
+        self.every_hour_callbacks = []
+        self.every_5_hours_callbacks = []
+        self.every_day_callbacks = []
+
+    @tasks.loop(hours=1)
+    async def go_every_hour(self):
+        for callback in self.every_hour_callbacks:
+            await callback()
+
+    @tasks.loop(hours=5)
+    async def go_every_5_hours(self):
+        for callback in self.every_5_hours_callbacks:
+            await callback()
+
+    @tasks.loop(hours=24)
+    async def go_every_day(self):
+        for callback in self.every_day_callbacks:
+            await callback()
+
+
+    def add_every_hour_callback(self, callback):
+        self.every_hour_callbacks.append(callback)
+        self.log("added every_hour_callback: " + str(callback.__name__))
     
+    def add_every_5_hours_callback(self, callback):
+        self.every_5_hours_callbacks.append(callback)
+        self.log("added every_5_hours_callback: " + str(callback.__name__))
+
+    def add_every_day_callback(self, callback):
+        self.every_day_callbacks.append(callback)
+        self.log("added every_day_callback: " + str(callback.__name__))

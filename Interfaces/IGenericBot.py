@@ -97,6 +97,18 @@ class IGenericBot(discord.Client):
         pass
 
     @abstractmethod
+    def add_every_hour_callback(self, callback):
+        pass
+
+    @abstractmethod
+    def add_every_5_hours_callback(self, callback):
+        pass
+
+    @abstractmethod
+    def add_every_day_callback(self, callback):
+        pass
+
+    @abstractmethod
     def activate(self):
         pass
 
