@@ -395,17 +395,23 @@ class GenericBot_client(IGenericBot):
 
     @tasks.loop(hours=1)
     async def go_every_hour(self):
+        self.log('going over every hour callbacks:')
         for callback in self.every_hour_callbacks:
+            self.log('\tactivating\t' + str(callback.__name__) + '()')
             await callback()
 
     @tasks.loop(hours=5)
     async def go_every_5_hours(self):
+        self.log('going over every 5 hours callbacks:')
         for callback in self.every_5_hours_callbacks:
+            self.log('\tactivating\t' + str(callback.__name__) + '()')
             await callback()
 
     @tasks.loop(hours=24)
     async def go_every_day(self):
+        self.log('going over every day callbacks:')
         for callback in self.every_day_callbacks:
+            self.log('\tactivating\t' + str(callback.__name__) + '()')
             await callback()
 
 
