@@ -113,8 +113,18 @@ The system is made out of a few main parts:
   The main function is the actual python file we run on our machine.
   On our main function, we will create our generic bot instance, 
   and add into it all the features that we'd like to load, 
-  by using the **'add_features'** method for a **few** features or the **'add_feature'** method for a **single** feature.
+  by using the **'add_features'** method for a **few** features or the **'add_feature'** method for a **single** feature, 
+  and sending the feature's class instance as a parameter.
   
   After that, we will use the **'activate'** method of the GenericBot to start the bot.
+  
+  Code example:
+  
+    def main():
+      ExampleBot = GenericBot_client(<Bot Token>)
+      ExampleBot.add_features(example_feature)
+      ExampleBot.activate()
+    main()
+      
 
 
