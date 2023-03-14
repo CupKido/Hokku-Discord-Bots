@@ -9,6 +9,7 @@ The system is made out of a few main parts:
   so you can get called even when outside the generic bot's class
   
   #### parameters of constructor function:
+  
     secret_key - your bot's token
     
     db_method (optional) - 'J' if you want to use json file for your database, or 'M' if you want to use MongoDB
@@ -109,7 +110,7 @@ The system is made out of a few main parts:
       async def say_hi(self):
         print('Hi, an hour has passed')
   
-## The Main function 
+## The Main File 
   The main function is the actual python file we run on our machine.
   On our main function, we will create our generic bot instance, 
   and add into it all the features that we'd like to load, 
@@ -118,11 +119,55 @@ The system is made out of a few main parts:
   
   After that, we will use the **'activate'** method of the GenericBot to start the bot.
   
+  There are 2 ways to create a main file.
+  
+  #### First way (more simple):
+  
+  You can either use the "framework" way, by filling up the 'main.py' file
+  first - import the features you want to use, then continue by filling up the functions 'get_token', 'get_db_method' and 'add_features' with your code.
+  then run the 'main_framework.py' file.
+  
+  Code example for 'main.py':
+  
+    from bot_funcionality_extensions.example_feature_class import example_feature_class
+
+    def get_token():
+        # return your discord bot token
+        return <bot token>
+        pass
+
+    def get_db_method():
+        # return 'J' for json or 'M' for mongo
+        return 'J'
+        pass
+
+    def add_features(new_generic_bot):
+        # add features to the bot with the following syntax:
+        # new_generic_bot.add_features(example_feature_class, example_feature_class2, ...)
+        new_generic_bot.add_features(example_feature_class)
+        pass
+
+  #### Second way (more flexible):
+  
+  You can also create your own main file, and inside it:
+  
+  * import necessary features
+  
+  * create a bot
+  
+  * add features
+  
+  * activate
+  
+  Then run your own file.
+  
   Code example:
   
+    from bot_funcionality_extensions.example_feature_class import example_feature_class
+    
     def main():
-      ExampleBot = GenericBot_client(<Bot Token>)
-      ExampleBot.add_features(example_feature)
+      ExampleBot = GenericBot_client(<Bot Token>, <db_method>, <config_uri>, <alert_when_online>)
+      ExampleBot.add_features(example_feature_class)
       ExampleBot.activate()
     main()
       
