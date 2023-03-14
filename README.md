@@ -25,7 +25,7 @@ The system is made out of a few main parts:
   you need to add it to the event's callbacks list, 
   by calling the GenericBot's Method:
       add_<name of event>
-  * notice that all functions added to events callbacks must be async functions 
+  * notice that all functions added to events callbacks must be **async functions** since they're called with **'await'** 
   
 ### List of supported events:
 
@@ -112,7 +112,9 @@ The system is made out of a few main parts:
 ## The Main function 
   The main function is the actual python file we run on our machine.
   On our main function, we will create our generic bot instance, 
-  and load into it all the features that we'd like to load.
-  After that, we will use the 'active' method of the GenericBot to start the bot.
+  and add into it all the features that we'd like to load, 
+  by using the **'add_features'** method for a **few** features or the **'add_feature'** method for a **single** feature.
+  
+  After that, we will use the **'activate'** method of the GenericBot to start the bot.
 
 
