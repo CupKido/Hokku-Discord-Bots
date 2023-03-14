@@ -41,7 +41,7 @@ import time
 
 
 class GenericBot_client(IGenericBot):
-    def __init__(self, secret_key, db_method='M', config_uri = None, alert_when_online : bool = False):
+    def __init__(self, secret_key, db_method='J', config_uri = None, alert_when_online : bool = False):
         # bot init
         super().__init__(intents = discord.Intents.all())
         server_config.set_method(db_method, config_uri)
@@ -440,3 +440,8 @@ class GenericBot_client(IGenericBot):
     def add_every_day_callback(self, callback):
         self.every_day_callbacks.append(callback)
         self.log("added every_day_callback: " + str(callback.__name__))
+
+
+    
+
+    
