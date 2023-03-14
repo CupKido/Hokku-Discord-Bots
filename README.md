@@ -17,44 +17,61 @@ The system is made out of a few main parts:
     # Client events:
 
       on_ready_callback
+      
       on_session_resumed_callback
+      
       on_guild_join_callback
+      
       on_guild_remove_callback
 
     # message events:
 
       on_message_callback
+      
       on_message_delete_callback
+      
       on_message_edit_callback
 
     # invite events:
 
       on_invite_create_callback
+      
       on_invite_delete_callback
 
     # member events:
+    
       on_voice_state_update_callback
+      
       on_member_remove_callback
+      
       on_member_update_callback
+      
       on_member_ban_callback
+      
       on_member_unban_callback
 
     # guild role events:
 
       on_guild_role_create_callback
+      
       on_guild_role_delete_callback
+      
       on_guild_role_update_callback
 
     # channel events:
 
       on_guild_channel_create_callback
+      
       on_guild_channel_update_callback
+      
       on_guild_channel_delete_callback
 
     # scheduler events:
 
       every_hour_callback
+      
       every_5_hours_callback
+      
       every_day_callback
   
   
@@ -65,6 +82,7 @@ The system is made out of a few main parts:
   Inside it's constructor, it can sign onto events, and add commmands to the bot
 
   An example for a feature that prints hi every hour, and adds a ping command:
+  
     class example_feature:
       def __init__(self, bot : IGenericBot):
         super.__init__(bot)
