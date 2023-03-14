@@ -1,81 +1,96 @@
 # Hokku-Discord-Bots
 A simple architecture that allows loading and unloading features from discord bots
+
 The system is made out of a few main parts:
 
-# Generic Bot #
+## Generic Bot
 
   The generic bot class is a class that allow you to sign up onto its events (mostly events caused by discord - discord event),
   so you can get called even when outside the generic bot's class
-
+  
+  #### parameters of constructor function:
+    secret_key - your bot's token
+    
+    db_method (optional) - 'J' if you want to use json file for your database, or 'M' if you want to use MongoDB
+      Default - 'J'
+      
+    config_uri (optional) - what path to use for either db or uri for MongoDB server
+      Default - None
+      
+    alert_when_online (optional) - whether to notify all guilds that the bot is ready and active
+      Default - False
+    
+  
   To make a function get called when an event happens, 
   you need to add it to the event's callbacks list, 
   by calling the GenericBot's Method:
       add_<name of event>
-  * notice that all functions added to events callbacks must be async functions *
-  List of supported events:
+  * notice that all functions added to events callbacks must be async functions 
+  
+### List of supported events:
 
-    # Client events:
+  Client events:
 
-      on_ready_callback
-      
-      on_session_resumed_callback
-      
-      on_guild_join_callback
-      
-      on_guild_remove_callback
+  * on_ready_callback
 
-    # message events:
+  * on_session_resumed_callback
 
-      on_message_callback
-      
-      on_message_delete_callback
-      
-      on_message_edit_callback
+  * on_guild_join_callback
 
-    # invite events:
+  * on_guild_remove_callback
 
-      on_invite_create_callback
-      
-      on_invite_delete_callback
+  message events:
 
-    # member events:
-    
-      on_voice_state_update_callback
-      
-      on_member_remove_callback
-      
-      on_member_update_callback
-      
-      on_member_ban_callback
-      
-      on_member_unban_callback
+  * on_message_callback
 
-    # guild role events:
+  * on_message_delete_callback
 
-      on_guild_role_create_callback
-      
-      on_guild_role_delete_callback
-      
-      on_guild_role_update_callback
+  * on_message_edit_callback
 
-    # channel events:
+  invite events:
 
-      on_guild_channel_create_callback
-      
-      on_guild_channel_update_callback
-      
-      on_guild_channel_delete_callback
+  * on_invite_create_callback
 
-    # scheduler events:
+  * on_invite_delete_callback
 
-      every_hour_callback
-      
-      every_5_hours_callback
-      
-      every_day_callback
+  member events:
+
+  * on_voice_state_update_callback
+
+  * on_member_remove_callback
+
+  * on_member_update_callback
+
+  * on_member_ban_callback
+
+  * on_member_unban_callback
+
+  guild role events:
+
+  * on_guild_role_create_callback
+
+  * on_guild_role_delete_callback
+
+  * on_guild_role_update_callback
+
+  channel events:
+
+  * on_guild_channel_create_callback
+
+  * on_guild_channel_update_callback
+
+  * on_guild_channel_delete_callback
+
+  scheduler events:
+
+  * every_hour_callback
+
+  * every_5_hours_callback
+
+  * every_day_callback
   
   
-# Features #
+## Bot Features
   
   A feature is a python class, is a class that inherits from the BotFeature class.
   The class recieves a Generic Bot instance as an argument on its constructor (__init__ func).
@@ -94,7 +109,10 @@ The system is made out of a few main parts:
       async def say_hi(self):
         print('Hi, an hour has passed')
   
-# The Main function #
-  
+## The Main function 
+  The main function is the actual python file we run on our machine.
+  On our main function, we will create our generic bot instance, 
+  and load into it all the features that we'd like to load.
+  After that, we will use the 'active' method of the GenericBot to start the bot.
 
 
