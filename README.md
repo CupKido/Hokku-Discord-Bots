@@ -179,8 +179,36 @@ The system is made out of a few main parts:
       ExampleBot.add_features(example_feature_class)
       ExampleBot.activate()
     main()
+
+# Generic UI components
+  during the making of the bot, we've created an easy to use classes for the discord UI, with the following elements:
+  * Buttons
+  * Select lists
+  * Modals (forms)
+  
+  ## Generic View
+  A class that inherits from the "view" object, that is added to messsages in order to attach a button or a select list.
+  You may simply create a GenericView object, with its constructor - 
+  
+    my_view = Generic_View()
       
+  then, when sending a message, and the 'view' parameter, like this:
+  
+    channel.send(<your message>, view = my_view)
+  
+  ## Generic Button
+  In order to add a button to your view, you need to use the "add_generic_button" method of the Generic_View class.
+  ### Parameters:
+  * label (str)
+  * style (discord.ButtonStyle)
+  * emoji (str)
+  * callback (function)
+  * value (any)
+  
+
+
 # Useful Links
 * discord api documentation:
   https://discordpy.readthedocs.io/en/stable/api.html
+
 
