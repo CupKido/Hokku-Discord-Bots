@@ -254,7 +254,7 @@ The system is made out of a few main parts:
     gen_view = Generic_View()
     gen_view.add_generic_select(placeholder='<your placeholder>', options=<options list>,
                                  min_values=<you min value>, max_values=<your max value>, callback=<your callback>)
-  * note you can only add up to 25 options, if you want to add a user select list, look below
+  * note you can only add up to 25 options, if you want to add a user select list, look for "User Selector" below
   
   ### Getting selected options
   
