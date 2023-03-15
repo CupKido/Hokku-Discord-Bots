@@ -25,7 +25,9 @@ The system is made out of a few main parts:
   To make a function get called when an event happens, 
   you need to add it to the event's callbacks list, 
   by calling the GenericBot's Method:
-      add_<name of event>
+  
+      <GenericBot instance>.add_<name of event>_callback(<name of function to add>)
+      
   * notice that all functions added to events callbacks must be **async functions** since they're called with **'await'** 
   
 ### List of supported events:
