@@ -136,7 +136,7 @@ The system is made out of a few main parts:
   first - import the features you want to use, then continue by filling up the functions 'get_token', 'get_db_method' and 'add_features' with your code.
   then run the 'main_framework.py' file.
   
-  Code example for 'main.py':
+  ##### Code example for 'main.py':
   
     from bot_funcionality_extensions.example_feature_class import example_feature_class
 
@@ -170,7 +170,7 @@ The system is made out of a few main parts:
   
   Then run your own file.
   
-  Code example:
+  ##### Code example:
   
     from bot_funcionality_extensions.example_feature_class import example_feature_class
     
@@ -199,11 +199,22 @@ The system is made out of a few main parts:
   ## Generic Button
   In order to add a button to your view, you need to use the "add_generic_button" method of the Generic_View class.
   ### Parameters:
+  
   * label (str)
   * style (discord.ButtonStyle)
   * emoji (str)
   * callback (function)
   * value (any)
+ 
+  ### Code Example:
+    my_view = Generic_View()
+    gen_view.add_generic_button(label = '<your label>',
+                                    style = ui_tools.string_to_color('<color>'),
+                                    callback = <your func>,
+                                    emoji= '<your emoji>'
+                                    )
+    channel.send('<your message>', view = my_view)
+    
   
 
 
