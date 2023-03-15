@@ -267,7 +267,24 @@ The system is made out of a few main parts:
   ## User Selector
   
   ### Code Example:
+  
     gen_view.add_user_selector(placeholder='👋 Add Users', callback=<your func>)
+    
+  ## UI tools module
+  
+  The ui tools module contains a few function that can assist you when working with discord's ui component.
+  So far the module contains these functions:
+  * string_to_color(color : str) - returns the "discord.ButtonStyle" equivalent of the color, so you can use simple color names when programming.
+  * color_to_string(color : discord.ButtonStyle) - does the opposite of "string_to_color"
+   
+    supported colors are: 
+    
+    red, green, blue, yellow, white, black
+    
+  * get_modal_value(interaction : discord.Interaction, index : int) - assuming the interaction contains data from filled module, 
+  returns the value inserted in the "index" number of TextInput box
+  
+  
 
 
 # Useful Links
