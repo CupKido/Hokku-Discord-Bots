@@ -296,6 +296,8 @@ A simple framework that allows creating, loading and unloading features from dis
   
   Callback arguments - (self, interaction)
   
+  **(To Be Continued)**
+  
   ## UI tools module
   
   The ui tools module contains a few function that can assist you when working with discord's ui component.
