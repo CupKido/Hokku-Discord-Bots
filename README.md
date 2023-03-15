@@ -219,7 +219,41 @@ The system is made out of a few main parts:
                                     )
     channel.send('<your message>', view = my_view)
     
+  ## Generic Select
+  A UI element that lets the user choose multiple choices from a list.
+  The Select can be created with the "add_generic_select" method of the "Generic_View" class.
   
+  ### Parameters:
+  
+  * placeholder (str) - text displayed when nothing is chosen
+  * min_values (int) - min values chosen at the same time
+  * max_values (int) - max values chosen at the same time
+  * callback (function) - function that gets called when the selection is changed
+    arguments: (self, interaction : Discord.Interaction, select : Generic_Select, view : Generic_View)
+  * options (list) - a list of all the options the select list will contain, 
+    each item is a dictionary object structured like this:
+    
+    {'label' : '<item's label>', 'description' : '<item's description>', 'value' : <item's value>}
+    
+    you could use the 'value' key to store data related to that choice, 
+    that will be later used to process the action that is needed to be taken.
+    
+  ### Code Example:
+    limit_options = [{'label' : 'Unlimited',
+                    'description' : '',
+                    'value' : 0}] + [
+                        {'label' : x,
+                        'description' : '',
+                        'value' : x}
+                         for x in range(1, 25)
+                    ]
+        gen_view = Generic_View()
+        gen_view.add_generic_select(placeholder='✋ User Limit', options=limit_options,
+                                     min_values=0, max_values=1, callback=self.set_vc_limit)
+  ## User Selector
+  
+  ### Code Example:
+    gen_view.add_user_selector(placeholder='👋 Add Users', callback=<your func>)
 
 
 # Useful Links
