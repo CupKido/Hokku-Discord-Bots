@@ -110,6 +110,13 @@ The system is made out of a few main parts:
       async def say_hi(self):
         print('Hi, an hour has passed')
   
+  ### Existing features:
+  * room opening
+  * confessions
+  * actions tester
+  * event logger
+  * discord api commands
+  
 ## The Main File 
   The main function is the actual python file we run on our machine.
   On our main function, we will create our generic bot instance, 
