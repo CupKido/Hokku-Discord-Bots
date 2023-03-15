@@ -1,7 +1,25 @@
 # Hokku-Discord-Bots
-A simple architecture that allows loading and unloading features from discord bots
+A simple framework that allows loading and unloading features from discord bots
 
-The system is made out of a few main parts:
+### The framework is made out of a few main parts:
+
+-   [Generic Bot](#generic-bot)
+    -   [Supported Events](#list-of-supported-events)
+-   [Bot Features](#bot-features)
+    -   [Existing Features](#existing-features)
+-   [The Main File](#the-main-file)
+    -   [Framework Way](#first-way)
+    -   [Custom Way](#second-way)
+
+### Available tools:
+
+-   [Generic UI components](#generic-ui-components)
+    -   [Generic View](#generic-view)
+    -   [Generic Button](#generic-button)
+    -   [Generic Select](#generic-select)
+    -   [User Selector](#user-selector)
+-   [UI tools module](#ui-tools-module)
+    
 
 ## Generic Bot
 
@@ -10,16 +28,16 @@ The system is made out of a few main parts:
   
   #### parameters of constructor function:
   
-    secret_key - your bot's token
-    
-    db_method (optional) - 'J' if you want to use json file for your database, or 'M' if you want to use MongoDB
-      Default - 'J'
-      
-    config_uri (optional) - what path to use for either db or uri for MongoDB server
-      Default - None
-      
-    alert_when_online (optional) - whether to notify all guilds that the bot is ready and active
-      Default - False
+  secret_key - your bot's token
+
+  db_method (optional) - 'J' if you want to use json file for your database, or 'M' if you want to use MongoDB
+    Default - 'J'
+
+  config_uri (optional) - what path to use for either db or uri for MongoDB server
+    Default - None
+
+  alert_when_online (optional) - whether to notify all guilds that the bot is ready and active
+    Default - False
     
   
   To make a function get called when an event happens, 
@@ -30,7 +48,7 @@ The system is made out of a few main parts:
       
   * notice that all functions added to events callbacks must be **async functions** since they're called with **'await'** 
   
-### List of supported events:
+### List of supported events
 
   Client events:
 
@@ -101,6 +119,9 @@ The system is made out of a few main parts:
   Inside it's constructor, it can sign onto events, and add commmands to the bot
 
   You, as a developer, are supposed to create your own features.
+  
+  #### Code Example:
+  
   An example for a feature that prints hi every hour, and adds a ping command:
   
     from Interfaces.BotFeature import BotFeature
@@ -134,8 +155,8 @@ The system is made out of a few main parts:
   
   There are 2 ways to create a main file.
   
-  #### First way (more simple):
-  
+  ### First way
+  #### (more simple)
   You can either use the "framework" way, by filling up the 'main.py' file
   first - import the features you want to use, then continue by filling up the functions 'get_token', 'get_db_method' and 'add_features' with your code.
   then run the 'main_framework.py' file.
@@ -160,8 +181,8 @@ The system is made out of a few main parts:
         new_generic_bot.add_features(example_feature_class)
         pass
 
-  #### Second way (more flexible):
-  
+  ### Second way 
+  #### (more flexible)
   You can also create your own main file, and inside it:
   
   * import necessary features
@@ -184,13 +205,13 @@ The system is made out of a few main parts:
       ExampleBot.activate()
     main()
 
-# Generic UI components
+## Generic UI components
   during the making of the bot, we've created an easy to use classes for the discord UI, with the following elements:
   * Buttons
   * Select lists
   * Modals (forms)
   
-  ## Generic View
+  ### Generic View
   A class that inherits from the "view" object, that is added to messsages in order to attach a button or a select list.
   You may simply create a GenericView object, with its constructor - 
   
@@ -200,9 +221,9 @@ The system is made out of a few main parts:
   
     channel.send(<your message>, view = my_view)
   
-  ## Generic Button
+  ### Generic Button
   In order to add a button to your view, you need to use the "add_generic_button" method of the Generic_View class.
-  ### Parameters:
+  #### Parameters:
   
   * label (str)
   * style (discord.ButtonStyle)
@@ -210,7 +231,7 @@ The system is made out of a few main parts:
   * callback (function)
   * value (any)
  
-  ### Code Example:
+  #### Code Example:
     my_view = Generic_View()
     gen_view.add_generic_button(label = '<your label>',
                                     style = ui_tools.string_to_color('<color>'),
@@ -219,11 +240,11 @@ The system is made out of a few main parts:
                                     )
     channel.send('<your message>', view = my_view)
     
-  ## Generic Select
+  ### Generic Select
   A UI element that lets the user choose multiple choices from a list.
   The Select can be created with the "add_generic_select" method of the "Generic_View" class.
   
-  ### Parameters:
+  #### Parameters:
   
   * placeholder (str) - text displayed when nothing is chosen
   * min_values (int) - min values chosen at the same time
@@ -242,7 +263,7 @@ The system is made out of a few main parts:
     you could use the 'value' key to store data related to that choice, 
     that will be later used to process the action that is needed to be taken.
     
-  ### Code Example:
+  #### Code Example:
     limit_options = [{'label' : 'Unlimited',
                     'description' : '',
                     'value' : 0}] + [
@@ -256,7 +277,7 @@ The system is made out of a few main parts:
                                  min_values=<you min value>, max_values=<your max value>, callback=<your callback>)
   * note you can only add up to 25 options, if you want to add a user select list, look for "User Selector" below
   
-  ### Getting selected options
+  #### Getting selected options
   
   You can find the values selected on the "interaction.data['values']", which contains a list of all values selected by the user.
   
@@ -264,9 +285,9 @@ The system is made out of a few main parts:
   
   if you've inserted None to the value key of the option, itll insert the label as the value variable instead.
   
-  ## User Selector
+  ### User Selector
   
-  ### Code Example:
+  #### Code Example:
   
     gen_view.add_user_selector(placeholder='👋 Add Users', callback=<your func>)
     
