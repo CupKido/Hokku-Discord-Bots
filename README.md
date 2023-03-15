@@ -95,10 +95,12 @@ The system is made out of a few main parts:
   
 ## Bot Features
   
-  A feature is a python class, is a class that inherits from the BotFeature class.
+  A bot feature is a python class that inherits from the BotFeature class, 
+  that represents a functionality a bot might preform.
   The class recieves a Generic Bot instance as an argument on its constructor (__init__ func).
   Inside it's constructor, it can sign onto events, and add commmands to the bot
 
+  You, as a developer, are supposed to create your own features.
   An example for a feature that prints hi every hour, and adds a ping command:
   
     from Interfaces.BotFeature import BotFeature
