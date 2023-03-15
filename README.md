@@ -247,9 +247,11 @@ The system is made out of a few main parts:
                         'value' : x}
                          for x in range(1, 25)
                     ]
-        gen_view = Generic_View()
-        gen_view.add_generic_select(placeholder='✋ User Limit', options=limit_options,
-                                     min_values=0, max_values=1, callback=self.set_vc_limit)
+    gen_view = Generic_View()
+    gen_view.add_generic_select(placeholder='<your placeholder>', options=<options list>,
+                                 min_values=<you min value>, max_values=<your max value>, callback=<your callback>)
+  * note you can only add up to 25 options, if you want to add a user select list, look below
+              
   ## User Selector
   
   ### Code Example:
