@@ -229,7 +229,11 @@ The system is made out of a few main parts:
   * min_values (int) - min values chosen at the same time
   * max_values (int) - max values chosen at the same time
   * callback (function) - function that gets called when the selection is changed
-    arguments: (self, interaction : Discord.Interaction, select : Generic_Select, view : Generic_View)
+  
+    arguments: 
+    
+    (self, interaction : Discord.Interaction, select : Generic_Select, view : Generic_View)
+    
   * options (list) - a list of all the options the select list will contain, 
     each item is a dictionary object structured like this:
     
@@ -251,7 +255,15 @@ The system is made out of a few main parts:
     gen_view.add_generic_select(placeholder='<your placeholder>', options=<options list>,
                                  min_values=<you min value>, max_values=<your max value>, callback=<your callback>)
   * note you can only add up to 25 options, if you want to add a user select list, look below
-              
+  
+  ### Getting selected options
+  
+  You can find the values selected on the "interaction.data['values']", which contains a list of all values selected by the user.
+  
+  note that you can only extract the "value" parameter of the option!
+  
+  if you've inserted None to the value key of the option, itll insert the label as the value variable instead.
+  
   ## User Selector
   
   ### Code Example:
