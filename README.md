@@ -171,5 +171,7 @@ The system is made out of a few main parts:
       ExampleBot.activate()
     main()
       
-
+# Useful Links
+* discord api documentation:
+  https://discordpy.readthedocs.io/en/stable/api.html
 
