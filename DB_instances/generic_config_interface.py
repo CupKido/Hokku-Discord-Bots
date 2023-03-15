@@ -11,23 +11,23 @@ class server_config:
     Json_Method = 'J'
     Mongo_client = None
     Method = None
-
+    additional_uri = '/server_configs/server_configs.json'
+    
     config_uri = "mongodb://localhost:27017/"
-
+    
     def __init__(self, server_id):
         # either "M" for mongo or "J" for json
-        if server_config.Method is None:
-            server_config.Method = 'M'
+        if self.Method is None:
+            self.Method = 'M'
 
-        server_config.confirm_db_initialized()
+        self.confirm_db_initialized()
 
         server_id = str(server_id)
         self.server_id = server_id
         self.load_params()
-        # self.save_params()
 
     def __str__(self) -> str:
-        return "ID: " +str(self.server_id) + "   Method: " + str(server_config.Method) + "   Params: " + str(self.params)
+        return "ID: " +str(self.server_id) + "   Method: " + str(self.Method) + "   Params: " + str(self.params)
 
     def get_param(self, param_name):
         param_name = str(param_name).lower()
@@ -44,13 +44,13 @@ class server_config:
         self.save_params()
 
     def save_params(self):
-        if server_config.Method == server_config.MongoDB_Method:
+        if self.Method == self.MongoDB_Method:
             self.save_params_M()
-        elif server_config.Method == server_config.Json_Method:
+        elif self.Method == self.Json_Method:
             self.save_params_J()
 
     def save_params_M(self):
-        db = server_config.Mongo_client["server_configs"]
+        db = self.Mongo_client["server_configs"]
         col = db["server_configs"]
         
         query = { "server_id": self.server_id }
@@ -65,22 +65,22 @@ class server_config:
             
     def save_params_J(self):
         try:
-            with open(server_config.config_uri, "r") as f:
+            with open(self.config_uri, "r") as f:
                 data = json.load(f)
         except:
             data = {}
         data[self.server_id] = self.params
-        with open(server_config.config_uri, "w+") as f:
+        with open(self.config_uri, "w+") as f:
             json.dump(data, f, indent=4)
 
     def load_params(self):
-        if server_config.Method == server_config.MongoDB_Method:
+        if self.Method == self.MongoDB_Method:
             self.load_params_M()
-        elif server_config.Method == server_config.Json_Method:
+        elif self.Method == self.Json_Method:
             self.load_params_J()
     
     def load_params_M(self):
-        db = server_config.Mongo_client["server_configs"]
+        db = self.Mongo_client["server_configs"]
         col = db["server_configs"]
         # col.delete_many({})
         # for x in col.find({}): print(x)
@@ -93,7 +93,7 @@ class server_config:
 
     def load_params_J(self):
         try:
-            with open(server_config.config_uri, "r") as f:
+            with open(self.config_uri, "r") as f:
                 data = json.load(f)
         except:
             self.params = {}
@@ -103,29 +103,38 @@ class server_config:
         else:
             self.params = {} 
     
-    @staticmethod
-    def set_method(method, config_uri = None):
-        if method == server_config.MongoDB_Method:
-            server_config.Method = method
-            server_config.config_uri = "mongodb://localhost:27017/"
-        elif method == server_config.Json_Method:
-            server_config.Method = method
-            server_config.config_uri = './data_base/config/bots_config.json'
+    @classmethod
+    def set_method(interface, method, db_uri = None):
+        interface.Method = method
+        if db_uri is None:
+            if method == interface.MongoDB_Method:
+                interface.config_uri = "mongodb://localhost:27017/"
+            elif method == interface.Json_Method:
+                interface.config_uri = './data_base' + interface.additional_uri
+        elif db_uri is not None:
+            if method == interface.Json_Method:
+                interface.config_uri = db_uri + interface.additional_uri
+            elif method == interface.MongoDB_Method:
+                interface.config_uri = db_uri
+
         else:
             print("Invalid method")
             return
-        if config_uri is not None:
-            server_config.config_uri = config_uri
         
-        server_config.confirm_db_initialized()
+        
+        interface.confirm_db_initialized()
 
-    @staticmethod
-    def confirm_db_initialized():
-        if server_config.Method == 'M' and server_config.Mongo_client is None:
-            server_config.Mongo_client = pymongo.MongoClient(server_config.config_uri)
+    @classmethod
+    def confirm_db_initialized(interface):
+        if interface.Method == 'M' and interface.Mongo_client is None:
+            interface.Mongo_client = pymongo.MongoClient(interface.config_uri)
             # print(server_config.Mongo_client.server_info())
-            print('MongoDB databases names list: \n\t' + '\n\t'.join(server_config.Mongo_client.list_database_names()))
-        if server_config.Method == 'J' and not os.path.exists(server_config.config_uri):
-            os.makedirs('data_base/config')
-            with open(server_config.config_uri, 'w+') as f:
+            print('MongoDB databases names list: \n\t' + '\n\t'.join(interface.Mongo_client.list_database_names()))
+        # get parent directory of config_uri
+        directory = os.path.dirname(interface.config_uri)
+        if interface.Method == 'J' and not os.path.exists(directory):
+            os.makedirs(directory)
+            with open(interface.config_uri, 'w+') as f:
                 f.write('{}')
+
+    
