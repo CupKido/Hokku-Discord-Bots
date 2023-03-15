@@ -18,6 +18,7 @@ A simple framework that allows creating, loading and unloading features from dis
     -   [Generic Button](#generic-button)
     -   [Generic Select](#generic-select)
     -   [User Selector](#user-selector)
+    -   [Generic Modal](#generic-modal)
 -   [UI tools module](#ui-tools-module)
     
 
@@ -291,6 +292,10 @@ A simple framework that allows creating, loading and unloading features from dis
   
     gen_view.add_user_selector(placeholder='👋 Add Users', callback=<your func>)
     
+  ### Generic Modal
+  
+  Callback arguments - (self, interaction)
+  
   ## UI tools module
   
   The ui tools module contains a few function that can assist you when working with discord's ui component.
