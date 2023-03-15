@@ -6,7 +6,7 @@ from dotenv import dotenv_values
 config = dotenv_values('.env')
 def main():
     # stat the bot
-    HitokuBot_token = config['HITOKUBOT']
+    HitokuBot_token = config['HITOKUBOT_TOKEN']
     HitokuBot = GenericBot_client(HitokuBot_token, 'J')
     HitokuBot.add_features(confessions)
     HitokuBot.activate()
