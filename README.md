@@ -101,7 +101,9 @@ The system is made out of a few main parts:
 
   An example for a feature that prints hi every hour, and adds a ping command:
   
-    class example_feature:
+    from Interfaces.BotFeature import BotFeature
+    
+    class example_feature(BotFeature):
       def __init__(self, bot : IGenericBot):
         super.__init__(bot)
         bot.add_every_hour_callback(self.say_hi)
