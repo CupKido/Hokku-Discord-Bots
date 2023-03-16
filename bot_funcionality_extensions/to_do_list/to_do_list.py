@@ -12,6 +12,7 @@ class to_do_list(BotFeature):
     IS_EMBED = 'is_embed'
     LAST_UPDATE = 'last_update'
     days_for_inactive = 60
+    select_list_task_index = 4
     def __init__(self, bot):
         super().__init__(bot)
         bot.add_every_day_callback(self.clean_inactive_users)
@@ -49,64 +50,89 @@ class to_do_list(BotFeature):
         my_view.add_generic_button(label=' Add', emoji='➕', style=discord.ButtonStyle.green, callback=self.add_task_button_click)
         if len(tasks_list) > 0:
             my_view.add_generic_button(label=' Delete', emoji='➖', style=discord.ButtonStyle.red, callback=self.delete_task_button_click)
-            my_view.add_generic_button(label=' Complete', emoji='✔️', style=discord.ButtonStyle.blurple, callback=self.complete_task_button_click)
-            options = [{'label' : tasks_list[x]['name'], 'description': tasks_list[x]['description'], 'value' : str(x)} for x in range(len(tasks_list))]
+            my_view.add_generic_button(label=' Check', emoji='✔️', style=discord.ButtonStyle.blurple, callback=self.complete_task_button_click)
+            my_view.add_generic_button(label=' Uncheck', emoji='❌', style=discord.ButtonStyle.blurple, callback=self.uncomplete_task_button_click)
+            options = [{'label' : (str(x+1) + '. ' + tasks_list[x]['name']), 'description': tasks_list[x]['description'], 'value' : str(x)} for x in range(len(tasks_list))]
             my_view.add_generic_select(placeholder='Select task', options=options, min_values=1, max_values=1, callback=self.select_task)
-            my_view.add_generic_button(label=' To top', emoji='☝️', style=discord.ButtonStyle.blurple, callback=self.move_to_top_button_click)
-            my_view.add_generic_button(label=' To bottom', emoji='👇', style=discord.ButtonStyle.blurple, callback=self.move_to_bottom_button_click)
+            my_view.add_generic_button(label='Refresh', style=discord.ButtonStyle.blurple, callback=self.refresh_button_click)
+            my_view.add_generic_button(label=' To top', emoji='☝️', style=discord.ButtonStyle.green, callback=self.move_to_top_button_click)
+            my_view.add_generic_button(label=' To bottom', emoji='👇', style=discord.ButtonStyle.green, callback=self.move_to_bottom_button_click)
+            if len(tasks_list) > 9:
+                my_view.add_generic_button(label=' Previous', style=discord.ButtonStyle.gray, callback=self.show_prev_button_click)
+                my_view.add_generic_button(label=' Next', style=discord.ButtonStyle.gray, callback=self.show_next_button_click)
         return my_view
 
     async def add_task_button_click(self, interaction, button, view):
         await self.show_add_task_modal(interaction)
 
     async def delete_task_button_click(self, interaction, button, view):
-        if len(view.children[3].values) == 0:
+        if len(view.children[self.select_list_task_index].values) == 0:
             await interaction.response.send_message('Please select a task', ephemeral=True)
             return
         this_user_db = per_id_db(interaction.user.id)
         tasks_list = this_user_db.get_param(self.TASKS_LIST)
         if tasks_list is None:
             tasks_list = []
-        selected_task_index = int(view.children[3].values[0])
+        selected_task_index = int(view.children[self.select_list_task_index].values[0])
         tasks_list.pop(selected_task_index)
         await self.update_show_tasks(interaction, tasks_list)
         this_user_db.set_params(tasks_list=tasks_list)
 
     async def complete_task_button_click(self, interaction, button, view):
-        if len(view.children[3].values) == 0:
+        if len(view.children[self.select_list_task_index].values) == 0:
             await interaction.response.send_message('Please select a task', ephemeral=True)
             return
         this_user_db = per_id_db(interaction.user.id)
         tasks_list = this_user_db.get_param(self.TASKS_LIST)
         if tasks_list is None:
             tasks_list = []
-        selected_task_index = int(view.children[3].values[0])
+        selected_task_index = int(view.children[self.select_list_task_index].values[0])
         tasks_list[selected_task_index]['is_done'] = True
         await self.update_show_tasks(interaction, tasks_list)
         this_user_db.set_params(tasks_list=tasks_list)
 
-    async def move_to_top_button_click(self, interaction, button, view):
-        if len(view.children[3].values) == 0:
+    async def uncomplete_task_button_click(self, interaction, button, view):
+        if len(view.children[self.select_list_task_index].values) == 0:
             await interaction.response.send_message('Please select a task', ephemeral=True)
             return
         this_user_db = per_id_db(interaction.user.id)
         tasks_list = this_user_db.get_param(self.TASKS_LIST)
         if tasks_list is None:
             tasks_list = []
-        selected_task_index = int(view.children[3].values[0])
+        selected_task_index = int(view.children[self.select_list_task_index].values[0])
+        tasks_list[selected_task_index]['is_done'] = False
+        await self.update_show_tasks(interaction, tasks_list)
+        this_user_db.set_params(tasks_list=tasks_list)
+
+    async def refresh_button_click(self, interaction, button, view):
+        this_user_db = per_id_db(interaction.user.id)
+        tasks_list = this_user_db.get_param(self.TASKS_LIST)
+        if tasks_list is None:
+            tasks_list = []
+        await self.update_show_tasks(interaction, tasks_list)
+
+    async def move_to_top_button_click(self, interaction, button, view):
+        if len(view.children[self.select_list_task_index].values) == 0:
+            await interaction.response.send_message('Please select a task', ephemeral=True)
+            return
+        this_user_db = per_id_db(interaction.user.id)
+        tasks_list = this_user_db.get_param(self.TASKS_LIST)
+        if tasks_list is None:
+            tasks_list = []
+        selected_task_index = int(view.children[self.select_list_task_index].values[0])
         tasks_list.insert(0, tasks_list.pop(selected_task_index))
         await self.update_show_tasks(interaction, tasks_list)
         this_user_db.set_params(tasks_list=tasks_list)
 
     async def move_to_bottom_button_click(self, interaction, button, view):
-        if len(view.children[3].values) == 0:
+        if len(view.children[self.select_list_task_index].values) == 0:
             await interaction.response.send_message('Please select a task', ephemeral=True)
             return
         this_user_db = per_id_db(interaction.user.id)
         tasks_list = this_user_db.get_param(self.TASKS_LIST)
         if tasks_list is None:
             tasks_list = []
-        selected_task_index = int(view.children[3].values[0])
+        selected_task_index = int(view.children[self.select_list_task_index].values[0])
         tasks_list.append(tasks_list.pop(selected_task_index))
         await self.update_show_tasks(interaction, tasks_list)
         this_user_db.set_params(tasks_list=tasks_list)
@@ -130,10 +156,13 @@ class to_do_list(BotFeature):
             res_msg += '\n'
         return res_msg
 
-    def get_tasks_embeds(self, tasks_list):
+    def get_tasks_embeds(self, tasks_list, start_point):
         res_embeds = []
         res_embeds.append(discord.Embed(title='To Do list:', color=0x0000ff))
-        for x in range(len(tasks_list)):
+        
+        for x in range(start_point-1,len(tasks_list)):
+            if len(res_embeds)== 10:
+                break
             task = tasks_list[x]
             res_embeds.append(self.get_embed_for_task(task, x))
         return res_embeds
@@ -160,10 +189,10 @@ class to_do_list(BotFeature):
         embed.add_field(name='Completed', value='Yes' if task['is_done'] else 'No', inline=False)
         if task['year'] != -1:
             embed.add_field(name='Late', value='Yes' if task_date < datetime.datetime.now() and not task['is_done'] else 'No', inline=False)
-        embed.set_footer(text='________________________________________________________________')
+        embed.set_footer(text='__________________________________________________________________________')
         return embed
 
-    async def update_show_tasks(self, interaction, tasks_list):
+    async def update_show_tasks(self, interaction, tasks_list, start_point = 1):
         this_user_db = per_id_db(interaction.user.id)
         is_embed = this_user_db.get_param(self.IS_EMBED)
         
@@ -172,7 +201,7 @@ class to_do_list(BotFeature):
         if is_embed is None:
             is_embed = True
         if is_embed:
-            embeds = self.get_tasks_embeds(tasks_list)
+            embeds = self.get_tasks_embeds(tasks_list, start_point)
             await interaction.response.edit_message(embeds=embeds, view=tasks_menu_view)
         else:
             message = self.get_tasks_string(tasks_list)
@@ -182,6 +211,15 @@ class to_do_list(BotFeature):
         this_user_db.set_params(last_update={'year' : now.year, 'month' : now.month, 'day' : now.day})
 
     async def show_add_task_modal(self, interaction):
+        # make sure existing tasks are less than 25
+        this_user_db = per_id_db(interaction.user.id)
+        tasks_list = this_user_db.get_param(self.TASKS_LIST)
+        if tasks_list is None:
+            tasks_list = []
+        elif len(tasks_list) >= 25:
+            await interaction.response.send_message('You can\'t have more than 25 tasks', ephemeral=True)
+            return
+
         this_modal = self.get_new_task_modal()
         await interaction.response.send_modal(this_modal)
 
@@ -234,7 +272,7 @@ class to_do_list(BotFeature):
         if is_embed is None:
             is_embed = True
         if is_embed:
-            embeds = self.get_tasks_embeds(tasks_list)
+            embeds = self.get_tasks_embeds(tasks_list, 1)
             await interaction.response.send_message(embeds=embeds, view=tasks_menu_view, ephemeral=True)
         else:
             message = self.get_tasks_string(tasks_list)
@@ -254,3 +292,63 @@ class to_do_list(BotFeature):
                     last_update = datetime.datetime(last_update_year, last_update_month, last_update_day)
                     if (datetime.datetime.now() - last_update).days > self.days_for_inactive:
                         per_id_db(user).set_params(tasks_list=None, last_update=None)
+
+    async def show_next_button_click(self, interacion, button, view):
+        # get first task index
+        this_user_db = per_id_db(interacion.user.id)
+
+        # check if embed
+        is_embed = this_user_db.get_param(self.IS_EMBED)
+        if is_embed is None:
+            is_embed = True
+        if not is_embed:
+            await interacion.response.defer()
+            return
+
+        if len(interacion.message.embeds[1]) == 1:
+            await interacion.defer()
+        index = int(interacion.message.embeds[1].author.name)
+
+        # get tasks list
+        
+        tasks_list = this_user_db.get_param(self.TASKS_LIST)
+        if tasks_list is None:
+            tasks_list = []
+
+        # update message
+        if index+9 <= len(tasks_list):
+            await self.update_show_tasks(interacion, tasks_list, index+9)
+        else:
+            await interacion.response.defer()
+
+    async def show_prev_button_click(self, interacion, button, view):
+        this_user_db = per_id_db(interacion.user.id)
+
+        # check if embed
+        is_embed = this_user_db.get_param(self.IS_EMBED)
+        if is_embed is None:
+            is_embed = True
+        if not is_embed:
+            await interacion.response.defer()
+            return
+
+        # get first task index
+        if len(interacion.message.embeds[1]) == 1:
+            await interacion.defer()
+        index = int(interacion.message.embeds[1].author.name)
+
+        # get tasks list
+        
+        tasks_list = this_user_db.get_param(self.TASKS_LIST)
+        if tasks_list is None:
+            tasks_list = []
+
+        # update message
+        if index-9 >= 1:
+            await self.update_show_tasks(interacion, tasks_list, index-9)
+        elif index != 1:
+            await self.update_show_tasks(interacion, tasks_list, 1)
+        else:
+            await interacion.response.defer()
+
+
