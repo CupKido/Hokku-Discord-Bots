@@ -987,12 +987,12 @@ class room_opening(BotFeature):
             this_server_config.set_params(is_message_embed=True, 
                                         embed_message_title='Manage your dynamic voice channel',
                                         embed_message_description='Here you can manage your voice \
-                                            channel and edit it as you see fit. \
-                                        \nYou must be connected to the voice channel in order to edit it.',
+                                            channel and edit it as you see fit.' + \
+                                        '\nYou must be connected to the voice channel in order to edit it.',
                                         vc_invite_dm = False,
                                         rate_limit_error_title='Easy does it...',
-                                        rate_limit_error_description='youv\'e renamed the channel too many times \
-                                        \nplease wait {time} seconds or open a new channel - <#{channel}>',
+                                        rate_limit_error_description='youv\'e renamed the channel too many times' + \
+                                        '\nplease wait {time} seconds or open a new channel - <#{channel}>',
                                         default_user_limit = 0,
                                         vc_name='{name}\'s Channel',
                                         special_roles = [],

@@ -3,6 +3,7 @@ from discord import app_commands
 from Interfaces.IGenericBot import IGenericBot
 import asyncio
 from DB_instances.generic_config_interface import server_config
+from DB_instances.per_id_db import per_id_db
 from bot_funcionality_extensions.logger import logger
 from discord.ext import commands, tasks
 import time
@@ -41,10 +42,11 @@ import time
 
 
 class GenericBot_client(IGenericBot):
-    def __init__(self, secret_key, db_method='J', config_uri = None, alert_when_online : bool = False):
+    def __init__(self, secret_key, db_method='J', db_uri = None, alert_when_online : bool = False):
         # bot init
         super().__init__(intents = discord.Intents.all())
-        server_config.set_method(db_method, config_uri)
+        server_config.set_method(db_method, db_uri)
+        per_id_db.set_method(db_method, db_uri)
         self.tree = app_commands.CommandTree(self)
         self.synced = False
         # bot options

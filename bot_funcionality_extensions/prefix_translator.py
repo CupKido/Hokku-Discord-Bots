@@ -26,7 +26,8 @@ class prefix_translator(BotFeature):
             
             if command_name in self.commands.keys():
                 try:
-                    await self.commands[command_name]({'interaction': {'response': {'send' : message.channel.send}}})
+                    await message.reply('Command found, yet not supported, please use the slash comma instead')
+                    #await self.commands[command_name]({'interaction': {'response': {'send' : message.channel.send}}})
                     return
                 except Exception as e:
                     print(e)
