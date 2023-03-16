@@ -15,7 +15,7 @@ class to_do_list(BotFeature):
         super().__init__(bot)
 
         @bot.tree.command(name='add_task', description='add task to the list')
-        async def add_task(interaction):
+        async def add_task_command(interaction):
             this_user_db = per_id_db(interaction.user.id)
             tasks_list = this_user_db.get_param(self.TASKS_LIST)
             if tasks_list is not None and len(tasks_list) == 25:
@@ -25,26 +25,11 @@ class to_do_list(BotFeature):
             await self.show_add_task_modal(interaction)
 
         @bot.tree.command(name='show_tasks', description='show tasks list')
-        async def show_tasks(interaction):
-            this_user_db = per_id_db(interaction.user.id)
-            tasks_list = this_user_db.get_param(self.TASKS_LIST)
-            is_embed = this_user_db.get_param(self.IS_EMBED)
-            if tasks_list is None:
-                tasks_list = []
-
-            tasks_menu_view = self.get_tasks_menu_view(tasks_list)
-
-            if is_embed is None:
-                is_embed = True
-            if is_embed:
-                embeds = self.get_tasks_embeds(tasks_list)
-                await interaction.response.send_message(embeds=embeds, view=tasks_menu_view, ephemeral=True)
-            else:
-                message = self.get_tasks_string(tasks_list)
-                await interaction.response.send_message(content=message, view=tasks_menu_view, ephemeral=True)
+        async def show_tasks_command(interaction):
+            await self.show_tasks(interaction)
                 
         @bot.tree.command(name='is_to_do_list_embed', description='set if to do list will be sent as embed')
-        async def is_to_do_list_embed(interaction, is_embed : bool):
+        async def is_to_do_list_embed_command(interaction, is_embed : bool):
             this_user_db = per_id_db(interaction.user.id)
             this_user_db.set_params(is_embed=is_embed)
             await interaction.response.send_message('To Do list was set as ' + ('Embed' if is_embed else 'Not Embed'), ephemeral=True)
@@ -228,3 +213,21 @@ class to_do_list(BotFeature):
 
     async def select_task(self, interaction, select, view):
         await interaction.response.defer()
+
+    async def show_tasks(self, interaction):
+        this_user_db = per_id_db(interaction.user.id)
+        tasks_list = this_user_db.get_param(self.TASKS_LIST)
+        is_embed = this_user_db.get_param(self.IS_EMBED)
+        if tasks_list is None:
+            tasks_list = []
+
+        tasks_menu_view = self.get_tasks_menu_view(tasks_list)
+
+        if is_embed is None:
+            is_embed = True
+        if is_embed:
+            embeds = self.get_tasks_embeds(tasks_list)
+            await interaction.response.send_message(embeds=embeds, view=tasks_menu_view, ephemeral=True)
+        else:
+            message = self.get_tasks_string(tasks_list)
+            await interaction.response.send_message(content=message, view=tasks_menu_view, ephemeral=True)
