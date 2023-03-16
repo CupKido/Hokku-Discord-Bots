@@ -84,6 +84,13 @@ class GenericBot_client(IGenericBot):
             if int(message.id) == int(message_id):
                 return message
 
+    def get_all_members_list(self):
+        members = []
+        for member in self.get_all_members():
+            if member not in members:
+                members.append(member)
+        return members
+
     async def on_ready(self):
         # running on_ready callbacks
         await self.wait_until_ready()
