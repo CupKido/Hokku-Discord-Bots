@@ -313,7 +313,7 @@ A simple framework that allows creating, loading and unloading features from dis
     
     red, green, blue, yellow, white, black
     
-  * get_modal_value(interaction : discord.Interaction, index : int) - assuming the interaction contains data from filled module, 
+  * get_modal_value(interaction : discord.Interaction, index : int) - assuming the interaction contains data from filled modal (form), 
   returns the value inserted in the "index" number of TextInput box
   
   
