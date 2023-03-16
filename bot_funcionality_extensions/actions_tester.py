@@ -45,6 +45,13 @@ class actions_tester(BotFeature):
             await interaction.channel.send(message)
             await interaction.response.send_message('sent message', ephemeral=True)
 
-        
+        @bot.tree.command(name = 'test', description='test')
+        @commands.has_permissions(administrator=True)
+        async def test(interaction: discord.Interaction):
+            embed1= discord.Embed(title="test1", description="test", color=0x00ff00)
+            embed2= discord.Embed(title="test2", description="test", color=0x00ff00)
+            embed3= discord.Embed(title="test3", description="test", color=0x00ff00, timestamp=discord.utils.utcnow())
+            embeds = [embed1, embed2, embed3]
+            await interaction.response.send_message('test', embeds=embeds, ephemeral=True)
 
         #TODO: move basic features to a separate feature
