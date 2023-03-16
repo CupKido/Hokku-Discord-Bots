@@ -21,6 +21,10 @@ A simple framework that allows creating, loading and unloading features from dis
     -   [Generic Modal](#generic-modal)
 -   [UI tools module](#ui-tools-module)
     
+    
+    
+    
+[Useful Links](#useful-links)
 
 ## Generic Bot
 
