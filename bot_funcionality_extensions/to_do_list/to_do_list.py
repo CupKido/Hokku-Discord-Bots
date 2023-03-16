@@ -10,10 +10,11 @@ from datetime import timedelta
 class to_do_list(BotFeature):
     TASKS_LIST = 'tasks_list'
     IS_EMBED = 'is_embed'
-
+    LAST_UPDATE = 'last_update'
+    days_for_inactive = 60
     def __init__(self, bot):
         super().__init__(bot)
-
+        bot.add_every_day_callback(self.clean_inactive_users)
         @bot.tree.command(name='add_task', description='add task to the list')
         async def add_task_command(interaction):
             this_user_db = per_id_db(interaction.user.id)
@@ -176,6 +177,9 @@ class to_do_list(BotFeature):
         else:
             message = self.get_tasks_string(tasks_list)
             await interaction.response.edit_message(content=message, view=tasks_menu_view)
+        # set last update date
+        now = datetime.datetime.now()
+        this_user_db.set_params(last_update={'year' : now.year, 'month' : now.month, 'day' : now.day})
 
     async def show_add_task_modal(self, interaction):
         this_modal = self.get_new_task_modal()
@@ -210,6 +214,10 @@ class to_do_list(BotFeature):
         else:
             await interaction.response.send_message('added task: ' + task_name, ephemeral=True)
         this_user_db.set_params(tasks_list=tasks_list)
+        # set last update date
+        now = datetime.datetime.now()
+        this_user_db.set_params(last_update={'year' : now.year, 'month' : now.month, 'day' : now.day})
+
 
     async def select_task(self, interaction, select, view):
         await interaction.response.defer()
@@ -231,3 +239,18 @@ class to_do_list(BotFeature):
         else:
             message = self.get_tasks_string(tasks_list)
             await interaction.response.send_message(content=message, view=tasks_menu_view, ephemeral=True)
+
+    async def clean_inactive_users(self):
+        allusers = per_id_db.get_all_data()
+        for user in allusers.keys():
+            if self.bot_client.get_user(user) is None:
+                continue
+            else:
+                this_user_db = allusers[user]
+                if self.LAST_UPDATE in this_user_db.keys() and this_user_db[self.LAST_UPDATE] is not None:
+                    last_update_year = this_user_db[self.LAST_UPDATE]['year']
+                    last_update_month = this_user_db[self.LAST_UPDATE]['month']
+                    last_update_day = this_user_db[self.LAST_UPDATE]['day']
+                    last_update = datetime.datetime(last_update_year, last_update_month, last_update_day)
+                    if (datetime.datetime.now() - last_update).days > self.days_for_inactive:
+                        per_id_db(user).set_params(tasks_list=None, last_update=None)

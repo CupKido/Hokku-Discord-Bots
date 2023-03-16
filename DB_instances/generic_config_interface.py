@@ -104,6 +104,26 @@ class server_config:
             self.params = {} 
     
     @classmethod
+    def get_all_data(interface):
+        if interface.Method == interface.MongoDB_Method:
+            return interface.get_all_data_M()
+        elif interface.Method == interface.Json_Method:
+            return interface.get_all_data_J()
+    
+    @classmethod
+    def get_all_data_M(interface):
+        pass
+
+    @classmethod
+    def get_all_data_J(interface):
+        try:
+            with open(interface.config_uri, "r+") as f:
+                data = json.load(f)
+            return data
+        except:
+            return {}
+
+    @classmethod
     def set_method(interface, method, db_uri = None):
         interface.Method = method
         if db_uri is None:
