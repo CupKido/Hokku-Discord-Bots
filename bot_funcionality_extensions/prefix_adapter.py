@@ -58,7 +58,7 @@ class response_temp:
         self.message = message
 
     async def send_message(self, content='', embed = None, embeds= None, ephemeral = False, view = None):
-        await self.message.channel.send(content, embed = embed, embeds=embeds, view = view)
+        await self.message.reply(content, embed = embed, embeds=embeds, view = view)
 
     async def edit_message(self, content='', embed = None, embeds= None, view = None):
         await self.message.edit(content, embed = embed, embeds=embeds, view = view)
