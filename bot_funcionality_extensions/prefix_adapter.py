@@ -10,7 +10,7 @@ from Interfaces.BotFeature import BotFeature
 #########################################
 
 class prefix_adapter(BotFeature):
-    
+    prefix = '!'
     def __init__(self, bot):
         super().__init__(bot)
         bot.add_on_ready_callback(self.on_ready)
@@ -29,8 +29,9 @@ class prefix_adapter(BotFeature):
     async def on_message(self, message):
         if message.author == self.bot_client.user:
             return
-
-        if message.content.startswith('!'):
+        if len(message.content) < 2:
+            return
+        if message.content.startswith(prefix_adapter.prefix):
             command_name = message.content.split(' ')[0][1:]
             
             if command_name in self.commands.keys():
