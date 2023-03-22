@@ -235,7 +235,7 @@ class activity_notifier(BotFeature):
         sevrer_nots = member_db.get_param(self.SERVERS_NOTIFICATIONS)
         if sevrer_nots is None:
             sevrer_nots = {}
-        sevrer_nots[member.guild.id] = minimum_members
+        sevrer_nots[str(member.guild.id)] = minimum_members
         member_db.set_params(servers_notifications = sevrer_nots)
 
 
