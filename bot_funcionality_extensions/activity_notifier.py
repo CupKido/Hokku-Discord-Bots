@@ -14,6 +14,7 @@ class activity_notifier(BotFeature):
     SERVERS_NOTIFICATIONS = 'servers_notifications'
     USERS_NOTIFICATIONS = 'users_notifications'
     LAST_ACTIVITY_NOTIFICATION_DATE = 'last_activity_notification_date'
+    DISABLE_ACTIVITY_NOTIFICATION = 'disable_activity_notification'
     IS_DND = 'is_dnd'
 
     NOTIFIED_MEMBERS = 'notified_members'
@@ -39,6 +40,11 @@ class activity_notifier(BotFeature):
                 return
             self.set_minimum_time(min_time, interaction.user)
             await interaction.response.send_message('Minimum time between notifications set to ' + str(min_time), ephemeral = True)
+
+        @self.bot_client.tree.command(name = 'disable_notifications_for_me', description = 'Disables the option for other members to get notified when you become active')
+        async def disable_notifications_for_me_command(interaction):
+            member_db = per_id_db(interaction.user.id)
+            member_db.set_params(disable_activity_notification=(not member_db.get_param(self.DISABLE_ACTIVITY_NOTIFICATION)))
 
     def get_activity_menu(self, member):
         my_view = Generic_View()
@@ -115,6 +121,8 @@ class activity_notifier(BotFeature):
                 await the_member.send(embed = active_server_embed)
                 self.update_last_notification_for_member(member_db)
             elif str(member.id) in to_notify_members_list:
+                if per_id_db(member.id).get_param(self.DISABLE_ACTIVITY_NOTIFICATION):
+                    continue
                 await the_member.send(embed = self.get_member_is_active_embed(member))
                 self.update_last_notification_for_member(member_db)
                 
@@ -240,7 +248,9 @@ class activity_notifier(BotFeature):
             return
         
         user_id = interaction.data['values'][0]
-
+        if per_id_db(user_id).get_param(self.DISABLE_ACTIVITY_NOTIFICATION):
+            await interaction.response.send_message('This user has disabled activity notifications', ephemeral = True)
+            return
         member_db = per_id_db(interaction.user.id)
         mems_list = member_db.get_param(self.USERS_NOTIFICATIONS)
         if mems_list is None:
