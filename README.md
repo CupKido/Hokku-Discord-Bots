@@ -148,6 +148,7 @@ A simple framework that allows creating, loading and unloading features from dis
   * actions tester
   * event logger
   * discord api commands
+  * to do list
   
 ## The Main File 
   The main function is the actual python file we run on our machine.
