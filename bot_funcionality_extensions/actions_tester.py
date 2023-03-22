@@ -29,15 +29,15 @@ class actions_tester(BotFeature):
         @bot.tree.command(name = 'join_vc', description='join a vc')
         @commands.has_permissions(administrator=True)
         async def join_a_vc(interaction: discord.Interaction, channel : discord.VoiceChannel):
+            await interaction.response.send_message('joining vc...', ephemeral=True)
             self.voice_clients[interaction.guild.id] = await channel.connect()
-            await interaction.response.send_message('joined vc', ephemeral=True)
             self.voice_clients[interaction.guild.id].play(discord.FFmpegPCMAudio('data_base/actions_tester/songJoJo.mp3'), after=lambda e: print('done'))
         
         @bot.tree.command(name = 'leave_vc', description='leave a vc')
         @commands.has_permissions(administrator=True)
         async def leave_a_vc(interaction: discord.Interaction):
+            await interaction.response.send_message('leaving vc...', ephemeral=True)
             await self.voice_clients[interaction.guild.id].disconnect()
-            await interaction.response.send_message('left vc', ephemeral=True)
 
         @bot.tree.command(name = 'send', description='sends a message')
         @commands.has_permissions(administrator=True)
