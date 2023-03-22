@@ -14,6 +14,7 @@ class activity_notifier(BotFeature):
     SERVERS_NOTIFICATIONS = 'servers_notifications'
     USERS_NOTIFICATIONS = 'users_notifications'
     LAST_ACTIVITY_NOTIFICATION_DATE = 'last_activity_notification_date'
+    IS_DND = 'is_dnd'
 
     NOTIFIED_MEMBERS = 'notified_members'
 
@@ -42,6 +43,11 @@ class activity_notifier(BotFeature):
     def get_activity_menu(self, member):
         my_view = Generic_View()
         this_server_config = server_config(member.guild.id)
+        member_db = per_id_db(member.id)
+        is_dnd = member_db.get_param(self.IS_DND)
+        if is_dnd is None:
+            is_dnd = False
+            member_db.set_params(is_dnd=False)
         notified_members_list = this_server_config.get_param(self.NOTIFIED_MEMBERS)
         if notified_members_list is None:
             notified_members_list = []
@@ -50,6 +56,12 @@ class activity_notifier(BotFeature):
             pass
         else:
             my_view.add_generic_button(label='Start Notifications', style=discord.ButtonStyle.green, callback=self.start_notifications)
+            pass
+        if is_dnd:
+            my_view.add_generic_button(label='Stop DND', style=discord.ButtonStyle.red, callback=self.stop_dnd_callback)
+            pass
+        else:
+            my_view.add_generic_button(label='Start DND', style=discord.ButtonStyle.green, callback=self.start_dnd_callback)
             pass
         my_view.add_generic_select(placeholder='Minimum Members for notification', min_values=1, max_values=1, options=[{'label': str(i), 'description' : '', 'value': str(i)} for i in range(1, 25)], callback=self.set_minimum_members_callback)
         my_view.add_generic_select(placeholder='Minimum Time between notifications', min_values=1, max_values=1, options=[{'label': str(i), 'description' : 'minutes', 'value': str(i)} for i in range(0, 24)], callback=self.set_minimum_time_callback)
@@ -71,24 +83,31 @@ class activity_notifier(BotFeature):
             the_member = member.guild.get_member(notified_member)
             if the_member is None:
                 continue
-            # check if the member is in a voice channel in the server
+            # continue if the member is in a voice channel in the server
             if the_member.voice is not None:
                 if the_member.voice.channel.guild.id == member.guild.id:
                     continue
+            
 
             member_db = per_id_db(notified_member)
+            # continue if the member is dnd
+            if member_db.get_param(self.IS_DND):
+                continue
+            # continue if the member timeouts have not passed
             if not self.check_if_notification_is_relevant(member_db):
                 continue
+
             servers_notifications_list = member_db.get_param(self.SERVERS_NOTIFICATIONS)
+            # continue if the member is not notified for this server
             if servers_notifications_list is None:
                 continue
             if str(member.guild.id) not in servers_notifications_list.keys():
                 continue
+
             min_members = servers_notifications_list[str(member.guild.id)]
             to_notify_members_list = member_db.get_param(self.USERS_NOTIFICATIONS)
             if to_notify_members_list is None:
-                member_db.set_params(users_notifications = [member.id])
-                to_notify_members_list = [member.id]
+                to_notify_members_list = []
             if min_members is None:
                 member_db.set_params(minimum_members = self.default_minimum_members)
                 min_members = self.default_minimum_members
@@ -189,6 +208,16 @@ class activity_notifier(BotFeature):
         if interaction.user.guild.id not in servers_notifications_list:
             servers_notifications_list[interaction.user.guild.id] = self.default_minimum_members
             member_db.set_params(servers_notifications = servers_notifications_list)
+        await interaction.response.edit_message(view = self.get_activity_menu(interaction.user))
+
+    async def stop_dnd_callback(self, interaction, button, view):
+        member_db = per_id_db(interaction.user.id)
+        member_db.set_params(is_dnd = False)
+        await interaction.response.edit_message(view = self.get_activity_menu(interaction.user))
+
+    async def start_dnd_callback(self, interaction, button, view):
+        member_db = per_id_db(interaction.user.id)
+        member_db.set_params(is_dnd = True)
         await interaction.response.edit_message(view = self.get_activity_menu(interaction.user))
 
     ####################
