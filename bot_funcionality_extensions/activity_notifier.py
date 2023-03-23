@@ -18,6 +18,7 @@ class activity_notifier(BotFeature):
     IS_DND = 'is_dnd'
 
     NOTIFIED_MEMBERS = 'notified_members'
+    ALLOW_SPECIFIC_MEMBER_NOTIFICATIONS = 'allow_specific_member_notifications'
 
     def __init__(self, bot: IGenericBot):
         super().__init__(bot)
@@ -46,6 +47,14 @@ class activity_notifier(BotFeature):
             member_db = per_id_db(interaction.user.id)
             member_db.set_params(disable_activity_notification=(not member_db.get_param(self.DISABLE_ACTIVITY_NOTIFICATION)))
 
+        @self.bot_client.tree.command(name = 'allow_specific_user_notifications', description = 'allow users to get notified when an other specific user gets on vc')
+        @commands.has_permissions(administrator=True)
+        async def allow_specific_user_notifications_command(interaction):
+            this_server_config = server_config(interaction.guild.id)
+            this_server_config.set_params(allow_specific_member_notifications=(not this_server_config.get_param(self.ALLOW_SPECIFIC_MEMBER_NOTIFICATIONS)))
+            await interaction.response.send_message('Allow specific member notifications set to ' + str(this_server_config.get_param(self.ALLOW_SPECIFIC_MEMBER_NOTIFICATIONS)), ephemeral = True)
+
+
     def get_activity_menu(self, member):
         my_view = Generic_View()
         this_server_config = server_config(member.guild.id)
@@ -59,19 +68,17 @@ class activity_notifier(BotFeature):
             notified_members_list = []
         if member.id in notified_members_list:
             my_view.add_generic_button(label='Stop Notifications', style=discord.ButtonStyle.red, callback=self.stop_notifications)
-            pass
         else:
             my_view.add_generic_button(label='Start Notifications', style=discord.ButtonStyle.green, callback=self.start_notifications)
-            pass
         if is_dnd:
             my_view.add_generic_button(label='Stop DND', style=discord.ButtonStyle.red, callback=self.stop_dnd_callback)
-            pass
         else:
             my_view.add_generic_button(label='Start DND', style=discord.ButtonStyle.green, callback=self.start_dnd_callback)
-            pass
         my_view.add_generic_select(placeholder='Minimum Members for notification', min_values=1, max_values=1, options=[{'label': str(i), 'description' : '', 'value': str(i)} for i in range(1, 25)], callback=self.set_minimum_members_callback)
         my_view.add_generic_select(placeholder='Minimum Time between notifications', min_values=1, max_values=1, options=[{'label': str(i), 'description' : 'minutes', 'value': str(i)} for i in range(0, 24)], callback=self.set_minimum_time_callback)
-        my_view.add_user_selector(placeholder='Notify Me About', callback=self.set_users_notifications_callback)
+        if this_server_config.get_param(self.ALLOW_SPECIFIC_MEMBER_NOTIFICATIONS):
+            my_view.add_user_selector(placeholder='Notify Me About', callback=self.set_users_notifications_callback)
+
         return my_view
     
     async def notify_relevant_members(self, member, before, after):
@@ -127,7 +134,7 @@ class activity_notifier(BotFeature):
                 self.update_last_notification_for_member(member_db)
                 return
             # alert the member if he is in the list of members to notify
-            elif str(member.id) in to_notify_members_list:
+            elif str(member.id) in to_notify_members_list and this_server_config.get_param(self.ALLOW_SPECIFIC_MEMBER_NOTIFICATIONS):
                 # continue if the member disabled notifications for himself
                 if per_id_db(member.id).get_param(self.DISABLE_ACTIVITY_NOTIFICATION):
                     continue
