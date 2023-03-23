@@ -47,7 +47,7 @@ class activity_notifier(BotFeature):
             member_db = per_id_db(interaction.user.id)
             member_db.set_params(disable_activity_notification=(not member_db.get_param(self.DISABLE_ACTIVITY_NOTIFICATION)))
 
-        @self.bot_client.tree.command(name = 'allow_specific_user_notifications', description = 'allow users to get notified when an other specific user gets on vc')
+        @self.bot_client.tree.command(name = 'allow_user_notifications', description = 'allow users to get notified when an other specific user gets on vc')
         @commands.has_permissions(administrator=True)
         async def allow_specific_user_notifications_command(interaction):
             this_server_config = server_config(interaction.guild.id)
