@@ -1,5 +1,5 @@
 # Hokku-Discord-Bots
-A simple framework that allows creating, loading and unloading features from discord bots
+A simple framework that allows creating, loading and unloading features from discord bots, very similar to discord Cogs
 
 ### The framework is made out of a few main parts:
 
