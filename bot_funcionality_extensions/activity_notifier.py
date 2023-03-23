@@ -109,22 +109,31 @@ class activity_notifier(BotFeature):
                 continue
             if str(member.guild.id) not in servers_notifications_list.keys():
                 continue
-
-            min_members = servers_notifications_list[str(member.guild.id)]
+            
+            # get the list of members to notify for this member
             to_notify_members_list = member_db.get_param(self.USERS_NOTIFICATIONS)
             if to_notify_members_list is None:
                 to_notify_members_list = []
+
+            # get minimum numbers of members for notification
+            min_members = servers_notifications_list[str(member.guild.id)]
             if min_members is None:
                 member_db.set_params(minimum_members = self.default_minimum_members)
                 min_members = self.default_minimum_members
+
+            # alert the member if the server is active
             if active_members_count >= min_members:
                 await the_member.send(embed = active_server_embed)
                 self.update_last_notification_for_member(member_db)
+                return
+            # alert the member if he is in the list of members to notify
             elif str(member.id) in to_notify_members_list:
+                # continue if the member disabled notifications for himself
                 if per_id_db(member.id).get_param(self.DISABLE_ACTIVITY_NOTIFICATION):
                     continue
                 await the_member.send(embed = self.get_member_is_active_embed(member))
                 self.update_last_notification_for_member(member_db)
+                return
                 
 
 
