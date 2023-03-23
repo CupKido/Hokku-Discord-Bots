@@ -1,5 +1,5 @@
 # Hokku-Discord-Bots
-A simple framework that allows creating, loading and unloading features from discord bots
+A simple framework that allows creating, loading and unloading features from discord bots, very similar to discord Cogs
 
 ### The framework is made out of a few main parts:
 
@@ -143,12 +143,15 @@ A simple framework that allows creating, loading and unloading features from dis
         print('Hi, an hour has passed')
   
   ### Existing features:
-  * room opening
-  * confessions
-  * actions tester
-  * event logger
-  * discord api commands
-  * to do list
+  * room opening - lets you to have a dynamic server
+  * confessions - lets you confess in a chosen confession channel
+  * actions tester - tool that helps you test actions of other bots
+  * event logger - tool that lets you see the logs of the past day
+  * discord api commands - lets you use some basic api command
+  * prefix_adapter - adapts all commands without parameters to prefix commands
+  * to do list - lets each user access a to do list that is saved on the bot
+  * active study rooms - for rooms with cam only
+  * activity notifier - lets users get notified when there are more than a certain number of users on vc, or when their friend joins vc
   
 ## The Main File 
   The main function is the actual python file we run on our machine.
