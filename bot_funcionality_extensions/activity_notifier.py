@@ -31,16 +31,16 @@ class activity_notifier(BotFeature):
             embed = discord.Embed(title = 'Activity Notifications Menu', description = 'Choose what you want to be notified for', color = 0x4444ff)
             await interaction.response.send_message(embed = embed, view = my_view, ephemeral = True)
 
-        @self.bot_client.tree.command(name = 'set_minimum_time', description = 'set minimum minutes between activity notifications')
-        async def set_minimum_time_command(interaction, min_time : int):
-            if min_time < 0:
-                await interaction.response.send_message('Time must be positive', ephemeral = True)
-                return
-            if min_time > 100000:
-                await interaction.response.send_message('Time must be less than 100000', ephemeral = True)
-                return
-            self.set_minimum_time(min_time, interaction.user)
-            await interaction.response.send_message('Minimum time between notifications set to ' + str(min_time), ephemeral = True)
+        # @self.bot_client.tree.command(name = 'set_minimum_time', description = 'set minimum minutes between activity notifications')
+        # async def set_minimum_time_command(interaction, min_time : int):
+        #     if min_time < 0:
+        #         await interaction.response.send_message('Time must be positive', ephemeral = True)
+        #         return
+        #     if min_time > 100000:
+        #         await interaction.response.send_message('Time must be less than 100000', ephemeral = True)
+        #         return
+        #     self.set_minimum_time(min_time, interaction.user)
+        #     await interaction.response.send_message('Minimum time between notifications set to ' + str(min_time), ephemeral = True)
 
         @self.bot_client.tree.command(name = 'disable_notifications_for_me', description = 'Disables the option for other members to get notified when you become active')
         async def disable_notifications_for_me_command(interaction):
@@ -75,7 +75,12 @@ class activity_notifier(BotFeature):
         else:
             my_view.add_generic_button(label='Start DND', style=discord.ButtonStyle.green, callback=self.start_dnd_callback)
         my_view.add_generic_select(placeholder='Minimum Members for notification', min_values=1, max_values=1, options=[{'label': str(i), 'description' : '', 'value': str(i)} for i in range(1, 25)], callback=self.set_minimum_members_callback)
-        my_view.add_generic_select(placeholder='Minimum Time between notifications', min_values=1, max_values=1, options=[{'label': str(i), 'description' : 'minutes', 'value': str(i)} for i in range(0, 24)], callback=self.set_minimum_time_callback)
+        
+        time_options = [{'label': str(i*10), 'description' : 'minutes', 'value': str(i*10)} for i in range(0, 6)] + \
+                        [{'label': str(i), 'description' : 'hours', 'value': str(i*60)} for i in range(1, 12)] + \
+                        [{'label': str(i), 'description' : 'days', 'value': str(i*60*24)} for i in range(1, 8)]
+        
+        my_view.add_generic_select(placeholder='Minimum Time between notifications', min_values=1, max_values=1, options=time_options, callback=self.set_minimum_time_callback)
         if this_server_config.get_param(self.ALLOW_SPECIFIC_MEMBER_NOTIFICATIONS):
             my_view.add_user_selector(placeholder='Notify Me About', callback=self.set_users_notifications_callback)
 
