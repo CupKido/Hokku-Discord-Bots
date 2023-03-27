@@ -280,7 +280,7 @@ class to_do_list(BotFeature):
         is_embed = this_user_db.get_param(self.IS_EMBED)
         is_visible = this_user_db.get_param(self.IS_VISIBLE)
         if is_visible is None:
-            is_visible = True
+            is_visible = False
 
         if tasks_list is None:
             tasks_list = []
