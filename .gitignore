@@ -9,4 +9,5 @@ comments.txt
 *.json
 TestingBot.py
 data_base/*.json
+data_base/actions_tester/*
 *.exe
