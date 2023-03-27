@@ -324,9 +324,11 @@ A simple framework that allows creating, loading and unloading features from dis
 
 
 # Useful Links
-* discord api documentation:
+* discord api documentation about discord modules:
   https://discordpy.readthedocs.io/en/stable/api.html
-* discord api documentation about interaction:
+* discord api documentation about commands:
+  https://discordpy.readthedocs.io/en/stable/ext/commands
+* discord api documentation about interactions:
   https://discordpy.readthedocs.io/en/stable/interactions/api.html
 * Article about discord Embeds structure:
   https://plainenglish.io/blog/send-an-embed-with-a-discord-bot-in-python
