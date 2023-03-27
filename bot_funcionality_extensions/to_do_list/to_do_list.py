@@ -1,5 +1,7 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
+import permission_checks
 from Interfaces.BotFeature import BotFeature
 from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
 from ui_components_extension import ui_tools

@@ -5,9 +5,14 @@ import discord
 from DB_instances.generic_config_interface import server_config
 from DB_instances.generic_db_instance import per_server_generic_db
 from discord.ext import commands
+from discord import app_commands
 from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
 import ui_components_extension.ui_tools as ui_tools
+import permission_checks
+
+
 # a feature with 'confess' command
+
 class confessions(BotFeature):
     CONFESSIONS_CHANNEL = 'confessions_channel'
     REPORT_COUNT = 'report_count'
@@ -19,7 +24,7 @@ class confessions(BotFeature):
         super().__init__(bot)
 
         @bot.tree.command(name = 'set_confess_channel', description='set a channel for confessions')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def set_confess_channel_command(interaction: discord.Interaction, channel : discord.TextChannel,
                                        report_count : int = 3):
             this_server_config = server_config(interaction.guild.id)

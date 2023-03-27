@@ -2,6 +2,8 @@ import discord
 import asyncio
 import datetime
 from discord.ext import commands
+from discord import app_commands
+import permission_checks
 from Interfaces.BotFeature import BotFeature
 from DB_instances.generic_config_interface import server_config
 from DB_instances.per_id_db import per_id_db
@@ -25,7 +27,7 @@ class active_study_rooms(BotFeature):
         client.add_on_voice_state_update_callback(self.on_voice_state_update)
 
         @client.tree.command(name='add_study_room', description='add a study room')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def add_study_room(interaction, channel: discord.VoiceChannel):
             this_server_config = server_config(interaction.guild.id)
             active_study_rooms_list = this_server_config.get_param(
@@ -38,7 +40,7 @@ class active_study_rooms(BotFeature):
             await interaction.response.send_message(f'added {channel.name} to study rooms', ephemeral=True)
 
         @client.tree.command(name='remove_study_room', description='remove a study room')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def remove_study_room(interaction, channel: discord.VoiceChannel):
             this_server_config = server_config(interaction.guild.id)
             active_study_rooms_list = this_server_config.get_param(
@@ -55,7 +57,7 @@ class active_study_rooms(BotFeature):
             await interaction.response.send_message(f'removed {channel.name} from study rooms', ephemeral=True)
 
         @client.tree.command(name='list_study_rooms', description='list all study rooms')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def list_study_rooms(interaction):
             this_server_config = server_config(interaction.guild.id)
             active_study_rooms_list = this_server_config.get_param(
@@ -65,14 +67,14 @@ class active_study_rooms(BotFeature):
             await interaction.response.send_message(f'{active_study_rooms_list}', ephemeral=True)
 
         @client.tree.command(name='set_banned_role', description='set the role to give to banned users')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def set_banned_role(interaction, role: discord.Role):
             this_server_config = server_config(interaction.guild.id)
             this_server_config.set_params(banned_role_id=role.id)
             await interaction.response.send_message(f'set banned role to {role.name}', ephemeral=True)
 
         @client.tree.command(name='check_ban', description='check if a user is banned, and how long until he can join again')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def check_ban(interaction):
             member_db = per_id_db(interaction.user.id)
             is_user_banned = member_db.get_param(self.IS_USER_BANNED)

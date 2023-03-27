@@ -2,6 +2,8 @@ import datetime
 import os
 import discord
 from discord.ext import commands
+from discord import app_commands
+import permission_checks
 from cleantext import clean
 from DB_instances.generic_config_interface import server_config
 from discord_modification_tools import channel_modifier
@@ -26,8 +28,8 @@ class logger(BotFeature, ILogger):
                 logger initialized\
                 \n==================================================")
 
-        @self.bot_client.tree.command(name = 'set_logs_cahnnel', description='sets the channel where the logs will be sent')
-        @commands.has_permissions(administrator=True)
+        @self.bot_client.tree.command(name = 'set_logs_channel', description='sets the channel where the logs will be sent')
+        @app_commands.check(permission_checks.is_admin)
         async def set_logs_cahnnel(interaction, channel : discord.TextChannel):
             this_server_config = server_config(interaction.guild.id)
             last_log_channel = this_server_config.get_param(logger.LOG_CHANNEL)
@@ -41,8 +43,8 @@ class logger(BotFeature, ILogger):
             await channel_modifier.set_readonly(channel)
             await interaction.response.send_message(f'log channel set to {channel.name}', ephemeral=True)
         
-        @self.bot_client.tree.command(name = 'remove_logs_cahnnel', description='changes the log channel to nothing')
-        @commands.has_permissions(administrator=True)
+        @self.bot_client.tree.command(name = 'remove_logs_channel', description='changes the log channel to nothing')
+        @app_commands.check(permission_checks.is_admin)
         async def set_logs_cahnnel(interaction):
             this_server_config = server_config(interaction.guild.id)
             last_log_channel = this_server_config.get_param(logger.LOG_CHANNEL)

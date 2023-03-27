@@ -2,6 +2,8 @@ import discord
 from Interfaces.IGenericBot import IGenericBot
 from Interfaces.BotFeature import BotFeature
 from discord.ext import commands
+from discord import app_commands
+import permission_checks
 import io
 class event_logger(BotFeature):
     def __init__(self, bot_client : IGenericBot):
@@ -54,7 +56,7 @@ class event_logger(BotFeature):
 
         self.class_name = 'event_logger'
         @bot_client.tree.command(name = 'get_todays_event_logs', description='get todays event logs')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def get_todays_event_logs(interaction: discord.Interaction):
             if interaction.guild is None:
                 await interaction.response.send_message('this command is only available on servers', ephemeral=True)

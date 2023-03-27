@@ -17,32 +17,41 @@ class prefix_adapter(BotFeature):
         self.commands = {}
 
     async def on_ready(self):
-        
+           
         self.bot_client.add_on_message_callback(self.on_message)
         for x in self.bot_client.tree.get_commands():
             if len(x.parameters) != 0: continue
             print(x.qualified_name)
-            self.commands[x.qualified_name] = x._callback
+
+            self.commands[x.qualified_name] = (x._callback, x._check_can_run)
 
         print('Prefix translator is ready')
     
+    
+
+
     async def on_message(self, message):
         if message.author == self.bot_client.user:
             return
         if len(message.content) < 2:
             return
         if message.content.startswith(prefix_adapter.prefix):
-            command_name = message.content.split(' ')[0][1:]
+            command_name = message.content.split(' ')[0][len(prefix_adapter.prefix):]
             
             if command_name in self.commands.keys():
-                try:
-                    # await message.reply('Command found, yet not supported, please use the slash comma instead')
-                    await self.commands[command_name](interaction_temp(message))
-                    return
-                except Exception as e:
-                    print(e)
-                    await message.channel.send('Command failed')
-            else:
+                interaction = interaction_temp(message)
+                if await self.commands[command_name][1](interaction):
+                    try:
+                        # await message.reply('Command found, yet not supported, please use the slash comma instead')
+                        await self.commands[command_name][0](interaction)
+                        return
+                    except Exception as e:
+                        print(e)
+                        await message.channel.send('Command failed')
+                        return
+                else:
+                    self.bot_client.error_handler(interaction)
+            else:        
                 await message.channel.send('Command not found')
 
 class interaction_temp:

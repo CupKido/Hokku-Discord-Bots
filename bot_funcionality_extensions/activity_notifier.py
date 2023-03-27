@@ -1,11 +1,15 @@
 import discord 
 import datetime
 from discord.ext import commands
+from discord import app_commands
+import permission_checks
 from Interfaces.BotFeature import BotFeature
 from Interfaces.IGenericBot import IGenericBot
 from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
 from DB_instances.per_id_db import per_id_db
 from DB_instances.generic_config_interface import server_config
+
+
 class activity_notifier(BotFeature):
     default_minimum_members = 4
     default_minimum_time = 30
@@ -48,7 +52,7 @@ class activity_notifier(BotFeature):
             member_db.set_params(disable_activity_notification=(not member_db.get_param(self.DISABLE_ACTIVITY_NOTIFICATION)))
 
         @self.bot_client.tree.command(name = 'allow_user_notifications', description = 'allow users to get notified when an other specific user gets on vc')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def allow_specific_user_notifications_command(interaction):
             this_server_config = server_config(interaction.guild.id)
             this_server_config.set_params(allow_specific_member_notifications=(not this_server_config.get_param(self.ALLOW_SPECIFIC_MEMBER_NOTIFICATIONS)))

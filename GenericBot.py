@@ -7,6 +7,7 @@ from DB_instances.per_id_db import per_id_db
 from bot_funcionality_extensions.logger import logger
 from discord.ext import commands, tasks
 import time
+import permission_checks
 
 ############################################
 # this is a generic bot that lets you sign #
@@ -38,16 +39,17 @@ import time
 # guild specific logs.                     #
 ############################################
 
-
+async def default_error_handler(interaction):
+    embed = discord.Embed(title='You do not have permissions to use this command')
+    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 class GenericBot_client(IGenericBot):
-    def __init__(self, secret_key, db_method='J', db_uri = None, alert_when_online : bool = False):
+    def __init__(self, secret_key, db_method='J', db_uri = None, alert_when_online : bool = False, command_prefix = '!', error_handler = default_error_handler):
         # bot init
-        super().__init__(intents = discord.Intents.all())
+        super().__init__(intents = discord.Intents.all(), command_prefix=command_prefix)
         server_config.set_method(db_method, db_uri)
         per_id_db.set_method(db_method, db_uri)
-        self.tree = app_commands.CommandTree(self)
         self.synced = False
         # bot options
         self.added = False
@@ -58,6 +60,8 @@ class GenericBot_client(IGenericBot):
         self.secret_key = secret_key
         # create features dict
         self.features = {}
+
+        self.error_handler = error_handler
         # adding event callbacks support
         self.add_scheduler_events()
         self.add_event_callback_support()
@@ -69,7 +73,7 @@ class GenericBot_client(IGenericBot):
             await interaction.response.send_message(f'https://discord.com/api/oauth2/authorize?client_id={self.user.id}&permissions=8&scope=bot', ephemeral=True)
     
         @self.tree.command(name = 'get_guild_config', description='get guild config')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def get_guild_config(interaction):
             this_server_config = server_config(interaction.guild.id)
             res = 'guild config: \n'
@@ -98,6 +102,13 @@ class GenericBot_client(IGenericBot):
         for callback in self.on_ready_callbacks:
             await callback()
         
+        # adding error handler to all commands
+        for x in self.tree.get_commands():
+            @x.error
+            async def error_handler(interaction):
+                await self.error_handler(interaction)
+
+        # syncing commands tree to discord
         if not self.synced:
             self.log('=================================\nsyncing commands tree to discord')
             await self.tree.sync()

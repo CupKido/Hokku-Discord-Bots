@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 from bot_funcionality_extensions.room_opening.active_channel_states import ChannelState
 import ui_components_extension.ui_tools as ui_tools
 from DB_instances.generic_config_interface import server_config
@@ -10,6 +11,7 @@ from Interfaces.BotFeature import BotFeature
 import json
 import os
 import requests
+import permission_checks
 
 ########################################
 # a feature for the GenericBot that    #
@@ -123,7 +125,7 @@ class room_opening(BotFeature):
                 await interaction.response.send_message('error', ephemeral = True)
         
         @client.tree.command(name = 'add_master_channel', description='add a channel to master channel list')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def add_master_channel(interaction: discord.Interaction, channel : discord.VoiceChannel):
 
             try:
@@ -151,7 +153,7 @@ class room_opening(BotFeature):
                 await interaction.response.send_message('error', ephemeral = True)
             
         @client.tree.command(name = 'remove_master_channel', description='remove a channel from master channel list')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def remove_master_channel(interaction: discord.Interaction, channel : discord.VoiceChannel):
 
             try:
@@ -198,7 +200,7 @@ class room_opening(BotFeature):
             this_server_config.set_params(vc_name='{name}\'s Channel')
 
         @client.tree.command(name = 'set_dynamics_name', description='set what name will be given to new vcs, for example: {name}\'s vc')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def set_vc_names(interaction: discord.Interaction, name : str):
             if len(name) >= 80:
                 embed = discord.Embed(title='name is too long, must be under 80 characters')
@@ -219,7 +221,7 @@ class room_opening(BotFeature):
                 await interaction.response.send_message('error', ephemeral = True)
 
         @client.tree.command(name = 'add_special_role', description='add role to special roles list')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def add_special_role(interaction : discord.Interaction, role : discord.Role, emoji : str = '', color : str = ''):
             try:
                 button_color = ui_tools.string_to_color(color)
@@ -246,7 +248,7 @@ class room_opening(BotFeature):
                 await interaction.response.send_message('error', ephemeral = True)
 
         @client.tree.command(name = 'remove_special_role', description='remove role from special roles list')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def remove_special_role(interaction : discord.Interaction, role : discord.Role):
             try:
                 this_server_config = server_config(interaction.guild.id)
@@ -268,7 +270,7 @@ class room_opening(BotFeature):
 
 
         @client.tree.command(name = 'choose_editing_channel', description='choose a channel for editing new voice channels')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def choose_editing_channel(interaction: discord.Interaction, channel : discord.TextChannel, use_last_message : bool = False):
             try:
                 # get server config
@@ -321,7 +323,7 @@ class room_opening(BotFeature):
                 await interaction.response.send_message('Ops.. Something went wrong', ephemeral = True)
 
         @client.tree.command(name = 'set_special_as_buttons', description='displays special roles as buttons, otherwise its a list')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def set_special_as_buttons(interaction: discord.Interaction, use_buttons : bool = True):
             try:
                 # get server config
@@ -335,7 +337,7 @@ class room_opening(BotFeature):
 
         # add command for resuming buttons on a soecific guild
         @client.tree.command(name = 'resume_buttons', description='resumes buttons on a specific guild')
-        @commands.has_permissions(administrator=True)
+        @app_commands.check(permission_checks.is_admin)
         async def resume_buttons(interaction: discord.Interaction):
             try:
                 await self.resume_buttons_for_guild(interaction.guild.id)
