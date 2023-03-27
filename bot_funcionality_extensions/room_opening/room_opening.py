@@ -181,6 +181,7 @@ class room_opening(BotFeature):
 
 
         @client.tree.command(name = 'setup', description='create default category with master and edit channels')
+        @app_commands.check(permission_checks.is_admin)
         async def setup_command(interaction):
             this_server_config = server_config(interaction.guild.id)
             await self.setup_guild(interaction.guild, this_server_config)
@@ -192,6 +193,7 @@ class room_opening(BotFeature):
             await interaction.response.send_message(embed=embed, ephemeral = True)
 
         @client.tree.command(name = 'clear', description='clears master and edit channels, with the default category')
+        @app_commands.check(permission_checks.is_admin)
         async def clear_command(interaction):
             embed = discord.Embed(title='Dynamico has cleared successfully !')
             await interaction.response.send_message(embed=embed, ephemeral = True)
