@@ -11,6 +11,8 @@ class to_do_list(BotFeature):
     TASKS_LIST = 'tasks_list'
     IS_EMBED = 'is_embed'
     LAST_UPDATE = 'last_update'
+    IS_VISIBLE = 'is_visible'
+
     days_for_inactive = 60
     select_list_task_index = 4
     def __init__(self, bot):
@@ -36,7 +38,6 @@ class to_do_list(BotFeature):
             this_user_db.set_params(is_embed=is_embed)
             await interaction.response.send_message('To Do list was set as ' + ('Embed' if is_embed else 'Not Embed'), ephemeral=True)
 
-
     def get_new_task_modal(self):
         this_modal = Generic_Modal(title='Add new task')
         this_modal.add_input(label = 'Enter task name:', placeholder='task Name', long=False, required=True)
@@ -60,6 +61,8 @@ class to_do_list(BotFeature):
             if len(tasks_list) > 9:
                 my_view.add_generic_button(label=' Previous', style=discord.ButtonStyle.gray, callback=self.show_prev_button_click)
                 my_view.add_generic_button(label=' Next', style=discord.ButtonStyle.gray, callback=self.show_next_button_click)
+            my_view.add_generic_button(label=' Set Hidden', style=discord.ButtonStyle.blurple, callback=self.set_hidden_button_click)
+            my_view.add_generic_button(label=' Set Visible', style=discord.ButtonStyle.blurple, callback=self.set_visible_button_click)
         return my_view
 
     async def add_task_button_click(self, interaction, button, view):
@@ -256,7 +259,6 @@ class to_do_list(BotFeature):
         now = datetime.datetime.now()
         this_user_db.set_params(last_update={'year' : now.year, 'month' : now.month, 'day' : now.day})
 
-
     async def select_task(self, interaction, select, view):
         await interaction.response.defer()
 
@@ -264,6 +266,10 @@ class to_do_list(BotFeature):
         this_user_db = per_id_db(interaction.user.id)
         tasks_list = this_user_db.get_param(self.TASKS_LIST)
         is_embed = this_user_db.get_param(self.IS_EMBED)
+        is_visible = this_user_db.get_param(self.IS_VISIBLE)
+        if is_visible is None:
+            is_visible = False
+
         if tasks_list is None:
             tasks_list = []
 
@@ -273,10 +279,10 @@ class to_do_list(BotFeature):
             is_embed = True
         if is_embed:
             embeds = self.get_tasks_embeds(tasks_list, 1)
-            await interaction.response.send_message(embeds=embeds, view=tasks_menu_view, ephemeral=True)
+            await interaction.response.send_message(embeds=embeds, view=tasks_menu_view, ephemeral=is_visible)
         else:
             message = self.get_tasks_string(tasks_list)
-            await interaction.response.send_message(content=message, view=tasks_menu_view, ephemeral=True)
+            await interaction.response.send_message(content=message, view=tasks_menu_view, ephemeral=is_visible)
 
     async def clean_inactive_users(self):
         allusers = per_id_db.get_all_data()
@@ -351,4 +357,13 @@ class to_do_list(BotFeature):
         else:
             await interacion.response.defer()
 
+    async def set_hidden_button_click(self, interacion, button, view):
+        this_user_db = per_id_db(interacion.user.id)
+        this_user_db.set_params(is_visible=False)
+        await interacion.response.edit_message(view=view)
+    
+    async def set_visible_button_click(self, interacion, button, view):
+        this_user_db = per_id_db(interacion.user.id)
+        this_user_db.set_params(is_visible=True)
+        await interacion.response.edit_message(view=view)
 
