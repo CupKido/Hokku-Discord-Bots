@@ -1,8 +1,9 @@
 import discord
+from discord.ext import commands
 from abc import abstractmethod
 from discord import app_commands
 
-class IGenericBot(discord.Client):
+class IGenericBot(commands.Bot):
 
     @abstractmethod
     async def on_ready(self):
