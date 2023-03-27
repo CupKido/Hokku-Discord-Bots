@@ -77,6 +77,9 @@ class to_do_list(BotFeature):
         if tasks_list is None:
             tasks_list = []
         selected_task_index = int(view.children[self.select_list_task_index].values[0])
+        if len(tasks_list) <= selected_task_index:
+            await interaction.response.send_message('This taks does not exist in your list', ephemeral=True)
+            return
         tasks_list.pop(selected_task_index)
         await self.update_show_tasks(interaction, tasks_list)
         this_user_db.set_params(tasks_list=tasks_list)
@@ -90,6 +93,9 @@ class to_do_list(BotFeature):
         if tasks_list is None:
             tasks_list = []
         selected_task_index = int(view.children[self.select_list_task_index].values[0])
+        if len(tasks_list) <= selected_task_index:
+            await interaction.response.send_message('This taks does not exist in your list', ephemeral=True)
+            return
         tasks_list[selected_task_index]['is_done'] = True
         await self.update_show_tasks(interaction, tasks_list)
         this_user_db.set_params(tasks_list=tasks_list)
@@ -103,6 +109,9 @@ class to_do_list(BotFeature):
         if tasks_list is None:
             tasks_list = []
         selected_task_index = int(view.children[self.select_list_task_index].values[0])
+        if len(tasks_list) <= selected_task_index:
+            await interaction.response.send_message('This taks does not exist in your list', ephemeral=True)
+            return
         tasks_list[selected_task_index]['is_done'] = False
         await self.update_show_tasks(interaction, tasks_list)
         this_user_db.set_params(tasks_list=tasks_list)
@@ -123,6 +132,9 @@ class to_do_list(BotFeature):
         if tasks_list is None:
             tasks_list = []
         selected_task_index = int(view.children[self.select_list_task_index].values[0])
+        if len(tasks_list) <= selected_task_index:
+            await interaction.response.send_message('This taks does not exist in your list', ephemeral=True)
+            return
         tasks_list.insert(0, tasks_list.pop(selected_task_index))
         await self.update_show_tasks(interaction, tasks_list)
         this_user_db.set_params(tasks_list=tasks_list)
@@ -136,6 +148,9 @@ class to_do_list(BotFeature):
         if tasks_list is None:
             tasks_list = []
         selected_task_index = int(view.children[self.select_list_task_index].values[0])
+        if len(tasks_list) <= selected_task_index:
+            await interaction.response.send_message('This taks does not exist in your list', ephemeral=True)
+            return
         tasks_list.append(tasks_list.pop(selected_task_index))
         await self.update_show_tasks(interaction, tasks_list)
         this_user_db.set_params(tasks_list=tasks_list)
@@ -159,9 +174,9 @@ class to_do_list(BotFeature):
             res_msg += '\n'
         return res_msg
 
-    def get_tasks_embeds(self, tasks_list, start_point):
+    def get_tasks_embeds(self, tasks_list, start_point, member):
         res_embeds = []
-        res_embeds.append(discord.Embed(title='To Do list:', color=0x0000ff))
+        res_embeds.append(discord.Embed(title='To Do list:', description=member.mention, color=0x0000ff))
         
         for x in range(start_point-1,len(tasks_list)):
             if len(res_embeds)== 10:
@@ -204,7 +219,7 @@ class to_do_list(BotFeature):
         if is_embed is None:
             is_embed = True
         if is_embed:
-            embeds = self.get_tasks_embeds(tasks_list, start_point)
+            embeds = self.get_tasks_embeds(tasks_list, start_point, interaction.user)
             await interaction.response.edit_message(embeds=embeds, view=tasks_menu_view)
         else:
             message = self.get_tasks_string(tasks_list)
@@ -259,9 +274,6 @@ class to_do_list(BotFeature):
         now = datetime.datetime.now()
         this_user_db.set_params(last_update={'year' : now.year, 'month' : now.month, 'day' : now.day})
 
-    async def select_task(self, interaction, select, view):
-        await interaction.response.defer()
-
     async def show_tasks(self, interaction):
         this_user_db = per_id_db(interaction.user.id)
         tasks_list = this_user_db.get_param(self.TASKS_LIST)
@@ -278,7 +290,7 @@ class to_do_list(BotFeature):
         if is_embed is None:
             is_embed = True
         if is_embed:
-            embeds = self.get_tasks_embeds(tasks_list, 1)
+            embeds = self.get_tasks_embeds(tasks_list, 1, interaction.user)
             await interaction.response.send_message(embeds=embeds, view=tasks_menu_view, ephemeral=(not is_visible))
         else:
             message = self.get_tasks_string(tasks_list)
@@ -298,6 +310,10 @@ class to_do_list(BotFeature):
                     last_update = datetime.datetime(last_update_year, last_update_month, last_update_day)
                     if (datetime.datetime.now() - last_update).days > self.days_for_inactive:
                         per_id_db(user).set_params(tasks_list=None, last_update=None)
+
+    ############
+    # UI event #
+    ############
 
     async def show_next_button_click(self, interacion, button, view):
         # get first task index
@@ -367,3 +383,13 @@ class to_do_list(BotFeature):
         this_user_db.set_params(is_visible=True)
         await interacion.response.edit_message(view=view)
 
+    async def select_task(self, interaction, select, view):
+        command_user = int(interaction.message.embeds[0].description[2:-1])
+
+        if interaction.user.id != command_user:
+            embed = discord.Embed(title='you are not the owner of this task list, you actions will be applied on your own list!', color=discord.Color.red())
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+        await interaction.response.defer()
+    
+    
