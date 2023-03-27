@@ -73,7 +73,7 @@ class response_temp:
         await self.message.edit(content, embed = embed, embeds=embeds, view = view)
 
     async def send_modal(self, modal):
-        await self.message.reply('Modals are not supported, please use the slash command instead')
+        await self.message.reply('Modals (forms) are not supported on prefix commands, please use the slash command instead')
 
     async def defer(self):
         pass
