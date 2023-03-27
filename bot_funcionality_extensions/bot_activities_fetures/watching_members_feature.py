@@ -20,4 +20,4 @@ class watching_members_feature(BotFeature):
 
     async def update_presence(self):
         await self.bot_client.change_presence(activity = discord.Activity(type = discord.ActivityType.watching, 
-                                                                          name = f'{len(self.bot_client.get_all_members_list())} Members on {len(self.bot_client.guilds)} Servers'))
+                                                                          name = f'{len(self.bot_client.users)} Members on {len(self.bot_client.guilds)} Servers'))
