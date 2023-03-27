@@ -107,6 +107,9 @@ class GenericBot_client(IGenericBot):
             @x.error
             async def error_handler(interaction, error=None):
                 await self.error_handler(interaction)
+                if error is not None:
+                    self.log(str(error))
+                    print(type(error))
 
         # syncing commands tree to discord
         if not self.synced:
