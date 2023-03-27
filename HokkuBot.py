@@ -10,7 +10,7 @@ from dotenv import dotenv_values
 config = dotenv_values('.env')
 def main():
     # stat the bot
-    HitokuBot = GenericBot_client(config['HOKKUBOT_TOKEN'], 'J')
+    HitokuBot = GenericBot_client(config['HOKKUBOT_TOKEN'], 'J', command_prefix='H?')
     HitokuBot.add_features(room_opening, 
                            watching_members_feature, 
                            event_logger, 

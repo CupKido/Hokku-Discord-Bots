@@ -9,7 +9,7 @@ config = dotenv_values('.env')
 def main():
     # stat the bot
     HitokuBot_token = config['HITOKUBOT_TOKEN']
-    HitokuBot = GenericBot_client(HitokuBot_token, 'J')
+    HitokuBot = GenericBot_client(HitokuBot_token, 'J', command_prefix='H!')
     HitokuBot.add_features(confessions, watching_members_feature, help_command, prefix_adapter)
     HitokuBot.activate()
 

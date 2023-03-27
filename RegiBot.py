@@ -8,8 +8,7 @@ from dotenv import dotenv_values
 config = dotenv_values('.env')
 
 def main():
-    CoffeeBot = GenericBot_client(config['REGIBOT_TOKEN'], 'J')
-    prefix_adapter.prefix = 'R?'
+    CoffeeBot = GenericBot_client(config['REGIBOT_TOKEN'], 'J', command_prefix='R?')
     CoffeeBot.add_features(to_do_list, watching_members_feature, help_command, prefix_adapter)
     CoffeeBot.activate()
 

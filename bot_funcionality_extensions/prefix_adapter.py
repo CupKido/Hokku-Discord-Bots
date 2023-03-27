@@ -14,6 +14,7 @@ class prefix_adapter(BotFeature):
     def __init__(self, bot):
         super().__init__(bot)
         bot.add_on_ready_callback(self.on_ready)
+        prefix_adapter.prefix = bot.command_prefix
         self.commands = {}
 
     async def on_ready(self):

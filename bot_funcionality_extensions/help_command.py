@@ -14,4 +14,5 @@ class help_command(BotFeature):
             for x in self.bot_client.tree.get_commands():
                 if await x._check_can_run(interaction):
                     message += '\nCommand: /' + x.qualified_name + '\nDescription: ' + x.description + '\n'
+            message += '\nBot\'s prefix is: \'' + self.bot_client.command_prefix + '\''
             await interaction.response.send_message(message, ephemeral=True)
