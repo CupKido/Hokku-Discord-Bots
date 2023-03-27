@@ -50,7 +50,7 @@ class prefix_adapter(BotFeature):
                         await message.channel.send('Command failed')
                         return
                 else:
-                    self.bot_client.error_handler(interaction)
+                    await self.bot_client.error_handler(interaction)
             else:        
                 await message.channel.send('Command not found')
 
