@@ -39,7 +39,7 @@ import permission_checks
 # guild specific logs.                     #
 ############################################
 
-async def default_error_handler(interaction):
+async def default_error_handler(interaction, error=None):
     embed = discord.Embed(title='You do not have permissions to use this command')
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -105,7 +105,7 @@ class GenericBot_client(IGenericBot):
         # adding error handler to all commands
         for x in self.tree.get_commands():
             @x.error
-            async def error_handler(interaction):
+            async def error_handler(interaction, error=None):
                 await self.error_handler(interaction)
 
         # syncing commands tree to discord
