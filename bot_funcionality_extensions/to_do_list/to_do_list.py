@@ -268,7 +268,7 @@ class to_do_list(BotFeature):
         is_embed = this_user_db.get_param(self.IS_EMBED)
         is_visible = this_user_db.get_param(self.IS_VISIBLE)
         if is_visible is None:
-            is_visible = False
+            is_visible = True
 
         if tasks_list is None:
             tasks_list = []
@@ -279,10 +279,10 @@ class to_do_list(BotFeature):
             is_embed = True
         if is_embed:
             embeds = self.get_tasks_embeds(tasks_list, 1)
-            await interaction.response.send_message(embeds=embeds, view=tasks_menu_view, ephemeral=is_visible)
+            await interaction.response.send_message(embeds=embeds, view=tasks_menu_view, ephemeral=(not is_visible))
         else:
             message = self.get_tasks_string(tasks_list)
-            await interaction.response.send_message(content=message, view=tasks_menu_view, ephemeral=is_visible)
+            await interaction.response.send_message(content=message, view=tasks_menu_view, ephemeral=(not is_visible))
 
     async def clean_inactive_users(self):
         allusers = per_id_db.get_all_data()
