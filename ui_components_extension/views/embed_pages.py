@@ -13,7 +13,7 @@ class embed_pages(discord.ui.View):
             self.items_per_page = items_per_page
 
         self.embed_title = embed_title
-        self.title = title
+        self.original_title = title
         self.embeds = embeds
         self.current_page = 0
         self.message = None
@@ -23,15 +23,21 @@ class embed_pages(discord.ui.View):
     
     async def send(self, interaction, ephemeral=False):
         if self.message is None:
-            self.message = await interaction.response.send_message(content=self.title, 
-                                                                   embeds=self.get_current_page_embeds(), 
-                                                                   view=self, 
-                                                                   ephemeral=ephemeral)
+            if self.embed_title is not None:
+                title = self.original_title
+            else:
+                title = str(self.current_page+1) + '/' + str(self.last_page + 1) + '\n' + self.original_title
+            self.message = await interaction.response.send_message(content=title, 
+                                                                    embeds=self.get_current_page_embeds(), 
+                                                                    view=self, 
+                                                                    ephemeral=ephemeral)
 
     def get_current_page_embeds(self):
         res = []
         if self.embed_title is not None:
+            self.embed_title.set_author(name=str(self.current_page+1) + '/' + str(self.last_page + 1))
             res.append(self.embed_title)
+
         for i in range(self.current_page * self.items_per_page, (self.current_page + 1) * self.items_per_page):
             if i >= len(self.embeds):
                 break
@@ -42,7 +48,11 @@ class embed_pages(discord.ui.View):
     async def previous(self, interaction, button):
         if self.current_page > 0:
             self.current_page -= 1
-            await interaction.response.edit_message(embeds=self.get_current_page_embeds())
+            if self.embed_title is not None:
+                await interaction.response.edit_message(embeds=self.get_current_page_embeds())
+            else:
+                title = str(self.current_page+1) + '/' + str(self.last_page + 1) + '\n' + self.original_title
+                await interaction.response.edit_message(content=title, embeds=self.get_current_page_embeds())
         else:
             await interaction.response.defer()
     
@@ -50,7 +60,11 @@ class embed_pages(discord.ui.View):
     async def next(self, interaction, button):
         if self.current_page < self.last_page:
             self.current_page += 1
-            await interaction.response.edit_message(embeds=self.get_current_page_embeds())
+            if self.embed_title is not None:
+                await interaction.response.edit_message(embeds=self.get_current_page_embeds())
+            else:
+                title = str(self.current_page+1) + '/' + str(self.last_page + 1) + '\n' + self.original_title
+                await interaction.response.edit_message(content=title, embeds=self.get_current_page_embeds())
         else:
             await interaction.response.defer()
     
