@@ -63,8 +63,8 @@ class to_do_list(BotFeature):
             if len(tasks_list) > 9:
                 my_view.add_generic_button(label=' Previous', style=discord.ButtonStyle.gray, callback=self.show_prev_button_click)
                 my_view.add_generic_button(label=' Next', style=discord.ButtonStyle.gray, callback=self.show_next_button_click)
-        my_view.add_generic_button(label=' Set Hidden', style=discord.ButtonStyle.blurple, callback=self.set_hidden_button_click)
-        my_view.add_generic_button(label=' Set Visible', style=discord.ButtonStyle.blurple, callback=self.set_visible_button_click)
+        my_view.add_generic_button(label=' Visible', style=discord.ButtonStyle.blurple, callback=self.set_visible_button_click)
+        my_view.add_generic_button(label=' Hidden', style=discord.ButtonStyle.blurple, callback=self.set_hidden_button_click)
         return my_view
 
     async def add_task_button_click(self, interaction, button, view):
