@@ -39,13 +39,8 @@ import permission_checks
 # guild specific logs.                     #
 ############################################
 
-async def default_error_handler(interaction, error=None):
-    embed = discord.Embed(title='You do not have permissions to use this command')
-    await interaction.response.send_message(embed=embed, ephemeral=True)
-
-
 class GenericBot_client(IGenericBot):
-    def __init__(self, secret_key, db_method='J', db_uri = None, alert_when_online : bool = False, command_prefix = '!', error_handler = default_error_handler):
+    def __init__(self, secret_key, db_method='J', db_uri = None, alert_when_online : bool = False, command_prefix = '!', error_handler = None):
         # bot init
         super().__init__(intents = discord.Intents.all(), command_prefix=command_prefix)
         server_config.set_method(db_method, db_uri)
@@ -61,7 +56,11 @@ class GenericBot_client(IGenericBot):
         # create features dict
         self.features = {}
 
-        self.error_handler = error_handler
+        if error_handler is None:
+            self.error_handler = self.default_error_handler
+        else:
+            self.error_handler = error_handler
+
         # adding event callbacks support
         self.add_scheduler_events()
         self.add_event_callback_support()
@@ -106,7 +105,7 @@ class GenericBot_client(IGenericBot):
         for x in self.tree.get_commands():
             @x.error
             async def error_handler(interaction, error=None):
-                await self.error_handler(interaction)
+                await self.error_handler(interaction, error)
                 if error is not None:
                     self.log(str(error))
                     print(type(error))
@@ -464,7 +463,10 @@ class GenericBot_client(IGenericBot):
         self.every_day_callbacks.append(callback)
         self.log("added every_day_callback: " + str(callback.__name__))
 
-
+    async def default_error_handler(self, interaction, error=None):
+        embed = discord.Embed(title='You do not have permissions to use this command')
+        print(error.with_traceback(None))
+        await interaction.response.send_message(embed=embed, ephemeral=True)
     
 
     
