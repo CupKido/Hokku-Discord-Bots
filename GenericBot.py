@@ -466,7 +466,7 @@ class GenericBot_client(IGenericBot):
     async def default_error_handler(self, interaction, error=None):
         embed = discord.Embed(title='You do not have permissions to use this command')
         print(error.with_traceback(None))
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.followup.send(embed=embed, ephemeral=True)
     
 
     
