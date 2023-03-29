@@ -39,6 +39,8 @@ import permission_checks
 # guild specific logs.                     #
 ############################################
 
+#TODO: add "initializer" function instead of __init__ to allow for easier feature adding, and changing parameters
+
 class GenericBot_client(IGenericBot):
     def __init__(self, secret_key, db_method='J', db_uri = None, alert_when_online : bool = False, command_prefix = '!', error_handler = None):
         # bot init

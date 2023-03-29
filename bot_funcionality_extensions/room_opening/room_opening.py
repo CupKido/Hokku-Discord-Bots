@@ -28,6 +28,8 @@ import permission_checks
 # - on_guild_join                               #
 #################################################
 
+#TODO: use bot_client.add_view for buttons maintenance
+
 EDITING_VC_CHANNEL = 'editing_vc_channel'
 STATIC_MESSAGE_ID = 'static_message_id'
 STATIC_MESSAGE = 'static_message'
