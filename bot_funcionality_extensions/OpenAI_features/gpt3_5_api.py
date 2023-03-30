@@ -79,7 +79,7 @@ class gpt3_5_api(BotFeature):
             else:
                 author = "GPT3.5"
             embed = discord.Embed(title=f"{author} said:", description=message["content"], color=0x11ffaa)
-            embed.set_footer(text='_________________________________________________________________________')
+            embed.set_footer(text='_______________________________________________________________________________')
             embeds.append(embed)
             i += 1
         await interaction.response.edit_message(embeds=embeds, view=None)
