@@ -37,8 +37,12 @@ class Generic_Button(Button):
             self.value = kwargs['value']
         else:
             self.value = None
+        if 'url' in kwargs.keys():
+            self.the_url = kwargs['url']
+        else:
+            self.the_url = None
         self.callback = self.callbacks
-        super().__init__(label=my_label, style=my_style, emoji=my_emoji)
+        super().__init__(label=my_label, style=my_style, emoji=my_emoji, url=self.the_url)
     
 
     async def callbacks(self, interaction):
@@ -112,12 +116,13 @@ class Generic_Selector(discord.ui.UserSelect):
 class Generic_View(View):
     def __init__(self, timeout=None):
         super().__init__(timeout=timeout)
-    def add_generic_button(self, label=None, style=None, emoji=None, callback=None, value=None):
+    def add_generic_button(self, label=None, style=None, emoji=None, callback=None, value=None, url=None):
         new_button = Generic_Button(label=label,
                                      style=style,
                                      emoji=emoji,
                                      callback=callback,
-                                     value=value)
+                                     value=value,
+                                     url=url)
         self.add_item(new_button)
 
         return new_button
