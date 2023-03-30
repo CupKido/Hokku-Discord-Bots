@@ -42,7 +42,7 @@ import permission_checks
 #TODO: add "initializer" function instead of __init__ to allow for easier feature adding, and changing parameters
 
 class GenericBot_client(IGenericBot):
-    def __init__(self, secret_key, db_method='J', db_uri = None, alert_when_online : bool = False, command_prefix = '!', error_handler = None):
+    def __init__(self, secret_key, db_method='J', db_uri = None, alert_when_online : bool = False, command_prefix = '!', error_handler = None, debug=False):
         # bot init
         super().__init__(intents = discord.Intents.all(), command_prefix=command_prefix)
         server_config.set_method(db_method, db_uri)
@@ -57,6 +57,7 @@ class GenericBot_client(IGenericBot):
         self.secret_key = secret_key
         # create features dict
         self.features = {}
+        self.is_debug = debug
 
         if error_handler is None:
             self.error_handler = self.default_error_handler
@@ -104,13 +105,14 @@ class GenericBot_client(IGenericBot):
             await callback()
         
         # adding error handler to all commands
-        for x in self.tree.get_commands():
-            @x.error
-            async def error_handler(interaction, error=None):
-                await self.error_handler(interaction, error)
-                if error is not None:
-                    self.log(str(error))
-                    print(type(error))
+        if not self.is_debug:
+            for x in self.tree.get_commands():
+                @x.error
+                async def error_handler(interaction, error=None):
+                    await self.error_handler(interaction, error)
+                    if error is not None:
+                        self.log(str(error))
+                        print(type(error))
 
         # syncing commands tree to discord
         if not self.synced:
