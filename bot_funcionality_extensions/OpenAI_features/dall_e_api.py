@@ -21,7 +21,7 @@ from dotenv import dotenv_values
 config = dotenv_values('.env')
 
 class dall_e_api(BotFeature):
-    max_pics_per_request = 8
+    max_pics_per_request = 3
     wait_per_image = 5
     new_wait_time_factor = 1.3
     default_images_amount = 1
@@ -118,7 +118,7 @@ class dall_e_api(BotFeature):
                 now = datetime.datetime.now()
                 now_dict = {"year": now.year, "month": now.month, "day": now.day, "hour": now.hour, "minute": now.minute, "second": now.second}
                 member_db.set_params(images_over_date=now_dict)
-            embed_description = "**prompt:**\n" + prompt + "\n\n**amount:**\n" + str(amount)
+            embed_description = "**prompt:**\n" + prompt + "\n\n**amount:**\n" + str(amount) + "\n\n**remaining images:**\n" + str(remaining_images - amount)
             sending_embed = embed = discord.Embed(title="Generating images...", description=embed_description, color=discord.Color.blurple())
             await interaction.response.send_message(embed=sending_embed, ephemeral=True)
             member_db.set_params(user_mid_request=True)
