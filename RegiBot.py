@@ -12,6 +12,8 @@ config = dotenv_values('.env')
 
 def main():
     CoffeeBot = GenericBot_client(config['REGIBOT_TOKEN'], 'J', command_prefix='R?')
+    dall_e_api.unlimited_users.append(427464593351114754)
+    dall_e_api.unlimited_users.append(1091693766294913145)
     CoffeeBot.add_features(to_do_list, watching_members_feature, help_command, gpt3_5_api, dall_e_api, google_translator, prefix_adapter)
     CoffeeBot.activate()
 
