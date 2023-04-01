@@ -8,6 +8,8 @@ from DB_instances.generic_config_interface import server_config
 from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
 import ui_components_extension.ui_tools as ui_tools
 import permission_checks
+import aiohttp
+import json
 from dotenv import dotenv_values
 config = dotenv_values('.env')
 
@@ -15,6 +17,7 @@ class gpt3_5_api(BotFeature):
     openai_key = config["OPENAI_KEY"]
 
     GPT_USER_HISTORY = 'gpt_user_history'
+    GPT_REPLIES_HIDDEN = "gpt_replies_hidden"
 
     GPT_CHANNELS = 'gpt_channels'
 
@@ -77,7 +80,7 @@ class gpt3_5_api(BotFeature):
         if gpt_channels is None or type(gpt_channels) is not list:
             gpt_channels = []
         if interaction.channel.id not in gpt_channels and gpt_channels != []:
-            await interaction.response.send_message("GPT is not allowed in this channel, please go to <#"+str(gpt_channels[0])+">")
+            await interaction.response.send_message("GPT is not allowed in this channel, please go to <#"+str(gpt_channels[0])+">", ephemeral=True)
             return
         elif gpt_channels != []:
             is_gpt_channel = True
@@ -87,6 +90,7 @@ class gpt3_5_api(BotFeature):
         view.add_generic_button(label='ask GPT3.5', style=discord.ButtonStyle.primary, callback=self.ask_GPT3_5_button_click)
         view.add_generic_button(label='Show GPT history', style=discord.ButtonStyle.secondary, callback=self.show_history_button_click)
         view.add_generic_button(label='clear GPT history', style=discord.ButtonStyle.danger, callback=self.clear_GPT_history_button_click)
+        view.add_generic_button(label='flip visibility', style=discord.ButtonStyle.secondary, callback=self.flip_visibility_button_click)
         view.add_generic_button(label='open website', style=discord.ButtonStyle.secondary, url='https://chat.openai.com/chat')
         # create embed that explains what GPT3.5 is and details the options
         embed = discord.Embed(title="ChatGPT menu", 
@@ -126,7 +130,62 @@ class gpt3_5_api(BotFeature):
             )
         
         return response["choices"][0]["message"]["content"]
-        
+
+    async def ask_GPT3_5_and_respond(self, message, interaction, is_gpt_channel):
+        member_db = per_id_db(interaction.user.id)
+        user_history = member_db.get_param(self.GPT_USER_HISTORY)
+        if user_history is None or type(user_history) is not list:
+            user_history = []
+
+        user_history.append({"role":"user", "content" : message})
+        while(len(str(user_history)) > 3500):
+            user_history = user_history[1:]
+
+        chatgpt_url = "https://api.openai.com/v1/chat/completions"
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + config["OPENAI_KEY"]  # Replace with your actual API key
+        }
+
+        data = {
+            "model" : "gpt-3.5-turbo",
+            "messages": [
+                    {
+                        "role": "user",
+                        "content": message
+                    }
+                ]
+        }
+        async with aiohttp.ClientSession() as session:
+            #print('getting image:\t' + prompt)
+            async with session.post(chatgpt_url, headers=headers, data=json.dumps(data)) as response:
+                if response.status == 200:
+                    response_json = await response.json()
+                    answer = response_json["choices"][0]["message"]["content"]
+                else:
+                    await interaction.response.send_message("Sorry, we have encountered an error. Please try again", ephemeral=True)
+                    return
+                user_history.append({"role":"assistant", "content" : answer})
+                if len(user_history) > 10:
+                    user_history = user_history[1:]
+                member_db.set_params(gpt_user_history=user_history)
+
+                # prepare response to user
+                question_embed = discord.Embed(title=f"Your question:", description=message, color=0x00ff00)
+                response_embed = discord.Embed(title=f"GPT3.5\'s response:", description=answer, color=0x00ff00)
+                embeds=[question_embed, response_embed]
+                # add button to show chat history
+                answer_view = Generic_View()
+                answer_view.add_generic_button(label="Show chat history", style=discord.ButtonStyle.primary, callback=self.show_history_button_click)
+                user_mention = interaction.user.mention
+                invisible = member_db.get_param(self.GPT_REPLIES_HIDDEN)
+                if invisible is None:
+                    invisible = True
+                # send response to user
+                await interaction.followup.send(content=user_mention,embeds=embeds, view=answer_view, ephemeral=invisible)
+                return answer
+
     async def show_history_button_click(self, interaction, button, view):
         member_db = per_id_db(interaction.user.id)
         user_history = member_db.get_param(self.GPT_USER_HISTORY)
@@ -150,7 +209,7 @@ class gpt3_5_api(BotFeature):
             embed.set_footer(text='_______________________________________________________________________________')
             embeds.append(embed)
             i += 1
-        await interaction.response.send_message(content=interaction.user.mention, embeds=embeds, ephemeral=True)
+        await interaction.response.send_message(content=interaction.user.mention + '\nYour chat history with ChatGPT:', embeds=embeds, ephemeral=True)
         return
     
     async def clear_history_confirmation_button_click(self, interaction, button, view):
@@ -170,7 +229,7 @@ class gpt3_5_api(BotFeature):
         question_modal.add_input(label="Question", 
                                  placeholder="What would you like to ask ChatGPT?", 
                                  required=True,
-                                 long=True)
+                                 long=True, max_length=3400)
         question_modal.set_callback(callback=self.ask_GPT3_5_modal_callback)
         await interaction.response.send_modal(question_modal)
     
@@ -201,19 +260,17 @@ class gpt3_5_api(BotFeature):
         
         # send message to GPT3.5 and get response
         await interaction.response.send_message("sending to ChatGPT, wait a few seconds for response...", ephemeral=True)
-        response = await self.ask_GPT3_5(message, interaction.user.id)
-
-        # prepare response to user
-        question_embed = discord.Embed(title=f"Your question:", description=message, color=0x00ff00)
-        response_embed = discord.Embed(title=f"GPT3.5\'s response:", description=response, color=0x00ff00)
-        embeds=[question_embed, response_embed]
-        # add button to show chat history
-        answer_view = Generic_View()
-        answer_view.add_generic_button(label="Show chat history", style=discord.ButtonStyle.primary, callback=self.show_history_button_click)
-        user_mention = interaction.user.mention
-        # send response to user
-        await interaction.followup.send(content=user_mention,embeds=embeds, view=answer_view, ephemeral=not is_gpt_channel)
-        return
+        await self.ask_GPT3_5_and_respond(message, interaction, is_gpt_channel)
+        
+    async def flip_visibility_button_click(self, interaction, button, view): #
+        # get current visibility
+        member_db = per_id_db(interaction.user.id)
+        current_visibility = member_db.get_param(self.GPT_REPLIES_HIDDEN)
+        if current_visibility is None:
+            current_visibility = True
+        # flip visibility
+        member_db.set_params(gpt_replies_hidden=not current_visibility)
+        await interaction.response.send_message("Your GPT3.5 replies are now " + ("hidden" if not current_visibility else "visible"), ephemeral=True)
 
     async def clear_GPT_history_button_click(self, interaction, button, view):
         confirmation_embed = discord.Embed(title=f"Are you sure you want to clear your chat history?", description="This action cannot be undone", color=0x00ff00)
