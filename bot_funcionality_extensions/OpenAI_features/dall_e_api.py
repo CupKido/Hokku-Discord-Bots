@@ -26,7 +26,7 @@ class dall_e_api(BotFeature):
     new_wait_time_factor = 1.3
     default_images_amount = 1
 
-    reset_every_hours = 1
+    reset_every_hours = 0.5
     images_for_user_per_reset = 8
 
     unlimited_users = []
