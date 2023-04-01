@@ -11,7 +11,9 @@ class google_translator(BotFeature):
         async def translate(interaction: discord.Interaction, text: str, target_language: str = "english"):
             translator = Translator()
             result = translator.translate(text, dest=self.get_letters_from_language(target_language))
-            await interaction.response.send_message(result.text, ephemeral=True)
+            translated_text = result.text.replace('\\n', '\n')
+            translated_embed = discord.Embed(title="Translation from " + result.src + ' to ' + result.dest, description=translated_text, color=0x00ff00)
+            await interaction.response.send_message(embed=translated_embed, ephemeral=True)
         
     def get_letters_from_language(self, language):
         if language in self.languages.keys():
