@@ -52,8 +52,9 @@ class prefix_adapter(BotFeature):
                         return
                 else:
                     await self.bot_client.error_handler(interaction=interaction)
-            else:        
-                await message.channel.send('Command not found')
+            else:      
+                pass  
+                # await message.channel.send('Command not found')
 
 class interaction_temp:
     def __init__(self, message):
