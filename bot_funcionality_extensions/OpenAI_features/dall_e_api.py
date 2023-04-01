@@ -26,12 +26,21 @@ class dall_e_api(BotFeature):
     new_wait_time_factor = 1.3
     default_images_amount = 1
 
-    reset_every_hours = 0.1
+    reset_every_hours = 1
     images_for_user_per_reset = 8
+
+    unlimited_users = []
+    sizes = {"small" : {"str" : "256x256", "price" : 0.016, 'resolusion' : 256}, 
+             "medium" : {"str" : "512x512", "price" : 0.018, 'resolusion' : 512}, 
+             "large" : {"str" : "1024x1024", "price" : 0.020, 'resolusion' : 1024}}
+    defalt_size = "medium"
+
+
     USER_MID_REQUEST = "user_mid_request"
     LAST_AMOUNT_RESET = "last_amount_reset"
     REMAINING_IMAGES = "remaining_images"
     IMAGES_OVER_DATE = "images_over_date"
+    MONEY_SPENT = "money_spent"
 
     def __init__(self, bot):
         super().__init__(bot)
@@ -86,9 +95,10 @@ class dall_e_api(BotFeature):
                 remaining_images = self.images_for_user_per_reset
                 member_db.set_params(remaining_images=remaining_images)
             else:
-                next_reset_time = last_reset + datetime.timedelta(hours=self.reset_every_hours)
-                await interaction.response.send_message("You have reached the limit of images you can generate per " + str(self.reset_every_hours) + " hours, please try again at " + str(next_reset_time), ephemeral=True)
-                return
+                if interaction.user.id not in self.unlimited_users:
+                    next_reset_time = last_reset + datetime.timedelta(hours=self.reset_every_hours)
+                    await interaction.response.send_message("You have reached the limit of images you can generate per " + str(self.reset_every_hours) + " hours, please try again at " + str(next_reset_time), ephemeral=True)
+                    return
         the_modal = Generic_Modal(title="Generate Image")
         the_modal.add_input(label="Prompt", placeholder="Enter prompt here", required=True, long=True, max_length=750)
         the_modal.add_input(label="Amount ("+ str(self.max_pics_per_request)+" max)", placeholder="Enter amount here", required=False, max_length=len(str(self.max_pics_per_request)))
@@ -118,11 +128,14 @@ class dall_e_api(BotFeature):
                 now = datetime.datetime.now()
                 now_dict = {"year": now.year, "month": now.month, "day": now.day, "hour": now.hour, "minute": now.minute, "second": now.second}
                 member_db.set_params(images_over_date=now_dict)
-            embed_description = "**prompt:**\n" + prompt + "\n\n**amount:**\n" + str(amount) + "\n\n**remaining images:**\n" + str(remaining_images - amount)
+            next_reset_time = self.last_amount_reset + datetime.timedelta(hours=self.reset_every_hours)
+            embed_description = "**prompt:**\n" + prompt + "\n\n**amount:**\n" + str(amount) + "\n\n**remaining images:**\n" + str(remaining_images - amount) + "\n\n**next reset:**\n" + str(next_reset_time)
             sending_embed = embed = discord.Embed(title="Generating images...", description=embed_description, color=discord.Color.blurple())
             await interaction.response.send_message(embed=sending_embed, ephemeral=True)
-            member_db.set_params(user_mid_request=True)
-            member_db.set_params(remaining_images=remaining_images - amount)
+            money_spent = member_db.get_param(self.MONEY_SPENT)
+            if money_spent is None:
+                money_spent = 0
+            member_db.set_params(user_mid_request=True, remaining_images=remaining_images - amount, money_spent=money_spent + amount * self.sizes[self.defalt_size]["price"])
             user_dir = "data_base/dall_e_db/" + str(interaction.user.id)
             if not os.path.exists(user_dir):
                         os.makedirs(user_dir)
@@ -142,7 +155,7 @@ class dall_e_api(BotFeature):
             data = {
                 "prompt": prompt,
                 "n": amount,
-                "size": "512x512"
+                "size": self.sizes[self.defalt_size]["str"]
             }
             # making request to generate image
             async with aiohttp.ClientSession() as session:
