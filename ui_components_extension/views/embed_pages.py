@@ -3,7 +3,7 @@ import math
 class embed_pages(discord.ui.View):
     def __init__(self, embeds, timeout=None, embed_title=None, title='', items_per_page=10):
         super().__init__(timeout=timeout)
-        if items_per_page is None:
+        if embed_title is None:
             max_items = 10
         else:
             max_items = 9
