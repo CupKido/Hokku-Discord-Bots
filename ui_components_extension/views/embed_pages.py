@@ -21,16 +21,22 @@ class embed_pages(discord.ui.View):
         self.last_page = int(math.ceil(self.last_page))
         
     
-    async def send(self, interaction, ephemeral=False):
+    async def send(self, interaction, ephemeral=False, followup=False):
         if self.message is None:
             if self.embed_title is not None:
                 title = self.original_title
             else:
                 title = str(self.current_page+1) + '/' + str(self.last_page + 1) + '\n' + self.original_title
-            self.message = await interaction.response.send_message(content=title, 
-                                                                    embeds=self.get_current_page_embeds(), 
-                                                                    view=self, 
-                                                                    ephemeral=ephemeral)
+            if followup:
+                self.message = await interaction.followup.send(content=title, 
+                                                                embeds=self.get_current_page_embeds(), 
+                                                                view=self, 
+                                                                ephemeral=ephemeral)
+            else:
+                self.message = await interaction.response.send_message(content=title, 
+                                                                        embeds=self.get_current_page_embeds(), 
+                                                                        view=self, 
+                                                                        ephemeral=ephemeral)
 
     def get_current_page_embeds(self):
         res = []
