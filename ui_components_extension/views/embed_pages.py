@@ -53,7 +53,7 @@ class embed_pages(discord.ui.View):
                 break
             new_embed = self.embeds[i]
             if(self.add_numbering):
-                new_embed.set_footer(text=new_embed.footer.text + ' | ' + str(i+1) + '/' + str(len(self.embeds)))
+                new_embed.set_footer(text=(new_embed.footer.text if new_embed.footer is not None and new_embed.footer.text is not None else '')  + ' | ' + str(i+1) + '/' + str(len(self.embeds)))
             res.append(new_embed)
         return res
 
