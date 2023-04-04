@@ -21,7 +21,7 @@ class embed_pages(discord.ui.View):
         self.last_page = int(math.ceil(self.last_page))
         
     
-    async def send(self, interaction, ephemeral=False, followup=False):
+    async def send(self, interaction, ephemeral=False, followup=False, extra_views=[]):
         if self.message is None:
             if self.embed_title is not None:
                 title = self.original_title
@@ -30,12 +30,12 @@ class embed_pages(discord.ui.View):
             if followup:
                 self.message = await interaction.followup.send(content=title, 
                                                                 embeds=self.get_current_page_embeds(), 
-                                                                view=self, 
+                                                                views=[self] + extra_views, 
                                                                 ephemeral=ephemeral)
             else:
                 self.message = await interaction.response.send_message(content=title, 
                                                                         embeds=self.get_current_page_embeds(), 
-                                                                        view=self, 
+                                                                        views=[self] + extra_views, 
                                                                         ephemeral=ephemeral)
 
     def get_current_page_embeds(self):
