@@ -1,7 +1,7 @@
 import discord
 import math
 class embed_pages(discord.ui.View):
-    def __init__(self, embeds, timeout=None, embed_title=None, title='', items_per_page=10):
+    def __init__(self, embeds, timeout=None, embed_title=None, title='', items_per_page=10, add_numbering=False):
         super().__init__(timeout=timeout)
         if embed_title is None:
             max_items = 10
@@ -19,6 +19,7 @@ class embed_pages(discord.ui.View):
         self.message = None
         self.last_page = float(len(self.embeds)) / float(self.items_per_page) - 1
         self.last_page = int(math.ceil(self.last_page))
+        self.add_numbering = add_numbering
         
     
     async def send(self, interaction, ephemeral=False, followup=False, views=[]):
@@ -50,7 +51,10 @@ class embed_pages(discord.ui.View):
         for i in range(self.current_page * self.items_per_page, (self.current_page + 1) * self.items_per_page):
             if i >= len(self.embeds):
                 break
-            res.append(self.embeds[i])
+            new_embed = self.embeds[i]
+            if(self.add_numbering):
+                new_embed.set_footer(text=new_embed.footer.text + ' | ' + str(i+1) + '/' + str(len(self.embeds)))
+            res.append(new_embed)
         return res
 
     @discord.ui.button(label='Previous' ,custom_id='previous')
