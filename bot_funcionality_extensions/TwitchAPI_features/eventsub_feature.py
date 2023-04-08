@@ -15,11 +15,11 @@ class eventsub_feature(BotFeature):
         bot.add_on_ready_callback(self.start_server)
 
         @bot.tree.command(name="add_onilne_event", description="Adds an event that will be triggered when the streamer goes online")
-        async def add_online_event(interaction : discord.Interaction, TwitchChannelName : str):
-            await interaction.response.send_message("Adding online event for channel " + TwitchChannelName, ephemeral=True)
-            user_id = twitch_wrapper.get_user_id(TwitchChannelName)
+        async def add_online_event(interaction : discord.Interaction, twitch_channel_name : str):
+            await interaction.response.send_message("Adding online event for channel " + twitch_channel_name, ephemeral=True)
+            user_id = twitch_wrapper.get_user_id(twitch_channel_name)
             eventsub_wrapper.create_subscription('stream.online', '1', user_id, self.get_stream_online_callback(interaction))
-            await interaction.followup.send("Added online event for channel " + TwitchChannelName, ephemeral=True)
+            await interaction.followup.send("Added online event for channel " + twitch_channel_name, ephemeral=True)
 
         @bot.tree.command(name='delete_all_events', description='Removes an event that will be triggered when the streamer goes online')
         async def remove_online_event(interaction : discord.Interaction): #
