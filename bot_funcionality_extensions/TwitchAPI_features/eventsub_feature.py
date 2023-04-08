@@ -2,6 +2,7 @@ import discord
 from discord.ext import tasks
 from Interfaces.BotFeature import BotFeature
 from DB_instances.generic_config_interface import server_config
+from DB_instances.per_id_db import per_id_db
 from bot_funcionality_extensions.TwitchAPI_features.twitch_wrapper import twitch_wrapper
 from bot_funcionality_extensions.TwitchAPI_features.eventsub_wrapper import eventsub_wrapper
 import async_timeout
@@ -11,7 +12,13 @@ config = dotenv_values('.env')
 
 
 class eventsub_feature(BotFeature):
+
     initialized = False
+
+    SUBSCRIPTIONS_CONTEXT = 'subscriptions_context'
+    STREAM_ANNOUNCEMENET_CHANNEL = 'stream_announcement_channel'
+
+    db_id = 'subscrioption_db'
     def __init__(self, bot):
         super().__init__(bot)
         self.alert_queue = []
@@ -23,14 +30,27 @@ class eventsub_feature(BotFeature):
         async def add_online_event(interaction : discord.Interaction, twitch_channel_name : str):
             await interaction.response.send_message("Adding online event for channel " + twitch_channel_name, ephemeral=True)
             user_id = twitch_wrapper.get_user_id(twitch_channel_name)
-            eventsub_wrapper.create_subscription('stream.online', '1', user_id, self.get_stream_online_callback(interaction))
+            sub = eventsub_wrapper.create_subscription('stream.online', '1', user_id)
             await interaction.followup.send("Added online event for channel " + twitch_channel_name, ephemeral=True)
+            db = per_id_db(self.db_id)
+            sub_context = db.get_param(self.SUBSCRIPTIONS_CONTEXT)
+            if sub_context is None:
+                sub_context = {}
+            sub_context[sub.id] = interaction.guild.id
+            db.set_params(subsctipions_context=sub_context)
+            
 
         @bot.tree.command(name='delete_all_events', description='Removes an event that will be triggered when the streamer goes online')
         async def remove_online_event(interaction : discord.Interaction): #
             await interaction.response.send_message("Removing all events", ephemeral=True)
             eventsub_wrapper.delete_all_subscriptions()
             await interaction.followup.send("Removed all events", ephemeral=True)
+
+        @bot.tree.command(name='set_stream_announcements', description='Sets the channel where the bot will announce when a streamer goes online')
+        async def remove_online_event(interaction : discord.Interaction, channel : discord.TextChannel): #
+            guild_db = server_config(interaction.guild.id)
+            guild_db.set_params(stream_announcement_channel=channel.id)
+            await interaction.response.send_message("Set stream announcements channel to " + channel.mention, ephemeral=True)
 
         
     def get_stream_online_callback(self, interaction : discord.Interaction):
@@ -41,18 +61,36 @@ class eventsub_feature(BotFeature):
 
     @tasks.loop(seconds=10)
     async def check_alert_queue(self):
-        while self.alert_queue:
-            data, interaction = self.alert_queue.pop(0)
-            username = data['event']['broadcaster_user_name']
-            user_id = data['event']['broadcaster_user_id']
-            streamer_url = 'https://www.twitch.tv/' + username
-            user_info = twitch_wrapper.get_user_info(username)
-            stream_info = twitch_wrapper.get_stream_by_user_name(username)
-            image = stream_info['thumbnail_url'].replace('{width}', '1920').replace('{height}', '1080')
-            embed = discord.Embed(title=stream_info['title'], url=streamer_url, color=0x6441a5)
-            embed.set_image(url=image)
-            embed.set_author(name=username + " is online!", icon_url=user_info['profile_image_url'])
-            await interaction.guild.text_channels[0].send(embed=embed)
+        db = None
+        sub_context = None
+        while eventsub_wrapper.events_queue:
+            if db is None:
+                db = per_id_db(self.db_id)
+                sub_context = db.get_param(self.SUBSCRIPTIONS_CONTEXT)
+                if sub_context is None:
+                    sub_context = {}
+            if subscription.id in sub_context.keys():
+                guild_id = sub_context[subscription.id]
+                guild_db = server_config(guild_id)
+                channel_id = guild_db.get_param(self.STREAM_ANNOUNCEMENET_CHANNEL)
+                if channel_id is None:
+                    continue
+                channel = self.bot.get_channel(channel_id)
+                if channel is None:
+                    continue
+                subscription, data = eventsub_wrapper.events_queue.pop(0)
+                username = data['event']['broadcaster_user_name']
+                user_id = data['event']['broadcaster_user_id']
+                streamer_url = 'https://www.twitch.tv/' + username
+                user_info = twitch_wrapper.get_user_info(username)
+                stream_info = twitch_wrapper.get_stream_by_user_name(username)
+                image = stream_info['thumbnail_url'].replace('{width}', '1920').replace('{height}', '1080')
+                embed = discord.Embed(title=stream_info['title'], url=streamer_url, color=0x6441a5)
+                embed.set_image(url=image)
+                embed.set_author(name=username + " is online!", icon_url=user_info['profile_image_url'])
+                await channel.send(embed=embed)
+
+    
 
     async def start_server(self):
         self.check_alert_queue.start()

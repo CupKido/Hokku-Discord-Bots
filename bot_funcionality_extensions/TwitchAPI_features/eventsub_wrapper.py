@@ -6,9 +6,9 @@ import hmac
 import time
 import datetime
 import threading
-from bot_funcionality_extensions.TwitchAPI_features.twitch_wrapper import twitch_wrapper
+# from bot_funcionality_extensions.TwitchAPI_features.twitch_wrapper import twitch_wrapper
 import asyncio
-# from twitch_wrapper import twitch_wrapper
+from twitch_wrapper import twitch_wrapper
 import requests
 from dotenv import dotenv_values
 config = dotenv_values('.env')
@@ -55,6 +55,9 @@ class eventsub_wrapper:
 
     subscriptions = []
     callback_url = "https://saartaler.site:443"
+
+    events_queue = []
+
     app = None
     @classmethod
     def get_subscriptions(instance):
@@ -111,10 +114,18 @@ class eventsub_wrapper:
                 return response
             
             tasks = []
-            for x in instance.subscriptions:
-                if x.event_type == request.json['subscription']['type'] and x.streamer_id == request.json['subscription']['condition']['broadcaster_user_id']:
-                    tasks.append(asyncio.create_task(x.callback_func(request.json)))
-            await asyncio.gather(*tasks)
+            this_sub = subscription(subscription_id = request.json['subscription']['id'], 
+                                    event_type= request.json['subscription']['type'],
+                                    version= request.json['subscription']['version'], 
+                                    streamer_id= request.json['subscription']['condition']['broadcaster_user_id'])
+            instance.events_queue.append((this_sub, request.json))
+            # for x in instance.subscriptions:
+            #     if x.id == request.json['subscription']['id']:
+
+            #         instance.events_queue.append((x, request.json))
+                    # if x.callback_func is not None:
+                        #tasks.append(asyncio.create_task(x.callback_func(request.json['event'])))
+            #await asyncio.gather(*tasks)
                     
             print(request.json)
             return "OK"
@@ -126,7 +137,7 @@ class eventsub_wrapper:
         # instance.app.run(host='0.0.0.0', port=443, ssl_context=context)
 
     @classmethod
-    def create_subscription(instance, event_type, version, streamer_id, event_callback_func, confirmation_callback=None):
+    def create_subscription(instance, event_type, version, streamer_id, confirmation_callback=None):
         print("Creating subscription")
         headers = {
             "Content-Type": "application/json",
@@ -149,8 +160,23 @@ class eventsub_wrapper:
         url = 'https://api.twitch.tv/helix/eventsub/subscriptions'
         response = requests.post(url, headers=headers, json=createWebhookBody)
         response.raise_for_status()
-        print('subscription created successfully', event_type, version, streamer_id, event_callback_func)
-        instance.subscriptions.append(subscription(event_type, version, streamer_id, event_callback_func))
+        sub_id = response.json()['data'][0]['id']
+        print('subscription created successfully', sub_id, event_type, version, streamer_id)
+        sub = subscription(sub_id, event_type, version, streamer_id, confirmation_callback)
+        instance.subscriptions.append(sub)
+        return sub
+
+
+    @classmethod
+    def pull_subscriptions(instance, get_callback_func=None):
+        subs = instance.get_subscriptions()
+        instance.subscriptions = []
+        for sub in subs['data']:
+            if get_callback_func is not None:
+                callback_func = get_callback_func('1234')
+            else:
+                callback_func = None
+            instance.subscriptions.append(subscription(sub['id'], sub['type'], sub['version'], sub['condition']['broadcaster_user_id'], callback_func))
 
     @classmethod
     def verify_twitch_webhook_signature(instance, request, response, body):
@@ -180,7 +206,8 @@ class eventsub_wrapper:
             print("Signature verified")
 
 class subscription:
-    def __init__(self, event_type, version, streamer_id, callback_func, confirmation_callback=None):
+    def __init__(self, subscription_id, event_type, version, streamer_id, confirmation_callback=None):
+        self.id = subscription_id
         self.event_type = event_type
         self.version = version
         self.streamer_id = streamer_id
@@ -200,9 +227,10 @@ async def callback_func(data):
     print(data)
 
 
-# eventsub_wrapper.set_access_data(config['TWITCH_CLIENT_ID'], config['TWITCH_API_SECRET'], config['TWITCH_EVENTSUB_SECRET'])
+eventsub_wrapper.set_access_data(config['TWITCH_CLIENT_ID'], config['TWITCH_API_SECRET'], config['TWITCH_EVENTSUB_SECRET'])
 # eventsub_wrapper.start_server()
 # eventsub_wrapper.delete_all_subscriptions()
 # eventsub_wrapper.create_subscription('stream.online', '1', twitch_wrapper.get_user_id('blobblab38'), callback_func)
-#eventsub_wrapper.create_subscription('stream.offline', '1', twitch_wrapper.get_user_id('blobblab38'), callback_func)
+#eventsub_wrapper.pull_subscriptions()
+# eventsub_wrapper.create_subscription('stream.offline', '1', twitch_wrapper.get_user_id('blobblab38'), callback_func)
 # print(eventsub_wrapper.get_subscriptions())
