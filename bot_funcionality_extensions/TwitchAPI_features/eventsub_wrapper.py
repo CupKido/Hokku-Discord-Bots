@@ -110,10 +110,11 @@ class eventsub_wrapper:
                 response = Response(request.json["challenge"], status=200, content_type="text/plain")
                 return response
             
-
+            tasks = []
             for x in instance.subscriptions:
                 if x.event_type == request.json['subscription']['type'] and x.streamer_id == request.json['subscription']['condition']['broadcaster_user_id']:
-                    asyncio.run(x.callback_func(request.json))
+                    tasks.append(asyncio.create_task(x.callback_func(request.json)))
+            await asyncio.gather(*tasks)
                     
             print(request.json)
             return "OK"
