@@ -3,7 +3,7 @@ from Interfaces.BotFeature import BotFeature
 from DB_instances.generic_config_interface import server_config
 from bot_funcionality_extensions.TwitchAPI_features.twitch_wrapper import twitch_wrapper
 from bot_funcionality_extensions.TwitchAPI_features.eventsub_wrapper import eventsub_wrapper
-import asyncio
+import async_timeout
 from dotenv import dotenv_values
 config = dotenv_values('.env')
 
@@ -42,7 +42,7 @@ class eventsub_feature(BotFeature):
                 embed.set_thumbnail(url=image)
                 embed.set_image(url=image)
                 embed.set_author(name=username + " is online!", icon_url=user_info['profile_image_url'])
-                async with asyncio.timeout(8):
+                async with async_timeout.timeout(10):
                     await interaction.guild.text_channels[0].send(embed=embed)
                 # await interaction.guild.text_channels[0].send(embed=embed)
             # except Exception as e:
