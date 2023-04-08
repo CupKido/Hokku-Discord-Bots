@@ -37,7 +37,7 @@ class eventsub_feature(BotFeature):
             if sub_context is None:
                 sub_context = {}
             sub_context[sub.id] = interaction.guild.id
-            db.set_params(subsctipions_context=sub_context)
+            db.set_params(subscriptions_context=sub_context)
             
 
         @bot.tree.command(name='delete_all_events', description='Removes an event that will be triggered when the streamer goes online')
@@ -45,6 +45,10 @@ class eventsub_feature(BotFeature):
             await interaction.response.send_message("Removing all events", ephemeral=True)
             eventsub_wrapper.delete_all_subscriptions()
             await interaction.followup.send("Removed all events", ephemeral=True)
+            db = per_id_db(self.db_id)
+            sub_context = db.get_param(self.SUBSCRIPTIONS_CONTEXT)
+            if sub_context is not None:
+                db.set_params(subscriptions_context={})
 
         @bot.tree.command(name='set_stream_announcements', description='Sets the channel where the bot will announce when a streamer goes online')
         async def remove_online_event(interaction : discord.Interaction, channel : discord.TextChannel): #
@@ -67,6 +71,7 @@ class eventsub_feature(BotFeature):
             if db is None:
                 db = per_id_db(self.db_id)
                 sub_context = db.get_param(self.SUBSCRIPTIONS_CONTEXT)
+                print(sub_context)
                 if sub_context is None:
                     sub_context = {}
             subscription, data = eventsub_wrapper.events_queue.pop(0)
