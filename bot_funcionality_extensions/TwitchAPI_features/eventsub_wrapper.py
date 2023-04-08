@@ -7,6 +7,7 @@ import time
 import datetime
 import threading
 from bot_funcionality_extensions.TwitchAPI_features.twitch_wrapper import twitch_wrapper
+import asyncio
 # from twitch_wrapper import twitch_wrapper
 import requests
 from dotenv import dotenv_values
@@ -112,7 +113,7 @@ class eventsub_wrapper:
 
             for x in instance.subscriptions:
                 if x.event_type == request.json['subscription']['type'] and x.streamer_id == request.json['subscription']['condition']['broadcaster_user_id']:
-                    await x.callback_func(request.json)
+                    asyncio.run(x.callback_func(request.json))
                     
             print(request.json)
             return "OK"
