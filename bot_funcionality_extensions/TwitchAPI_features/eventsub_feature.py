@@ -29,8 +29,9 @@ class eventsub_feature(BotFeature):
 
     def get_stream_online_callback(self, interaction : discord.Interaction):
         async def callback(data):
-            username = data['subscription']['event']['broadcaster_user_name']
-            user_id = data['subscription']['event']['broadcaster_user_id']
+            #print('data: ', data)
+            username = data['event']['broadcaster_user_name']
+            user_id = data['event']['broadcaster_user_id']
             streamer_url = 'https://www.twitch.tv/' + username
             user_info = twitch_wrapper.get_user_info(user_id)
             stream_info = twitch_wrapper.get_stream_by_user_name(username)
