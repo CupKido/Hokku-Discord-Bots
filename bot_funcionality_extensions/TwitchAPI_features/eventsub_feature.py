@@ -69,6 +69,7 @@ class eventsub_feature(BotFeature):
                 sub_context = db.get_param(self.SUBSCRIPTIONS_CONTEXT)
                 if sub_context is None:
                     sub_context = {}
+            subscription, data = eventsub_wrapper.events_queue.pop(0)
             if subscription.id in sub_context.keys():
                 guild_id = sub_context[subscription.id]
                 guild_db = server_config(guild_id)
@@ -78,7 +79,6 @@ class eventsub_feature(BotFeature):
                 channel = self.bot.get_channel(channel_id)
                 if channel is None:
                     continue
-                subscription, data = eventsub_wrapper.events_queue.pop(0)
                 username = data['event']['broadcaster_user_name']
                 user_id = data['event']['broadcaster_user_id']
                 streamer_url = 'https://www.twitch.tv/' + username
