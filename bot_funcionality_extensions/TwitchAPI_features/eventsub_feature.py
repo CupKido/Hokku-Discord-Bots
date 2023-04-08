@@ -33,7 +33,7 @@ class eventsub_feature(BotFeature):
             username = data['event']['broadcaster_user_name']
             user_id = data['event']['broadcaster_user_id']
             streamer_url = 'https://www.twitch.tv/' + username
-            user_info = twitch_wrapper.get_user_info(user_id)
+            user_info = twitch_wrapper.get_user_info(username)
             stream_info = twitch_wrapper.get_stream_by_user_name(username)
             image = stream_info['thumbnail_url'].replace('{width}', '1920').replace('{height}', '1080')
             embed = discord.Embed(title=stream_info['title'], url=streamer_url, color=0x6441a5)
