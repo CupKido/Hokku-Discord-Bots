@@ -70,13 +70,18 @@ class eventsub_feature(BotFeature):
                 if sub_context is None:
                     sub_context = {}
             subscription, data = eventsub_wrapper.events_queue.pop(0)
+            print(subscription, data)
+            print(subscription.id, sub_context.keys(), subscription.id in sub_context.keys())
             if subscription.id in sub_context.keys():
                 guild_id = sub_context[subscription.id]
                 guild_db = server_config(guild_id)
                 channel_id = guild_db.get_param(self.STREAM_ANNOUNCEMENET_CHANNEL)
+                print(channel_id)
                 if channel_id is None:
                     continue
-                channel = self.bot.get_channel(channel_id)
+
+                channel = self.bot_client.get_channel(channel_id)
+                print(channel)
                 if channel is None:
                     continue
                 username = data['event']['broadcaster_user_name']
