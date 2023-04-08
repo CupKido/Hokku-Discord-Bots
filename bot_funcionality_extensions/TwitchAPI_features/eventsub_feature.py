@@ -1,10 +1,12 @@
 import discord
+from discord.ext import tasks
 from Interfaces.BotFeature import BotFeature
 from DB_instances.generic_config_interface import server_config
 from bot_funcionality_extensions.TwitchAPI_features.twitch_wrapper import twitch_wrapper
 from bot_funcionality_extensions.TwitchAPI_features.eventsub_wrapper import eventsub_wrapper
 import async_timeout
 from dotenv import dotenv_values
+
 config = dotenv_values('.env')
 
 
@@ -12,6 +14,8 @@ class eventsub_feature(BotFeature):
     initialized = False
     def __init__(self, bot):
         super().__init__(bot)
+        self.alert_queue = []
+
         eventsub_wrapper.set_access_data(config['TWITCH_CLIENT_ID'], config['TWITCH_API_SECRET'], config['TWITCH_EVENTSUB_SECRET'])
         bot.add_on_ready_callback(self.start_server)
 
@@ -28,29 +32,31 @@ class eventsub_feature(BotFeature):
             eventsub_wrapper.delete_all_subscriptions()
             await interaction.followup.send("Removed all events", ephemeral=True)
 
+        
     def get_stream_online_callback(self, interaction : discord.Interaction):
         async def callback(data):
-            #print('data: ', data)
-            # try:
-                username = data['event']['broadcaster_user_name']
-                user_id = data['event']['broadcaster_user_id']
-                streamer_url = 'https://www.twitch.tv/' + username
-                user_info = twitch_wrapper.get_user_info(username)
-                stream_info = twitch_wrapper.get_stream_by_user_name(username)
-                image = stream_info['thumbnail_url'].replace('{width}', '1920').replace('{height}', '1080')
-                embed = discord.Embed(title=stream_info['title'], url=streamer_url, color=0x6441a5)
-                embed.set_thumbnail(url=image)
-                embed.set_image(url=image)
-                embed.set_author(name=username + " is online!", icon_url=user_info['profile_image_url'])
-                async with async_timeout.timeout(10):
-                    await interaction.guild.text_channels[0].send(embed=embed)
-                # await interaction.guild.text_channels[0].send(embed=embed)
-            # except Exception as e:
-            #     print(e)
+            self.alert_queue.append((data, interaction))
 
         return callback
 
+    @tasks.loop(seconds=10)
+    async def check_alert_queue(self):
+        while self.alert_queue:
+            data, interaction = self.alert_queue.pop(0)
+            username = data['event']['broadcaster_user_name']
+            user_id = data['event']['broadcaster_user_id']
+            streamer_url = 'https://www.twitch.tv/' + username
+            user_info = twitch_wrapper.get_user_info(username)
+            stream_info = twitch_wrapper.get_stream_by_user_name(username)
+            image = stream_info['thumbnail_url'].replace('{width}', '1920').replace('{height}', '1080')
+            embed = discord.Embed(title=stream_info['title'], url=streamer_url, color=0x6441a5)
+            embed.set_thumbnail(url=image)
+            embed.set_image(url=image)
+            embed.set_author(name=username + " is online!", icon_url=user_info['profile_image_url'])
+            await interaction.guild.text_channels[0].send(embed=embed)
+
     async def start_server(self):
+        self.check_alert_queue.start()
         eventsub_wrapper.start_server()
     
 
