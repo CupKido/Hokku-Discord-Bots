@@ -50,7 +50,6 @@ class eventsub_feature(BotFeature):
             stream_info = twitch_wrapper.get_stream_by_user_name(username)
             image = stream_info['thumbnail_url'].replace('{width}', '1920').replace('{height}', '1080')
             embed = discord.Embed(title=stream_info['title'], url=streamer_url, color=0x6441a5)
-            embed.set_thumbnail(url=image)
             embed.set_image(url=image)
             embed.set_author(name=username + " is online!", icon_url=user_info['profile_image_url'])
             await interaction.guild.text_channels[0].send(embed=embed)
