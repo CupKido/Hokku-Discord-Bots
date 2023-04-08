@@ -6,9 +6,9 @@ import hmac
 import time
 import datetime
 import threading
-# from bot_funcionality_extensions.TwitchAPI_features.twitch_wrapper import twitch_wrapper
+from bot_funcionality_extensions.TwitchAPI_features.twitch_wrapper import twitch_wrapper
 import asyncio
-from twitch_wrapper import twitch_wrapper
+# from twitch_wrapper import twitch_wrapper
 import requests
 from dotenv import dotenv_values
 config = dotenv_values('.env')
