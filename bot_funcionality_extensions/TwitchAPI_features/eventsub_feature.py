@@ -30,7 +30,7 @@ class eventsub_feature(BotFeature):
     def get_stream_online_callback(self, interaction : discord.Interaction):
         async def callback(data):
             #print('data: ', data)
-            try:
+            # try:
                 username = data['event']['broadcaster_user_name']
                 user_id = data['event']['broadcaster_user_id']
                 streamer_url = 'https://www.twitch.tv/' + username
@@ -42,9 +42,9 @@ class eventsub_feature(BotFeature):
                 embed.set_image(url=image)
                 embed.set_author(name=username + " is online!", icon_url=user_info['profile_image_url'])
                 await interaction.guild.text_channels[0].send(embed=embed)
-            except Exception as e:
-                print(e)
-                
+            # except Exception as e:
+            #     print(e)
+
         return callback
 
     async def start_server(self):
