@@ -84,21 +84,24 @@ class eventsub_feature(BotFeature):
                 print(channel_id)
                 if channel_id is None:
                     continue
-
-                channel = self.bot_client.get_channel(channel_id)
-                print(channel)
-                if channel is None:
+                try:
+                    channel = self.bot_client.get_channel(channel_id)
+                    print(channel)
+                    if channel is None:
+                        continue
+                    username = data['event']['broadcaster_user_name']
+                    user_id = data['event']['broadcaster_user_id']
+                    streamer_url = 'https://www.twitch.tv/' + username
+                    user_info = twitch_wrapper.get_user_info(username)
+                    stream_info = twitch_wrapper.get_stream_by_user_name(username)
+                    image = stream_info['thumbnail_url'].replace('{width}', '1920').replace('{height}', '1080')
+                    embed = discord.Embed(title=stream_info['title'], url=streamer_url, color=0x6441a5)
+                    embed.set_image(url=image)
+                    embed.set_author(name=username + " is online!", icon_url=user_info['profile_image_url'])
+                    await channel.send(embed=embed)
+                except Exception as e:
+                    print(e)
                     continue
-                username = data['event']['broadcaster_user_name']
-                user_id = data['event']['broadcaster_user_id']
-                streamer_url = 'https://www.twitch.tv/' + username
-                user_info = twitch_wrapper.get_user_info(username)
-                stream_info = twitch_wrapper.get_stream_by_user_name(username)
-                image = stream_info['thumbnail_url'].replace('{width}', '1920').replace('{height}', '1080')
-                embed = discord.Embed(title=stream_info['title'], url=streamer_url, color=0x6441a5)
-                embed.set_image(url=image)
-                embed.set_author(name=username + " is online!", icon_url=user_info['profile_image_url'])
-                await channel.send(embed=embed)
 
     
 
