@@ -38,7 +38,11 @@ class eventsub_feature(BotFeature):
             sub_created = False
             subs_data = eventsub_wrapper.get_subscriptions()
             for sub in subs_data:
-                if sub['type'] == "stream.online" and sub['condition']['broadcaster_user_id'] == user_id:
+                print(sub)
+                print(sub['type'])
+                print(sub['condition']['broadcaster_user_id'])
+                print(user_id)
+                if sub['type'] == "stream.online" and int(sub['condition']['broadcaster_user_id']) == int(user_id):
                     # add the guild to the list of guilds that will be notified
                     if sub.id in sub_context.keys():
                         if type(sub_context[sub.id]) is list:
