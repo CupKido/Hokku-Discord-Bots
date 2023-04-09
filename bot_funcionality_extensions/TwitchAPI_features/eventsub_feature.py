@@ -86,25 +86,25 @@ class eventsub_feature(BotFeature):
             if sub_context is None:
                 sub_context = {}
             sub_created = False
-            subs_data = eventsub_wrapper.get_subscriptions()
+            subs_data = eventsub_wrapper.get_subscriptions()['data']
             for sub in subs_data:
                 if sub['type'] == "stream.online" and sub['condition']['broadcaster_user_id'] == user_id:
                     # add the guild to the list of guilds that will be notified
-                    if sub.id in sub_context.keys():
-                        if type(sub_context[sub.id]) is list:
-                            if interaction.guild.id in sub_context[sub.id]:
-                                sub_context[sub.id].remove(interaction.guild.id)
+                    if sub['id'] in sub_context.keys():
+                        if type(sub_context[sub['id']]) is list:
+                            if interaction.guild.id in sub_context[sub['id']]:
+                                sub_context[sub['id']].remove(interaction.guild.id)
                             else:
                                 await interaction.followup.send("Channel not added", ephemeral=True)
                                 return
-                        elif sub_context[sub.id] == interaction.guild.id:
-                            sub_context[sub.id] = []
+                        elif sub_context[sub['id']] == interaction.guild.id:
+                            sub_context[sub['id']] = []
                         else:
                             await interaction.followup.send("Channel not added", ephemeral=True)
                             return
-                    if len(sub_context[sub.id]) == 0:
-                        eventsub_wrapper.delete_subscription(sub.id)
-                        del sub_context[sub.id]
+                    if len(sub_context[sub['id']]) == 0:
+                        eventsub_wrapper.delete_subscription(sub['id'])
+                        del sub_context[sub['id']]
                     db.set_params(subscriptions_context=sub_context)
                     await interaction.followup.send("Removed online event for channel " + twitch_channel_name, ephemeral=True)
                     return
