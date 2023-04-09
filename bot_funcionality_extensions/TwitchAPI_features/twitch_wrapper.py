@@ -144,7 +144,7 @@ class twitch_wrapper:
         }
         response = requests.get(url, headers=headers)
         data = response.json()
-        if data['data']:
+        if 'data' in data.keys() and data['data']:
             return data['data'][0]['id']
         
         return None
