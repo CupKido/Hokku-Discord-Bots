@@ -1,10 +1,12 @@
 import discord
 from discord.ext import tasks
+from discord import app_commands
 from Interfaces.BotFeature import BotFeature
 from DB_instances.generic_config_interface import server_config
 from DB_instances.per_id_db import per_id_db
 from bot_funcionality_extensions.TwitchAPI_features.twitch_wrapper import twitch_wrapper
 from bot_funcionality_extensions.TwitchAPI_features.eventsub_wrapper import eventsub_wrapper
+import permission_checks
 import async_timeout
 from dotenv import dotenv_values
 
@@ -36,6 +38,7 @@ class eventsub_feature(BotFeature):
         bot.add_on_ready_callback(self.start_server)
 
         @bot.tree.command(name="add_onilne_event", description="Adds an event that will be triggered when the streamer goes online")
+        @app_commands.check(permission_checks.is_admin) 
         async def add_online_event(interaction : discord.Interaction, twitch_channel_name : str):
             await interaction.response.send_message("Adding online event for channel " + twitch_channel_name, ephemeral=True)
             user_id = twitch_wrapper.get_user_id(twitch_channel_name)
@@ -96,6 +99,7 @@ class eventsub_feature(BotFeature):
             
 
         @bot.tree.command(name='remove_online_event', description='Removes an event that will be triggered when the streamer goes online')
+        @app_commands.check(permission_checks.is_admin) 
         async def remove_online_event(interaction : discord.Interaction, twitch_channel_name : str): #
             await interaction.response.send_message("Removing online event for channel " + twitch_channel_name, ephemeral=True)
             user_id = twitch_wrapper.get_user_id(twitch_channel_name)
@@ -133,7 +137,7 @@ class eventsub_feature(BotFeature):
 
 
 
-        @bot.tree.command(name='delete_all_events', description='Removes an event that will be triggered when the streamer goes online')
+        #@bot.tree.command(name='delete_all_events', description='Removes an event that will be triggered when the streamer goes online')
         async def delete_all_events(interaction : discord.Interaction): #
             await interaction.response.send_message("Removing all events", ephemeral=True)
             eventsub_wrapper.delete_all_subscriptions()
