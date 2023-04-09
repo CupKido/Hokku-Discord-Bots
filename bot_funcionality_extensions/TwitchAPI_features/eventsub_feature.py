@@ -30,18 +30,86 @@ class eventsub_feature(BotFeature):
         async def add_online_event(interaction : discord.Interaction, twitch_channel_name : str):
             await interaction.response.send_message("Adding online event for channel " + twitch_channel_name, ephemeral=True)
             user_id = twitch_wrapper.get_user_id(twitch_channel_name)
-            sub = eventsub_wrapper.create_subscription('stream.online', '1', user_id)
-            await interaction.followup.send("Added online event for channel " + twitch_channel_name, ephemeral=True)
+            # make sure that a subscription for this user does not already exist
             db = per_id_db(self.db_id)
             sub_context = db.get_param(self.SUBSCRIPTIONS_CONTEXT)
             if sub_context is None:
                 sub_context = {}
-            sub_context[sub.id] = interaction.guild.id
+            sub_created = False
+            subs_data = eventsub_wrapper.get_subscriptions()
+            for sub in subs_data:
+                if sub['type'] == "stream.online" and sub['condition']['broadcaster_user_id'] == user_id:
+                    # add the guild to the list of guilds that will be notified
+                    if sub.id in sub_context.keys():
+                        if type(sub_context[sub.id]) is list:
+                            if interaction.guild.id not in sub_context[sub.id]:
+                                sub_context[sub.id].append(interaction.guild.id)
+                            else:
+                                await interaction.followup.send("Channel already added", ephemeral=True)
+                                return
+                        elif sub_context[sub.id] != interaction.guild.id:
+                            sub_context[sub.id] = [sub_context[sub.id], interaction.guild.id]
+                        else:
+                            sub_context[sub.id] = [sub_context[sub.id]]
+                    sub_created = True
+                    break
+            if not sub_created:
+                sub = eventsub_wrapper.create_subscription('stream.online', '1', user_id)
+                if sub.id in sub_context.keys():
+                    if type(sub_context[sub.id]) is list:
+                        if interaction.guild.id not in sub_context[sub.id]:
+                            sub_context[sub.id].append(interaction.guild.id)
+                        else:
+                            await interaction.followup.send("Channel already added", ephemeral=True)
+                            return
+                    elif sub_context[sub.id] != interaction.guild.id:
+                        sub_context[sub.id] = [sub_context[sub.id], interaction.guild.id]
+                    else:
+                        sub_context[sub.id] = [sub_context[sub.id]]
+                else:
+                    sub_context[sub.id] = [interaction.guild.id]
+            await interaction.followup.send("Added online event for channel " + twitch_channel_name, ephemeral=True)
             db.set_params(subscriptions_context=sub_context)
             
 
+        @bot.tree.command(name='remove_online_event', description='Removes an event that will be triggered when the streamer goes online')
+        async def remove_online_event(interaction : discord.Interaction, twitch_channel_name : str): #
+            await interaction.response.send_message("Removing online event for channel " + twitch_channel_name, ephemeral=True)
+            user_id = twitch_wrapper.get_user_id(twitch_channel_name)
+            db = per_id_db(self.db_id)
+            sub_context = db.get_param(self.SUBSCRIPTIONS_CONTEXT)
+            if sub_context is None:
+                sub_context = {}
+            sub_created = False
+            subs_data = eventsub_wrapper.get_subscriptions()
+            for sub in subs_data:
+                if sub['type'] == "stream.online" and sub['condition']['broadcaster_user_id'] == user_id:
+                    # add the guild to the list of guilds that will be notified
+                    if sub.id in sub_context.keys():
+                        if type(sub_context[sub.id]) is list:
+                            if interaction.guild.id in sub_context[sub.id]:
+                                sub_context[sub.id].remove(interaction.guild.id)
+                            else:
+                                await interaction.followup.send("Channel not added", ephemeral=True)
+                                return
+                        elif sub_context[sub.id] == interaction.guild.id:
+                            sub_context[sub.id] = []
+                        else:
+                            await interaction.followup.send("Channel not added", ephemeral=True)
+                            return
+                    if len(sub_context[sub.id]) == 0:
+                        eventsub_wrapper.delete_subscription(sub.id)
+                        del sub_context[sub.id]
+                    db.set_params(subscriptions_context=sub_context)
+                    await interaction.followup.send("Removed online event for channel " + twitch_channel_name, ephemeral=True)
+                    return
+            await interaction.followup.send("Channel not added", ephemeral=True)
+            
+
+
+
         @bot.tree.command(name='delete_all_events', description='Removes an event that will be triggered when the streamer goes online')
-        async def remove_online_event(interaction : discord.Interaction): #
+        async def delete_all_events(interaction : discord.Interaction): #
             await interaction.response.send_message("Removing all events", ephemeral=True)
             eventsub_wrapper.delete_all_subscriptions()
             await interaction.followup.send("Removed all events", ephemeral=True)
@@ -78,17 +146,8 @@ class eventsub_feature(BotFeature):
             print(subscription, data)
             print(subscription.id, sub_context.keys(), subscription.id in sub_context.keys())
             if subscription.id in sub_context.keys():
-                guild_id = sub_context[subscription.id]
-                guild_db = server_config(guild_id)
-                channel_id = guild_db.get_param(self.STREAM_ANNOUNCEMENET_CHANNEL)
-                print(channel_id)
-                if channel_id is None:
-                    continue
                 try:
-                    channel = self.bot_client.get_channel(channel_id)
-                    print(channel)
-                    if channel is None:
-                        continue
+                    # creating embed
                     username = data['event']['broadcaster_user_name']
                     user_id = data['event']['broadcaster_user_id']
                     streamer_url = 'https://www.twitch.tv/' + username
@@ -98,7 +157,17 @@ class eventsub_feature(BotFeature):
                     embed = discord.Embed(title=stream_info['title'], url=streamer_url, color=0x6441a5)
                     embed.set_image(url=image)
                     embed.set_author(name=username + " is online!", icon_url=user_info['profile_image_url'])
-                    await channel.send(embed=embed)
+                    for guild_id in sub_context[subscription.id]:
+                        guild_db = server_config(guild_id)
+                        channel_id = guild_db.get_param(self.STREAM_ANNOUNCEMENET_CHANNEL)
+                        #print(channel_id)
+                        if channel_id is None:
+                            continue
+                        channel = self.bot_client.get_channel(channel_id)
+                        #print(channel)
+                        if channel is None:
+                            continue
+                        await channel.send(embed=embed)
                 except Exception as e:
                     print(e)
                     continue
