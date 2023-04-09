@@ -1,9 +1,9 @@
 import discord
 import math
 class embed_pages(discord.ui.View):
-    def __init__(self, embeds, timeout=None, embed_title=None, title='', items_per_page=10):
+    def __init__(self, embeds, timeout=None, embed_title=None, title='', items_per_page=10, add_numbering=False):
         super().__init__(timeout=timeout)
-        if items_per_page is None:
+        if embed_title is None:
             max_items = 10
         else:
             max_items = 9
@@ -19,18 +19,28 @@ class embed_pages(discord.ui.View):
         self.message = None
         self.last_page = float(len(self.embeds)) / float(self.items_per_page) - 1
         self.last_page = int(math.ceil(self.last_page))
+        self.add_numbering = add_numbering
         
     
-    async def send(self, interaction, ephemeral=False):
+    async def send(self, interaction, ephemeral=False, followup=False, views=[]):
         if self.message is None:
             if self.embed_title is not None:
                 title = self.original_title
             else:
                 title = str(self.current_page+1) + '/' + str(self.last_page + 1) + '\n' + self.original_title
-            self.message = await interaction.response.send_message(content=title, 
-                                                                    embeds=self.get_current_page_embeds(), 
-                                                                    view=self, 
-                                                                    ephemeral=ephemeral)
+            for view in views:
+                for item in view.children:
+                    self.add_item(item)
+            if followup:
+                self.message = await interaction.followup.send(content=title, 
+                                                                embeds=self.get_current_page_embeds(), 
+                                                                view=self, 
+                                                                ephemeral=ephemeral)
+            else:
+                self.message = await interaction.response.send_message(content=title, 
+                                                                        embeds=self.get_current_page_embeds(), 
+                                                                        view=self, 
+                                                                        ephemeral=ephemeral)
 
     def get_current_page_embeds(self):
         res = []
@@ -41,7 +51,10 @@ class embed_pages(discord.ui.View):
         for i in range(self.current_page * self.items_per_page, (self.current_page + 1) * self.items_per_page):
             if i >= len(self.embeds):
                 break
-            res.append(self.embeds[i])
+            new_embed = self.embeds[i]
+            if(self.add_numbering):
+                new_embed.set_footer(text=(new_embed.footer.text if new_embed.footer is not None and new_embed.footer.text is not None else '')  + ' | ' + str(i+1) + '/' + str(len(self.embeds)))
+            res.append(new_embed)
         return res
 
     @discord.ui.button(label='Previous' ,custom_id='previous')

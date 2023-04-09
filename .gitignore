@@ -8,6 +8,10 @@ comments.txt
 .env
 *.json
 TestingBot.py
+BadBot.py
 data_base/*.json
 data_base/actions_tester/*
+data_base/dall_e_db/*
 *.exe
+*example*
+bot_funcionality_extensions/BadBot/*

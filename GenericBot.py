@@ -1,12 +1,11 @@
 import discord
 from discord import app_commands
 from Interfaces.IGenericBot import IGenericBot
-import asyncio
 from DB_instances.generic_config_interface import server_config
 from DB_instances.per_id_db import per_id_db
 from bot_funcionality_extensions.logger import logger
 from discord.ext import commands, tasks
-import time
+import io
 import permission_checks
 
 ############################################
@@ -39,8 +38,12 @@ import permission_checks
 # guild specific logs.                     #
 ############################################
 
+#TODO: add "initializer" function instead of __init__ to allow for easier feature adding, and changing parameters
+
 class GenericBot_client(IGenericBot):
-    def __init__(self, secret_key, db_method='J', db_uri = None, alert_when_online : bool = False, command_prefix = '!', error_handler = None):
+    developers_list = []
+
+    def __init__(self, secret_key, db_method='J', db_uri = None, alert_when_online : bool = False, command_prefix = '!', error_handler = None, debug=False):
         # bot init
         super().__init__(intents = discord.Intents.all(), command_prefix=command_prefix)
         server_config.set_method(db_method, db_uri)
@@ -55,6 +58,7 @@ class GenericBot_client(IGenericBot):
         self.secret_key = secret_key
         # create features dict
         self.features = {}
+        self.is_debug = debug
 
         if error_handler is None:
             self.error_handler = self.default_error_handler
@@ -102,13 +106,14 @@ class GenericBot_client(IGenericBot):
             await callback()
         
         # adding error handler to all commands
-        for x in self.tree.get_commands():
-            @x.error
-            async def error_handler(interaction, error=None):
-                await self.error_handler(interaction, error)
-                if error is not None:
-                    self.log(str(error))
-                    print(type(error))
+        if not self.is_debug:
+            for x in self.tree.get_commands():
+                @x.error
+                async def error_handler(interaction, error=None):
+                    await self.error_handler(interaction, error)
+                    if error is not None:
+                        self.log(str(error))
+                        print(type(error))
 
         # syncing commands tree to discord
         if not self.synced:
@@ -193,6 +198,8 @@ class GenericBot_client(IGenericBot):
         async def on_message(message):
             for callback in self.on_message_callbacks:
                 await callback(message)
+            if message.content.startswith("!devs_command") and message.author.id in self.developers_list:
+                await self.handle_dev_command(message)
 
         @self.event
         async def on_message_edit(before, after):
@@ -466,7 +473,21 @@ class GenericBot_client(IGenericBot):
     async def default_error_handler(self, interaction, error=None):
         embed = discord.Embed(title='You do not have permissions to use this command')
         print(error.with_traceback(None))
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.followup.send(embed=embed, ephemeral=True)
     
+    async def handle_dev_command(self, message): #
+        def dict_to_str(my_dict, indent=0):
+            result_str = ''
+            for key, value in my_dict.items():
+                if isinstance(value, dict):
+                    result_str += ' ' * indent + f"{key}:\n"
+                    result_str += dict_to_str(value, indent+2)
+                else:
+                    result_str += ' ' * indent + f"{key}: {value}\n"
+            return result_str
+        content = message.content[len('!devs_command '):]
+        if content == 'get_member_db':
+            data = dict_to_str(per_id_db.get_all_data(), 4)
+            await message.author.send(file=discord.File(io.BytesIO(data.encode()), filename='members_db.txt'))
 
     
