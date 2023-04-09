@@ -36,7 +36,8 @@ class eventsub_feature(BotFeature):
             if sub_context is None:
                 sub_context = {}
             sub_created = False
-            subs_data = eventsub_wrapper.get_subscriptions()
+            subs_data = eventsub_wrapper.get_subscriptions()['data']
+            print(subs_data)
             for sub in subs_data:
                 print(sub)
                 print(sub['type'])
