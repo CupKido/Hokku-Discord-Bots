@@ -153,6 +153,7 @@ class eventsub_feature(BotFeature):
             if subscription.id in sub_context.keys():
                 try:
                     # creating embed
+                    print('creating embed')
                     username = data['event']['broadcaster_user_name']
                     user_id = data['event']['broadcaster_user_id']
                     streamer_url = 'https://www.twitch.tv/' + username
@@ -162,6 +163,9 @@ class eventsub_feature(BotFeature):
                     embed = discord.Embed(title=stream_info['title'], url=streamer_url, color=0x6441a5)
                     embed.set_image(url=image)
                     embed.set_author(name=username + " is online!", icon_url=user_info['profile_image_url'])
+                    print('embed created', 'guilds to notify', sub_context[subscription.id])
+                    if type(sub_context[subscription.id]) is not list:
+                        sub_context[subscription.id] = [sub_context[subscription.id]]
                     for guild_id in sub_context[subscription.id]:
                         guild_db = server_config(guild_id)
                         channel_id = guild_db.get_param(self.STREAM_ANNOUNCEMENET_CHANNEL)
