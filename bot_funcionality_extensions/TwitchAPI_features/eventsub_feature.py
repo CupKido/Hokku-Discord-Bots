@@ -10,6 +10,15 @@ from dotenv import dotenv_values
 
 config = dotenv_values('.env')
 
+#####################################
+# A feature that allows the bot to  #
+# subscribe to twitch events        #
+# (so far only stream online event) #
+# and alert the server in a         #
+# specified channel when the event  #
+# occurs with all the details       #
+# about the event                   #
+#####################################
 
 class eventsub_feature(BotFeature):
 
