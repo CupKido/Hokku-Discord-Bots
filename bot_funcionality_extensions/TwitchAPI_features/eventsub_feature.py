@@ -39,13 +39,22 @@ class eventsub_feature(BotFeature):
         async def add_online_event(interaction : discord.Interaction, twitch_channel_name : str):
             await interaction.response.send_message("Adding online event for channel " + twitch_channel_name, ephemeral=True)
             user_id = twitch_wrapper.get_user_id(twitch_channel_name)
+            if user_id is None:
+                await interaction.followup.send("Channel not found", ephemeral=True)
+                return
             # make sure that a subscription for this user does not already exist
             db = per_id_db(self.db_id)
             sub_context = db.get_param(self.SUBSCRIPTIONS_CONTEXT)
             if sub_context is None:
                 sub_context = {}
             sub_created = False
-            subs_data = eventsub_wrapper.get_subscriptions()['data']
+            subs= eventsub_wrapper.get_subscriptions()
+            if subs['total_cost'] > subs['max_total_cost']:
+                print('Error! Reached subscriptions limit', subs['total_cost'])
+                embed = discord.Embed(title="We're sorry!", description="We can not subscribe to any new streamers since we have reached the subscriptions limit", color=0xff0000)
+                await interaction.followup.send(embed=embed, ephemeral=True)
+                return
+            subs_data = subs['data']
             print(subs_data)
             for sub in subs_data:
                 print(sub)
@@ -90,11 +99,13 @@ class eventsub_feature(BotFeature):
         async def remove_online_event(interaction : discord.Interaction, twitch_channel_name : str): #
             await interaction.response.send_message("Removing online event for channel " + twitch_channel_name, ephemeral=True)
             user_id = twitch_wrapper.get_user_id(twitch_channel_name)
+            if user_id is None:
+                await interaction.followup.send("Channel not found", ephemeral=True)
+                return
             db = per_id_db(self.db_id)
             sub_context = db.get_param(self.SUBSCRIPTIONS_CONTEXT)
             if sub_context is None:
                 sub_context = {}
-            sub_created = False
             subs_data = eventsub_wrapper.get_subscriptions()['data']
             for sub in subs_data:
                 if sub['type'] == "stream.online" and sub['condition']['broadcaster_user_id'] == user_id:
