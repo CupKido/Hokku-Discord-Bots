@@ -45,17 +45,17 @@ class eventsub_feature(BotFeature):
                 print(user_id)
                 if sub['type'] == "stream.online" and int(sub['condition']['broadcaster_user_id']) == int(user_id):
                     # add the guild to the list of guilds that will be notified
-                    if sub.id in sub_context.keys():
-                        if type(sub_context[sub.id]) is list:
-                            if interaction.guild.id not in sub_context[sub.id]:
-                                sub_context[sub.id].append(interaction.guild.id)
+                    if sub['id'] in sub_context.keys():
+                        if type(sub_context[sub['id']]) is list:
+                            if interaction.guild.id not in sub_context[sub['id']]:
+                                sub_context[sub['id']].append(interaction.guild.id)
                             else:
                                 await interaction.followup.send("Channel already added", ephemeral=True)
                                 return
-                        elif sub_context[sub.id] != interaction.guild.id:
-                            sub_context[sub.id] = [sub_context[sub.id], interaction.guild.id]
+                        elif sub_context[sub['id']] != interaction.guild.id:
+                            sub_context[sub['id']] = [sub_context[sub['id']], interaction.guild.id]
                         else:
-                            sub_context[sub.id] = [sub_context[sub.id]]
+                            sub_context[sub['id']] = [sub_context[sub['id']]]
                     sub_created = True
                     break
             if not sub_created:
