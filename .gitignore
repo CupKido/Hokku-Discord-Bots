@@ -13,5 +13,5 @@ data_base/*.json
 data_base/actions_tester/*
 data_base/dall_e_db/*
 *.exe
-example*
+*example*
 bot_funcionality_extensions/BadBot/*
