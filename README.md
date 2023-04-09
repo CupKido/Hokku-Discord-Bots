@@ -152,6 +152,7 @@ A simple framework that allows creating, loading and unloading features from dis
   * to do list - lets each user access a to do list that is saved on the bot
   * active study rooms - for rooms with cam only
   * activity notifier - lets users get notified when there are more than a certain number of users on vc, or when their friend joins vc
+  * help command - adds the help command that sends a description about all commands that specific user can use
   
 ## The Main File 
   The main function is the actual python file we run on our machine.
