@@ -181,29 +181,33 @@ class eventsub_wrapper:
     @classmethod
     def verify_twitch_webhook_signature(instance, request, response, body):
         print("Verifying signature")
-        twitch_message_id = request.headers.get("Twitch-Eventsub-Message-Id")
-        twitch_timestamp = request.headers.get("Twitch-Eventsub-Message-Timestamp")
-        twitch_message_signature = request.headers.get("Twitch-Eventsub-Message-Signature")
-        timestamp = datetime.datetime.strptime(twitch_timestamp[:26] + twitch_timestamp[-1], "%Y-%m-%dT%H:%M:%S.%fZ")
-        now = datetime.datetime.utcnow()
+        try:
+            twitch_message_id = request.headers.get("Twitch-Eventsub-Message-Id")
+            twitch_timestamp = request.headers.get("Twitch-Eventsub-Message-Timestamp")
+            twitch_message_signature = request.headers.get("Twitch-Eventsub-Message-Signature")
+            timestamp = datetime.datetime.strptime(twitch_timestamp[:26] + twitch_timestamp[-1], "%Y-%m-%dT%H:%M:%S.%fZ")
+            now = datetime.datetime.utcnow()
 
-        delta = now - timestamp
+            delta = now - timestamp
 
 
-        if abs(delta.total_seconds()) > 600:
-            raise Exception("Signature is older than 10 minutes. Ignore this request.")
-        
-        if not instance.eventsub_secret:
-            raise Exception("The Twitch signing secret is missing.")
-        print(type(twitch_message_id), type(twitch_timestamp), type(body))
-        message = (twitch_message_id + twitch_timestamp + body).encode('utf-8')
-        secret = instance.eventsub_secret.encode('utf-8')
-        our_message_signature = "sha256=" + hmac.new(secret, message, hashlib.sha256).hexdigest()
-        
-        if twitch_message_signature != our_message_signature:
-            raise Exception("Invalid signature")
-        else:
-            print("Signature verified")
+            if abs(delta.total_seconds()) > 600:
+                raise Exception("Signature is older than 10 minutes. Ignore this request.")
+            
+            if not instance.eventsub_secret:
+                raise Exception("The Twitch signing secret is missing.")
+            print(type(twitch_message_id), type(twitch_timestamp), type(body))
+            message = (twitch_message_id + twitch_timestamp + body).encode('utf-8')
+            secret = instance.eventsub_secret.encode('utf-8')
+            our_message_signature = "sha256=" + hmac.new(secret, message, hashlib.sha256).hexdigest()
+            
+            if twitch_message_signature == our_message_signature:
+                print("Signature verified")
+                return
+        except:
+            pass
+        print("Signature verification failed")
+        raise Exception("Invalid signature")
 
 class subscription:
     def __init__(self, subscription_id, event_type, version, streamer_id, confirmation_callback=None):
@@ -227,7 +231,7 @@ async def callback_func(data):
     print(data)
 
 
-eventsub_wrapper.set_access_data(config['TWITCH_CLIENT_ID'], config['TWITCH_API_SECRET'], config['TWITCH_EVENTSUB_SECRET'])
+# eventsub_wrapper.set_access_data(config['TWITCH_CLIENT_ID'], config['TWITCH_API_SECRET'], config['TWITCH_EVENTSUB_SECRET'])
 # eventsub_wrapper.start_server()
 # eventsub_wrapper.delete_all_subscriptions()
 # eventsub_wrapper.create_subscription('stream.online', '1', twitch_wrapper.get_user_id('blobblab38'), callback_func)
