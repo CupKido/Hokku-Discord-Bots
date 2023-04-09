@@ -12,7 +12,7 @@ from dotenv import dotenv_values
 config = dotenv_values('.env')
 
 def main():
-    CoffeeBot = GenericBot_client(config['REGIBOT_TOKEN'], 'J', command_prefix='R?')
+    CoffeeBot = GenericBot_client(config['REGIBOT_TOKEN'], 'J', command_prefix='R?', debug=True)
     dall_e_api.unlimited_users.append(427464593351114754)
     dall_e_api.unlimited_users.append(1091693766294913145)
     CoffeeBot.developers_list.append(427464593351114754)
