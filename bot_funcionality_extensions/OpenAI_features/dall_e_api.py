@@ -187,7 +187,7 @@ class dall_e_api(BotFeature):
                     embeds = [ready_embed]
                     for x in range(len(image_urls)):
                         embed = discord.Embed(title="Image " + str(x+1), color=discord.Color.blurple())
-                        embed.set_image(url=image_urls[x])
+                        embed.set_image(url=image_urls[x]['url'])
                         embeds.append(embed)
                     embs = embed_pages(embeds)
                     await embs.send(interaction=interaction, followup=True)
