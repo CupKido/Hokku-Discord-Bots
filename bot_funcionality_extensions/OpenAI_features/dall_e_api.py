@@ -135,7 +135,11 @@ class dall_e_api(BotFeature):
             money_spent = member_db.get_param(self.MONEY_SPENT)
             if money_spent is None:
                 money_spent = 0
-            member_db.set_params(user_mid_request=True, remaining_images=remaining_images - amount, money_spent=money_spent + amount * self.sizes[self.defalt_size]["price"])
+            if interaction.user.id not in self.unlimited_users:
+                remaining_images = remaining_images - amount
+            else:
+                remaining_images = 10000
+            member_db.set_params(user_mid_request=True, remaining_images=remaining_images, money_spent=money_spent + amount * self.sizes[self.defalt_size]["price"])
             user_dir = "data_base/dall_e_db/" + str(interaction.user.id)
             if not os.path.exists(user_dir):
                         os.makedirs(user_dir)
