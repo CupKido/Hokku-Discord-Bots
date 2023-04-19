@@ -191,6 +191,7 @@ class dall_e_api(BotFeature):
                         embeds.append(embed)
                     embs = embed_pages(embeds)
                     await embs.send(interaction=interaction, followup=True)
+                    member_db.set_params(user_mid_request=False)
                     return
                     files= []
                     # create thread for downloading images and start it
@@ -212,7 +213,6 @@ class dall_e_api(BotFeature):
                                                             files=files)
                     
                     # updatingg member status
-                    member_db.set_params(user_mid_request=False)
 
 
         except Exception as e:
