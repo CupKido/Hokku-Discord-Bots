@@ -7,6 +7,7 @@ from Interfaces.BotFeature import BotFeature
 from DB_instances.per_id_db import per_id_db
 from DB_instances.generic_config_interface import server_config
 from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
+from ui_components_extension.views.embed_pages import embed_pages
 import ui_components_extension.ui_tools as ui_tools
 import permission_checks
 import os
@@ -180,7 +181,17 @@ class dall_e_api(BotFeature):
                     
 
                     # writing images to file
-                    
+                    ready_embed = discord.Embed(title="Your AI generated images are ready", 
+                                                description=embed_description, 
+                                                color=discord.Color.blurple())
+                    embeds = [ready_embed]
+                    for x in range(len(image_urls)):
+                        embed = discord.Embed(title="Image " + str(x+1), color=discord.Color.blurple())
+                        embed.set_image(url=image_urls[x])
+                        embeds.append(embed)
+                    embs = embed_pages(embeds)
+                    await embs.send(interaction=interaction, followup=True)
+                    return
                     files= []
                     # create thread for downloading images and start it
                     t = threading.Thread(target=self.download_images, args=(image_urls, user_dir))
@@ -196,9 +207,6 @@ class dall_e_api(BotFeature):
                         filename = user_dir + "\\" + str(x) +".jpg"
                         files.append(discord.File(filename))
                     # sending images with embed
-                    ready_embed = discord.Embed(title="Your AI generated images are ready", 
-                                                description=embed_description, 
-                                                color=discord.Color.blurple())
                     await interaction.followup.send(content=interaction.user.mention,
                                                             embed=ready_embed,
                                                             files=files)
