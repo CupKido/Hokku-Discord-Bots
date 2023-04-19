@@ -99,6 +99,9 @@ class dall_e_api(BotFeature):
                     next_reset_time = last_reset + datetime.timedelta(hours=self.reset_every_hours)
                     await interaction.response.send_message("You have reached the limit of images you can generate per " + str(self.reset_every_hours) + " hours, please try again at " + str(next_reset_time), ephemeral=True)
                     return
+                else: 
+                    remaining_images = 10000
+                    member_db.set_params(remaining_images=remaining_images)
         the_modal = Generic_Modal(title="Generate Image")
         the_modal.add_input(label="Prompt", placeholder="Enter prompt here", required=True, long=True, max_length=750)
         the_modal.add_input(label="Amount ("+ str(self.max_pics_per_request)+" max)", placeholder="Enter amount here", required=False, max_length=len(str(self.max_pics_per_request)))
@@ -137,8 +140,6 @@ class dall_e_api(BotFeature):
                 money_spent = 0
             if interaction.user.id not in self.unlimited_users:
                 remaining_images = remaining_images - amount
-            else:
-                remaining_images = 10000
             member_db.set_params(user_mid_request=True, remaining_images=remaining_images, money_spent=money_spent + amount * self.sizes[self.defalt_size]["price"])
             user_dir = "data_base/dall_e_db/" + str(interaction.user.id)
             if not os.path.exists(user_dir):
