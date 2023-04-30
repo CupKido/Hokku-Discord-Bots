@@ -5,10 +5,11 @@ from discord.ext import commands
 from discord import app_commands
 import permission_checks
 from Interfaces.BotFeature import BotFeature
-from DB_instances.generic_config_interface import server_config
-from DB_instances.per_id_db import per_id_db
+# from DB_instances.generic_config_interface import server_config
+# from DB_instances.per_id_db import per_id_db
 
-
+server_config = None
+per_id_db = None
 class active_study_rooms(BotFeature):
 
     ACTIVE_STUDY_ROOMS = 'active_study_rooms'
