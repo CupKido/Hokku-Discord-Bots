@@ -30,7 +30,7 @@ class gpt3_5_api(BotFeature):
         global per_id_db, server_config
         super().__init__(bot)
         openai.api_key = self.openai_key
-        per_id_db = bot.db.get_collection_instance(General_DB_Names.Items_data.value).get_item_instance
+        per_id_db = bot.db.get_collection_instance('ChatGPTFeature').get_item_instance
         server_config = bot.db.get_collection_instance(General_DB_Names.Servers_data.value).get_item_instance
         @bot.tree.command(name='gpt_menu', description='open GPT actions menu')
         async def GPT_menu_command(interaction : discord.Interaction):
