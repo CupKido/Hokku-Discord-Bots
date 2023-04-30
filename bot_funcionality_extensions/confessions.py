@@ -2,8 +2,9 @@ from Interfaces.IGenericBot import IGenericBot
 from Interfaces.BotFeature import BotFeature
 from GenericBot import GenericBot_client
 import discord
-from DB_instances.generic_config_interface import server_config
-from DB_instances.generic_db_instance import per_server_generic_db
+# from DB_instances.generic_config_interface import server_config
+# from DB_instances.generic_db_instance import per_server_generic_db
+from DB_instances.DB_instance import General_DB_Names
 from discord.ext import commands
 from discord import app_commands
 from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
@@ -12,7 +13,8 @@ import permission_checks
 
 
 # a feature with 'confess' command
-
+server_config = None
+per_server_generic_db = None
 class confessions(BotFeature):
     CONFESSIONS_CHANNEL = 'confessions_channel'
     REPORT_COUNT = 'report_count'
@@ -21,8 +23,10 @@ class confessions(BotFeature):
     db_name = 'confessions_db'
 
     def __init__(self, bot):
+        global per_server_generic_db, server_config
         super().__init__(bot)
-
+        per_server_generic_db = bot.db.get_collection_instance(self.db_name).get_item_instance
+        server_config = bot.db.get_collection_instance(General_DB_Names.Servers_data.value).get_item_instance
         @bot.tree.command(name = 'set_confess_channel', description='set a channel for confessions')
         @app_commands.check(permission_checks.is_admin)
         async def set_confess_channel_command(interaction: discord.Interaction, channel : discord.TextChannel,
@@ -71,7 +75,7 @@ class confessions(BotFeature):
         message = await message.reply(reply)
         await self.add_options_buttons(message)
         await interaction.response.defer(ephemeral=True)
-        db = per_server_generic_db(interaction.guild.id, confessions.db_name)
+        db = per_server_generic_db(interaction.guild.id)
         db.set_param(message.id, {'reply_to' : message_id, 'original_user' : message.author.id})
     
     async def send_confession(self, interaction):
@@ -98,7 +102,7 @@ class confessions(BotFeature):
     async def report(self, interaction, button, view):
         
         message_id = button.value['message']
-        db = per_server_generic_db(interaction.guild.id, confessions.db_name)
+        db = per_server_generic_db(interaction.guild.id)
         message_data = db.get_param(message_id)
         if message_data is None:
             message_data = {}
@@ -145,5 +149,5 @@ class confessions(BotFeature):
         await self.add_options_buttons(message)
         embed = discord.Embed(title='sent confession', color=0x70aaff)
         await interaction.response.send_message(embed=embed, ephemeral=True)
-        db = per_server_generic_db(interaction.guild.id, confessions.db_name)
+        db = per_server_generic_db(interaction.guild.id)
         db.set_param(message.id, {'original_user' : message.author.id})
