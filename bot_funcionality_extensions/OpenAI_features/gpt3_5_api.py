@@ -3,8 +3,9 @@ from discord import app_commands
 from discord.ext import commands
 import openai
 from Interfaces.BotFeature import BotFeature
-from DB_instances.per_id_db import per_id_db
-from DB_instances.generic_config_interface import server_config
+# from DB_instances.per_id_db import per_id_db
+#from DB_instances.generic_config_interface import server_config
+from DB_instances.DB_instance import General_DB_Names
 from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
 import ui_components_extension.ui_tools as ui_tools
 import permission_checks
@@ -13,6 +14,10 @@ import json
 from dotenv import dotenv_values
 config = dotenv_values('.env')
 
+
+
+per_id_db = None
+server_config = None
 class gpt3_5_api(BotFeature):
     openai_key = config["OPENAI_KEY"]
 
@@ -22,9 +27,11 @@ class gpt3_5_api(BotFeature):
     GPT_CHANNELS = 'gpt_channels'
 
     def __init__(self, bot):
+        global per_id_db, server_config
         super().__init__(bot)
         openai.api_key = self.openai_key
-        
+        per_id_db = bot.db.get_collection_instance(General_DB_Names.Items_data.value).get_item_instance
+        server_config = bot.db.get_collection_instance(General_DB_Names.Servers_data.value).get_item_instance
         @bot.tree.command(name='gpt_menu', description='open GPT actions menu')
         async def GPT_menu_command(interaction : discord.Interaction):
             # make sure openai key is set
@@ -150,12 +157,7 @@ class gpt3_5_api(BotFeature):
 
         data = {
             "model" : "gpt-3.5-turbo",
-            "messages": [
-                    {
-                        "role": "user",
-                        "content": message
-                    }
-                ]
+            "messages": user_history
         }
         async with aiohttp.ClientSession() as session:
             #print('getting image:\t' + prompt)
