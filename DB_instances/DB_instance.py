@@ -209,7 +209,7 @@ class item_instance:
     def delete_item(self):
         self.db_instance.delete(self.id)
 
-def DB_factory(DB_Method : DB_Methods, db_name, uri=None):
+def DB_factory(db_name, DB_Method : DB_Methods, uri=None):
     if DB_Method == DB_Methods.Json:
         return JsonDB_instance(db_name, uri)
     elif DB_Method == DB_Methods.MongoDB:
