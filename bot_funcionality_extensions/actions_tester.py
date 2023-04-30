@@ -8,7 +8,8 @@ import asyncio
 from Interfaces.BotFeature import BotFeature
 import requests
 from io import BytesIO
-
+from ui_components_extension.generic_ui_comps import Generic_View
+from ui_components_extension.minesweeper import minesweeper
 ##################################
 # a feature for simulating a     #
 # user to test results of        #
@@ -110,3 +111,29 @@ class actions_tester(BotFeature):
             print(response.text)
             print(response.status_code)
             print(response)
+        @bot.tree.command(name = 'test_buttons_amount', description='test buttons')
+        @app_commands.check(permission_checks.is_admin)
+        async def test5(interaction: discord.Interaction):
+            await interaction.response.send_message('you asked for it...', ephemeral=True)
+            my_view = Generic_View()
+            i = 24
+            for x in range(i):
+                my_view.add_generic_button(label='🚩', style=discord.ButtonStyle.primary, callback=(lambda x, y, z: x.response.send_message('test', ephemeral=True)))
+            while i < 1000:
+                try:
+                    my_view.add_generic_button(label='', emoji='🚩', style=discord.ButtonStyle.primary, callback=(lambda x, y, z: x.response.send_message('test', ephemeral=True)))
+                    await interaction.followup.send('test', ephemeral=True, view=my_view)
+                    i += 1
+                    await asyncio.sleep(0.3)
+                except Exception as e:
+                    print(i, e)
+                    break
+        @bot.tree.command(name = 'minesweeper', description='test buttons')
+        @app_commands.check(permission_checks.is_admin)
+        async def test5(interaction: discord.Interaction):
+            await interaction.response.send_message('', view=minesweeper())
+
+        @bot.tree.command(name = 'minesweeper_eph', description='test buttons')
+        @app_commands.check(permission_checks.is_admin)
+        async def test5(interaction: discord.Interaction):
+            await interaction.response.send_message('', view=minesweeper())
