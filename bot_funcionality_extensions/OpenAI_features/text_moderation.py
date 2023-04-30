@@ -1,29 +1,23 @@
 import discord
 from discord import app_commands
-from discord.ext import commands, tasks
-import openai
-import asyncio
 from Interfaces.BotFeature import BotFeature
-from DB_instances.per_id_db import per_id_db
-from DB_instances.generic_config_interface import server_config
-from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
-import ui_components_extension.ui_tools as ui_tools
+# from DB_instances.generic_config_interface import server_config
+from DB_instances.DB_instance import General_DB_Names
 import permission_checks
-import os
 import json
-import urllib.request
 import aiohttp
-import requests
-import threading
-import time
 from dotenv import dotenv_values
 config = dotenv_values('.env')
+
+server_config = None
 
 class text_moderation_api(BotFeature):
     FILTER_IS_ON = "filter_is_on"
 
     def __init__(self, bot):
+        global server_config
         super().__init__(bot)
+        server_config = bot.db.get_collection_instance(General_DB_Names.Servers_data.value).get_item_instance
         bot.add_on_message_callback(self.filter_messages)
         @bot.tree.command(name="trigger_filter", description="Generate images with Dall-E")
         @app_commands.check(permission_checks.is_admin)

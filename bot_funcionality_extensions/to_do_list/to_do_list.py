@@ -5,10 +5,12 @@ import permission_checks
 from Interfaces.BotFeature import BotFeature
 from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
 from ui_components_extension import ui_tools
-from DB_instances.per_id_db import per_id_db
+#from DB_instances.per_id_db import per_id_db
+from DB_instances.DB_instance import General_DB_Names
 import datetime
 from datetime import timedelta
 
+per_id_db = None
 class to_do_list(BotFeature):
     TASKS_LIST = 'tasks_list'
     IS_EMBED = 'is_embed'
@@ -18,7 +20,12 @@ class to_do_list(BotFeature):
     days_for_inactive = 60
     select_list_task_index = 4
     def __init__(self, bot):
+        global per_id_db
         super().__init__(bot)
+        
+        self.db_collection = bot.db.get_collection_instance("ToDoListFeature")
+        per_id_db = bot.db.get_collection_instance("ToDoListFeature").get_item_instance
+
         bot.add_every_day_callback(self.clean_inactive_users)
         @bot.tree.command(name='add_task', description='add task to the list')
         async def add_task_command(interaction):
@@ -299,7 +306,7 @@ class to_do_list(BotFeature):
             await interaction.response.send_message(content=message, view=tasks_menu_view, ephemeral=(not is_visible))
 
     async def clean_inactive_users(self):
-        allusers = per_id_db.get_all_data()
+        allusers = self.db_collection.get_all_data_dict()
         for user in allusers.keys():
             if self.bot_client.get_user(user) is None:
                 continue

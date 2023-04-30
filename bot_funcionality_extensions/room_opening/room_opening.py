@@ -3,7 +3,8 @@ from discord.ext import commands
 from discord import app_commands
 from bot_funcionality_extensions.room_opening.active_channel_states import ChannelState
 import ui_components_extension.ui_tools as ui_tools
-from DB_instances.generic_config_interface import server_config
+#from DB_instances.generic_config_interface import server_config
+from DB_instances.DB_instance import General_DB_Names
 import discord_modification_tools.channel_modifier as channel_modifier
 from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
 from Interfaces.IGenericBot import IGenericBot
@@ -47,12 +48,17 @@ RATE_LIMIT_ERROR_DESCRIPTION = 'rate_limit_error_description'
 DEFAULT_USER_LIMIT = 'default_user_limit'
 USE_BUTTONS = 'use_buttons'
 
+
+server_config = None
 class room_opening(BotFeature):
     clean_dead_every = 60
     db_dir_path = 'data_base/room_opening'
     db_file_name = 'active_channels.json'
     def __init__(self, client : IGenericBot):
+        global server_config
         super().__init__(client)
+
+        server_config = client.db.get_collection_instance(General_DB_Names.Servers_data.value).get_item_instance
         self.logger = client.get_logger()
         self.dead_channels_counter = 0
         self.active_channels = {}
@@ -185,6 +191,8 @@ class room_opening(BotFeature):
         @client.tree.command(name = 'setup', description='create default category with master and edit channels')
         @app_commands.check(permission_checks.is_admin)
         async def setup_command(interaction):
+            started_embed = discord.Embed(title='Working on it...', description='Please wait')
+            await interaction.response.send_message(embed=started_embed, ephemeral = True)
             this_server_config = server_config(interaction.guild.id)
             await self.setup_guild(interaction.guild, this_server_config)
             category = '<#' + str(this_server_config.get_param(INITIAL_CATEGORY_ID)) + '>'
@@ -192,7 +200,7 @@ class room_opening(BotFeature):
             master = '<#' + str(this_server_config.get_param(VC_FOR_VC)[0]) + '>'
             embed = discord.Embed(title='Dynamico has been set up successfully !',
                                    description=f'Created: \nCategory: {category}\nEdit Channel: {edit}\nMaster Channel: {master}')
-            await interaction.response.send_message(embed=embed, ephemeral = True)
+            await interaction.followup.send(embed=embed, ephemeral = True)
 
         @client.tree.command(name = 'clear', description='clears master and edit channels, with the default category')
         @app_commands.check(permission_checks.is_admin)

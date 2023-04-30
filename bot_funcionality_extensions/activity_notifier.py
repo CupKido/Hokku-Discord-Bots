@@ -6,10 +6,12 @@ import permission_checks
 from Interfaces.BotFeature import BotFeature
 from Interfaces.IGenericBot import IGenericBot
 from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
-from DB_instances.per_id_db import per_id_db
-from DB_instances.generic_config_interface import server_config
+# from DB_instances.per_id_db import per_id_db
+# from DB_instances.generic_config_interface import server_config
+from DB_instances.DB_instance import General_DB_Names
 
-
+per_id_db = None
+server_config = None
 class activity_notifier(BotFeature):
     default_minimum_members = 4
     default_minimum_time = 30
@@ -25,10 +27,13 @@ class activity_notifier(BotFeature):
     ALLOW_SPECIFIC_MEMBER_NOTIFICATIONS = 'allow_specific_member_notifications'
 
     def __init__(self, bot: IGenericBot):
+        global per_id_db, server_config
         super().__init__(bot)
         self.bot_client.add_on_voice_state_update_callback(self.notify_relevant_members)
 
-
+        per_id_db = bot.db.get_collection_instance('ActivityNotifierFeature').get_item_instance
+        server_config = bot.db.get_collection_instance(General_DB_Names.Servers_data.value).get_item_instance
+        
         @self.bot_client.tree.command(name = 'activity_menu', description = 'Get a menu for activity notifications')
         async def activity_menu(interaction):
             my_view = self.get_activity_menu(interaction.user)

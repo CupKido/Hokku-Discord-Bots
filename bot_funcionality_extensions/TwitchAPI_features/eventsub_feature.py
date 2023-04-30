@@ -2,8 +2,9 @@ import discord
 from discord.ext import tasks
 from discord import app_commands
 from Interfaces.BotFeature import BotFeature
-from DB_instances.generic_config_interface import server_config
-from DB_instances.per_id_db import per_id_db
+# from DB_instances.generic_config_interface import server_config
+# from DB_instances.per_id_db import per_id_db
+from DB_instances.DB_instance import General_DB_Names
 from bot_funcionality_extensions.TwitchAPI_features.twitch_wrapper import twitch_wrapper
 from bot_funcionality_extensions.TwitchAPI_features.eventsub_wrapper import eventsub_wrapper
 import permission_checks
@@ -21,7 +22,8 @@ config = dotenv_values('.env')
 # occurs with all the details       #
 # about the event                   #
 #####################################
-
+per_id_db = None
+server_config = None
 class eventsub_feature(BotFeature):
 
     initialized = False
@@ -31,9 +33,12 @@ class eventsub_feature(BotFeature):
 
     db_id = 'subscrioption_db'
     def __init__(self, bot):
+        global per_id_db, server_config
         super().__init__(bot)
         self.alert_queue = []
 
+        per_id_db = bot.db.get_collection_instance(General_DB_Names.Items_data.value).get_item_instance
+        server_config = bot.db.get_collection_instance(General_DB_Names.Servers_data.value).get_item_instance
         eventsub_wrapper.set_access_data(config['TWITCH_CLIENT_ID'], config['TWITCH_API_SECRET'], config['TWITCH_EVENTSUB_SECRET'])
         bot.add_on_ready_callback(self.start_server)
 

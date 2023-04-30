@@ -4,8 +4,7 @@ from discord.ext import commands, tasks
 import openai
 import asyncio
 from Interfaces.BotFeature import BotFeature
-from DB_instances.per_id_db import per_id_db
-from DB_instances.generic_config_interface import server_config
+# from DB_instances.per_id_db import per_id_db
 from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
 from ui_components_extension.views.embed_pages import embed_pages
 import ui_components_extension.ui_tools as ui_tools
@@ -21,6 +20,8 @@ import datetime
 from dotenv import dotenv_values
 config = dotenv_values('.env')
 
+
+per_id_db = None
 class dall_e_api(BotFeature):
     max_pics_per_request = 3
     wait_per_image = 5
@@ -44,7 +45,9 @@ class dall_e_api(BotFeature):
     MONEY_SPENT = "money_spent"
 
     def __init__(self, bot):
+        global per_id_db
         super().__init__(bot)
+        per_id_db = bot.db.get_collection_instance("DallEFeature").get_item_instance
         self.last_amount_reset = datetime.datetime.now()
         bot.add_on_message_callback(self.on_message)
         bot.add_on_ready_callback(self.start_tasks)

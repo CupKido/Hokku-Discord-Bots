@@ -5,7 +5,8 @@ from discord.ext import commands
 from discord import app_commands
 import permission_checks
 from cleantext import clean
-from DB_instances.generic_config_interface import server_config
+# from DB_instances.generic_config_interface import server_config
+from DB_instances.DB_instance import General_DB_Names
 from discord_modification_tools import channel_modifier
 from Interfaces.IGenericBot import IGenericBot
 from Interfaces.ILogger import ILogger
@@ -27,11 +28,11 @@ class logger(BotFeature, ILogger):
         self.log("==================================================\n\
                 logger initialized\
                 \n==================================================")
-
+        self.server_config = bot_client.db.get_collection_instance(General_DB_Names.Servers_data.value).get_item_instance
         @self.bot_client.tree.command(name = 'set_logs_channel', description='sets the channel where the logs will be sent')
         @app_commands.check(permission_checks.is_admin)
         async def set_logs_cahnnel(interaction, channel : discord.TextChannel):
-            this_server_config = server_config(interaction.guild.id)
+            this_server_config = self.server_config(interaction.guild.id)
             last_log_channel = this_server_config.get_param(logger.LOG_CHANNEL)
             if last_log_channel:
                 last_log_channel = self.bot_client.get_channel(int(last_log_channel))
@@ -46,7 +47,7 @@ class logger(BotFeature, ILogger):
         @self.bot_client.tree.command(name = 'remove_logs_channel', description='changes the log channel to nothing')
         @app_commands.check(permission_checks.is_admin)
         async def set_logs_cahnnel(interaction):
-            this_server_config = server_config(interaction.guild.id)
+            this_server_config = self.server_config(interaction.guild.id)
             last_log_channel = this_server_config.get_param(logger.LOG_CHANNEL)
             if last_log_channel:
                 last_log_channel = self.bot_client.get_channel(int(last_log_channel))
@@ -111,7 +112,7 @@ class logger(BotFeature, ILogger):
             f.write(instance_name + ': ' + str(msg) + '\t(' +str(datetime.datetime.now()) + ')\n')
         
         # send to log channel
-        this_server_config = server_config(guild_id)
+        this_server_config = self.server_config(guild_id)
         log_channel_id = this_server_config.get_param(logger.LOG_CHANNEL)
         if log_channel_id:
             # create embed
