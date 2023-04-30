@@ -93,6 +93,8 @@ class MongoDB_instance(DB_instance):
         if self.client is None:
             raise Exception('Failed to connect to MongoDB_instance.\n' + 
                             'Context: ' + str(self.__dict__))
+        else: 
+            print('Successfully connected to MongoDB database')
         self.db = self.client[db_name]
     
     def get_collection_instance(self, collection_name):
@@ -207,4 +209,10 @@ class item_instance:
     def delete_item(self):
         self.db_instance.delete(self.id)
 
-
+def DB_factory(DB_Method : DB_Methods, db_name, uri=None):
+    if DB_Method == DB_Methods.Json:
+        return JsonDB_instance(db_name, uri)
+    elif DB_Method == DB_Methods.MongoDB:
+        return MongoDB_instance(db_name, uri)
+    else:
+        raise Exception('Invalid DB_Method: ' + str(DB_Method))
