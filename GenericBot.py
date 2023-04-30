@@ -7,7 +7,7 @@ from bot_funcionality_extensions.logger import logger
 from discord.ext import commands, tasks
 import io
 import permission_checks
-
+from DB_instances.DB_instance import *
 ############################################
 # this is a generic bot that lets you sign #
 # to events the bot receives from discord. #
@@ -43,11 +43,10 @@ import permission_checks
 class GenericBot_client(IGenericBot):
     developers_list = []
 
-    def __init__(self, secret_key, db_method='J', db_uri = None, alert_when_online : bool = False, command_prefix = '!', error_handler = None, debug=False):
+    def __init__(self, secret_key, db_name, db_method='J', alert_when_online : bool = False, command_prefix = '!', error_handler = None, debug=False):
         # bot init
         super().__init__(intents = discord.Intents.all(), command_prefix=command_prefix)
-        server_config.set_method(db_method, db_uri)
-        per_id_db.set_method(db_method, db_uri)
+        self.db = DB_factory(db_name, db_method)
         self.synced = False
         # bot options
         self.added = False
