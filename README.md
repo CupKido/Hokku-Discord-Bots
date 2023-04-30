@@ -29,19 +29,22 @@ A simple framework that allows creating, loading and unloading features from dis
 ## Generic Bot
 
   The generic bot class is a class that allow you to sign up onto its events (mostly events caused by discord - discord event),
-  so you can get called even when outside the generic bot's class
+  so you can get called even when outside the generic bot's class.
   
   #### parameters of constructor function:
   
   secret_key - your bot's token
 
   db_method (optional) - 'J' if you want to use json file for your database, or 'M' if you want to use MongoDB
+  
     Default - 'J'
 
   config_uri (optional) - what path to use for either db or uri for MongoDB server
+  
     Default - None
 
   alert_when_online (optional) - whether to notify all guilds that the bot is ready and active
+  
     Default - False
     
   
