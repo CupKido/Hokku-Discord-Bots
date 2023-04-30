@@ -179,6 +179,7 @@ class gpt3_5_api(BotFeature):
                 embeds=[question_embed, response_embed]
                 # add button to show chat history
                 answer_view = Generic_View()
+                answer_view.add_generic_button(label="Reply", style=discord.ButtonStyle.green, callback=self.ask_GPT3_5_button_click)
                 answer_view.add_generic_button(label="Show chat history", style=discord.ButtonStyle.primary, callback=self.show_history_button_click)
                 user_mention = interaction.user.mention
                 invisible = member_db.get_param(self.GPT_REPLIES_HIDDEN)
