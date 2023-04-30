@@ -4,9 +4,9 @@ import random
 from ui_components_extension.generic_ui_comps import Generic_Button
 
 class minesweeper(View):
-    def __init__(self, *, timeout = None):
+    def __init__(self, *, timeout = None, ephemeral=False):
         super().__init__(timeout=timeout)
-
+        self.ephemeral = ephemeral
         self.game_over = False
         self.flagging = False
         self.board = [[spot(random.randint(0, 5) == 0 and x*y != 16) for x in range(5)] for y in range(5)]
@@ -62,7 +62,7 @@ class minesweeper(View):
         except Exception as e:
             print(e)
         if self.game_over:
-            await interaction.followup.send('Game Over!')
+            await interaction.followup.send('Game Over!', ephemeral=self.ephemeral)
 
         for x in range(5):
             for y in range(5):
@@ -70,7 +70,7 @@ class minesweeper(View):
                 not self.board[x][y].is_bomb and self.board[x][y].is_flagged:
                     return
         self.game_over = True
-        await interaction.followup.send('You Win!')
+        await interaction.followup.send('You Win!', ephemeral=self.ephemeral)
 
     async def flag_callback(self, interaction, button, view):
         if self.game_over:
