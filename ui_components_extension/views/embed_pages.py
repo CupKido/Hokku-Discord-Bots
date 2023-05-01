@@ -20,6 +20,10 @@ class embed_pages(discord.ui.View):
         self.last_page = float(len(self.embeds)) / float(self.items_per_page) - 1
         self.last_page = int(math.ceil(self.last_page))
         self.add_numbering = add_numbering
+        if add_numbering:
+            for i in range(len(self.embeds)):
+                this_embed = self.embeds[i]
+                this_embed.set_footer(text=((this_embed.footer.text + ' | ') if this_embed.footer is not None and this_embed.footer.text is not None else '') + str(i+1) + '/' + str(len(self.embeds)))
         
     
     async def send(self, interaction, ephemeral=False, followup=False, views=[]):
@@ -51,10 +55,7 @@ class embed_pages(discord.ui.View):
         for i in range(self.current_page * self.items_per_page, (self.current_page + 1) * self.items_per_page):
             if i >= len(self.embeds):
                 break
-            new_embed = self.embeds[i]
-            if(self.add_numbering):
-                new_embed.set_footer(text=(new_embed.footer.text if new_embed.footer is not None and new_embed.footer.text is not None else '')  + ' | ' + str(i+1) + '/' + str(len(self.embeds)))
-            res.append(new_embed)
+            res.append(self.embeds[i])
         return res
 
     @discord.ui.button(label='Previous' ,custom_id='previous')
