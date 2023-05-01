@@ -5,12 +5,12 @@ from bot_funcionality_extensions.bot_activities_fetures.watching_members_feature
 from bot_funcionality_extensions.prefix_adapter import prefix_adapter
 from bot_funcionality_extensions.activity_notifier import activity_notifier
 from bot_funcionality_extensions.help_command import help_command
-
+from DB_instances.DB_instance import DB_Methods
 from dotenv import dotenv_values
 config = dotenv_values('.env')
 def main():
     # stat the bot
-    HitokuBot = GenericBot_client(config['HOKKUBOT_TOKEN'], 'J', command_prefix='H?')
+    HitokuBot = GenericBot_client(config['HOKKUBOT_TOKEN'], 'HokkuBot', DB_Methods.MongoDB, command_prefix='H?')
     HitokuBot.add_features(room_opening, 
                            watching_members_feature, 
                            event_logger, 
