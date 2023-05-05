@@ -366,8 +366,12 @@ A simple framework that allows creating, loading and unloading features from dis
     * Json
     * MongoDB
   * DB_instance : class - an abstract class for db instances
-  * MongoDB_instance : class (inherits DB_instance) - used to connect to a MongoDB Database, parameters are (db_name, connection_string=None)
-  * JsonDB_instance : class (inherits DB_instance) - used to maintain a Json database, parameters are (db_name, location=None)
+  * MongoDB_instance : class (inherits DB_instance) - used to connect to a MongoDB Database, parameters are:
+    * db_name : str 
+    * connection_string=None : str
+  * JsonDB_instance : class (inherits DB_instance) - used to maintain a Json database, parameters are:
+    * db_name : str
+    * location=None : str
   * item_instance : class - represents an item inside a collection.
   * DB_factory : function - for getting a DB_instance based on parameters, which are:
     * db_name : str
