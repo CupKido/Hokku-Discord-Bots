@@ -43,6 +43,9 @@ A simple framework that allows creating, loading and unloading features from dis
   
     Default - False
     
+  The generic bot also has a logger feature and a db instance built into it;
+  * [bot.db](#db-instance)
+  * [bot.logger](#logger-feature)
   
   To make a function get called when an event happens, 
   you need to add it to the event's callbacks list, 
@@ -51,6 +54,8 @@ A simple framework that allows creating, loading and unloading features from dis
       <GenericBot instance>.add_<name of event>_callback(<name of function to add>)
       
   * notice that all functions added to events callbacks must be **async functions** since they're called with **'await'** 
+  
+  
   
 ### List of supported events
 
@@ -352,6 +357,18 @@ A simple framework that allows creating, loading and unloading features from dis
     pages.send(interaction, ephemeral=True)
   Creating a list of embeds, and sending them back privately, with an embed title
   
+  ## DB instance
+  the db_instance is a module that contains different classes for using the DB in an easy way.
+  
+  Few of the items inside it are:
+  * General_DB_Names : Enum - contains a few commonly used names for collections, that features could share.
+  * DB_Methods : Enum - Contains the DB interfaces options, currently supports:
+    * Json
+    * MongoDB
+  * DB_instance : class - an abstract class for db instances
+  * MongoDB_instance : class (inherits DB_instance) - used to connect to a MongoDB Database, parameters are (db_name, connection_string=None)
+  * JsonDB_instance : class (inherits DB_instance) - used to maintain a Json database, parameters are (db_name, location=None)
+  * item_instance : class - represents an item inside a collection.
   
 
 
