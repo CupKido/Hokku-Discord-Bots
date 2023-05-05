@@ -35,11 +35,11 @@ A simple framework that allows creating, loading and unloading features from dis
   
   secret_key - your bot's token
 
-  db_method (optional) - 'J' if you want to use json file for your database, or 'M' if you want to use MongoDB
+  db_method (optional) - a [DB_Methods](#db-methods) instance
   
-    Default - 'J'
+    Default - DB_Methods.Json
 
-  config_uri (optional) - what path to use for either db or uri for MongoDB server
+  db_name (optional) - what DB to use inside the DB server/files
   
     Default - None
 
