@@ -35,7 +35,7 @@ A simple framework that allows creating, loading and unloading features from dis
   
   secret_key - your bot's token
 
-  db_method- a [DB_Methods](#db-methods) instance
+  db_method- a [DB_Methods](#db-methods) instance. In case you chose MongoDB then make sure to set enviorment variable "MONGO_DB_CONNECTION_STRING" as your           connection string
   
   db_name - what DB to use inside the DB server/files
   
