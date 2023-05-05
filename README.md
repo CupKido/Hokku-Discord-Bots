@@ -327,7 +327,7 @@ A simple framework that allows creating, loading and unloading features from dis
   A class that inherits the discord view component, for presenting lists, search results or just sending a group of embeds.
   
   #### Usage:
-    view = embed_pages(...)
+    view = embed_pages(embeds, ...)
     view.send(interaction, ...)
   #### Parameters:
   ##### constructor
