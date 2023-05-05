@@ -33,13 +33,13 @@ A simple framework that allows creating, loading and unloading features from dis
   
   #### parameters of constructor function:
   
-  secret_key - your bot's token
+  * secret_key - your bot's token
 
-  db_method- a [DB_Methods](#db-methods) instance. In case you chose MongoDB then make sure to set enviorment variable "MONGO_DB_CONNECTION_STRING" as your           connection string
+  * db_method- a [DB_Methods](#db-methods) instance. In case you chose MongoDB then make sure to set enviorment variable "MONGO_DB_CONNECTION_STRING" as your           connection string
   
-  db_name - what DB to use inside the DB server/files
+  * db_name - what DB to use inside the DB server/files
   
-  alert_when_online (optional) - whether to notify all guilds that the bot is ready and active
+  * alert_when_online (optional) - whether to notify all guilds that the bot is ready and active
   
     Default - False
     
