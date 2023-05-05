@@ -20,6 +20,7 @@ A simple framework that allows creating, loading and unloading features from dis
     -   [User Selector](#user-selector)
     -   [Generic Modal](#generic-modal)
 -   [UI tools module](#ui-tools-module)
+- [View Components](#view-components)
     
     
     
@@ -325,7 +326,7 @@ A simple framework that allows creating, loading and unloading features from dis
   * get_modal_value(interaction : discord.Interaction, index : int) - assuming the interaction contains data from filled modal (form), 
   returns the value inserted in the "index" number of TextInput box
   
-  ## Implemented Views
+  ## View Components
   
   ### Embed Pages
   
@@ -356,6 +357,12 @@ A simple framework that allows creating, loading and unloading features from dis
     pages = embed_pages(embeds=embeds, embed_title=title_embed, items_per_page=3, add_numbering=True)
     pages.send(interaction, ephemeral=True)
   Creating a list of embeds, and sending them back privately, with an embed title
+  
+  ### Minesweeper
+  
+  An example of a view that contains functionallity inside. 
+  In this case - contains functionallity for the game Minesweeper.
+  just attach an instance as a view to any message, and youll be presented with an interactinve game board, that lets you play the game!
   
   ## DB instance
   the db_instance is a module that contains different classes for using the DB in an easy way.
