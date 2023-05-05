@@ -35,14 +35,10 @@ A simple framework that allows creating, loading and unloading features from dis
   
   secret_key - your bot's token
 
-  db_method (optional) - a [DB_Methods](#db-methods) instance
+  db_method- a [DB_Methods](#db-methods) instance
   
-    Default - DB_Methods.Json
-
-  db_name (optional) - what DB to use inside the DB server/files
+  db_name - what DB to use inside the DB server/files
   
-    Default - None
-
   alert_when_online (optional) - whether to notify all guilds that the bot is ready and active
   
     Default - False
@@ -323,6 +319,38 @@ A simple framework that allows creating, loading and unloading features from dis
     
   * get_modal_value(interaction : discord.Interaction, index : int) - assuming the interaction contains data from filled modal (form), 
   returns the value inserted in the "index" number of TextInput box
+  
+  ## Implemented Views
+  
+  ### Embed Pages
+  
+  A class that inherits the discord view component, for presenting lists, search results or just sending a group of embeds.
+  
+  #### Usage:
+    view = embed_pages(...)
+    view.send(interaction, ...)
+  #### Parameters:
+  ##### constructor
+  * embeds : list - list object with all embeds that you'd like to present.
+  * timeout : int (optional) - timeout of view.
+  * embed_title : discord.Embed (optional) - an embed to always present at the top of the presented list.
+  * title : str (optional) - the content of the message sent.
+  * items_per_page : int (optional) - how many embeds to show in each page. if embed_title is given max is 9 otherwise max is 10.
+  * add_numbering : bool (optional) - whether to add item number in the footer to every embed.
+  ##### embed_pages.send()
+  * interaction : discord.Interaction - the interaction to respond to.
+  * ephemeral : bool (optional) - whether to reply privately
+  * followup : bool (optional) - whether to reply as followup
+  * views : list (optional) - list of view to attach to message
+  #### Code example:
+    embeds = []
+    for x in range(1,9)
+        this_embed = discord.Embed(title=str(x), description=f'this is embed number {x}')
+        embeds.append(this_embed)
+    title_embed = discord.Embed(title='this is a very cool title!')
+    pages = embed_pages(embeds=embeds, embed_title=title_embed, items_per_page=3, add_numbering=True)
+    pages.send(interaction, ephemeral=True)
+  Creating a list of embeds, and sending them back privately, with an embed title
   
   
 
