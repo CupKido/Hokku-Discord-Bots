@@ -43,7 +43,7 @@ from DB_instances.DB_instance import *
 class GenericBot_client(IGenericBot):
     developers_list = []
 
-    def __init__(self, secret_key, db_name, db_method='J', alert_when_online : bool = False, command_prefix = '!', error_handler = None, debug=False):
+    def __init__(self, secret_key, db_name, db_method, alert_when_online : bool = False, command_prefix = '!', error_handler = None, debug=False, permissions_code : int = 8):
         # bot init
         super().__init__(intents = discord.Intents.all(), command_prefix=command_prefix)
         self.db = DB_factory(db_name, db_method)
@@ -58,7 +58,7 @@ class GenericBot_client(IGenericBot):
         # create features dict
         self.features = {}
         self.is_debug = debug
-
+        self.permissions_code=permissions_code
         if error_handler is None:
             self.error_handler = self.default_error_handler
         else:
@@ -72,7 +72,7 @@ class GenericBot_client(IGenericBot):
 
         @self.tree.command(name = 'get_invite_link', description='get invite link for this bot')
         async def get_invite_link(interaction):
-            await interaction.response.send_message(f'https://discord.com/api/oauth2/authorize?client_id={self.user.id}&permissions=8&scope=bot', ephemeral=True)
+            await interaction.response.send_message(f'https://discord.com/api/oauth2/authorize?client_id={self.user.id}&permissions={self.permissions_code}&scope=bot', ephemeral=True)
     
         @self.tree.command(name = 'get_guild_config', description='get guild config')
         @app_commands.check(permission_checks.is_admin)
