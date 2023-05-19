@@ -13,6 +13,7 @@ class General_DB_Names(enum.Enum):
     Items_data = 'Items'
     Users_data = 'Users'
     General_data = 'General'
+    Config_data = 'Config'
 
 class DB_Methods(enum.Enum):
     Json = 'J'
