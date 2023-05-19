@@ -17,8 +17,16 @@ class gpt3_5_feature(BotFeature):
     users_collection = None
     servers_collection = None
 
-    delete_after_minutes = 15
+
+    # bot config variables
+    initial_delete_after_minutes = 15
+    initial_private_history_length = 5
+    initial_chat_history_messages = 9
     slowmode_delay_seconds = 10
+    DELETE_AFTER_MINUTES = "delete_after_minutes"
+    GPT_HISTORY_LENGTH = "chat_history_length"
+    PRIVATE_HISTORY_LENGTH = "private_history_length"
+    GPT_FEATURE_CONFIG = "gpt_feature_config"
     # for feature db and server db
     OPEN_CHATS = "active_gpt_chats"
 
@@ -29,7 +37,7 @@ class gpt3_5_feature(BotFeature):
     ACTIVE_GPT_CHAT = "active_gpt_chat"
     GPT_TOKENS_USED = "gpt_tokens_used"
     GPT_CHAT_COST = "gpt_chat_cost"
-
+    PRIVATE_HISTORY = "private_history"
     # feature item name
     FEATURE_NAME = "gpt3_5_data"
 
@@ -38,6 +46,16 @@ class gpt3_5_feature(BotFeature):
         self.feature_collection = bot.db.get_collection_instance("gpt3_5_feature")
         self.servers_collection = bot.db.get_collection_instance(General_DB_Names.Servers_data.value)
         
+        # set config variables
+        feature_config = self.feature_collection.get(self.GPT_FEATURE_CONFIG)
+        if self.DELETE_AFTER_MINUTES not in feature_config.keys():
+            feature_config[self.DELETE_AFTER_MINUTES] = self.initial_delete_after_minutes
+        if self.GPT_HISTORY_LENGTH not in feature_config.keys():
+            feature_config[self.GPT_HISTORY_LENGTH] = self.initial_chat_history_messages
+        if self.PRIVATE_HISTORY_LENGTH not in feature_config.keys():
+            feature_config[self.PRIVATE_HISTORY_LENGTH] = self.initial_private_history_length
+        self.feature_collection.set(self.GPT_FEATURE_CONFIG, feature_config)
+
         # decorator example
         # @bot.add_on_message_callback
         # async def call_on_message(message):
@@ -236,7 +254,10 @@ class gpt3_5_feature(BotFeature):
         await message.channel.edit(overwrites={message.author: discord.PermissionOverwrite(send_messages=False),})
 
         # load user chat history
-        user_history = await self.load_user_history(message.channel, 7)
+        config_data = self.feature_collection.get(self.GPT_FEATURE_CONFIG)
+        if self.GPT_HISTORY_LENGTH not in config_data.keys() or config_data[self.GPT_HISTORY_LENGTH] is None:
+            config_data[self.GPT_HISTORY_LENGTH] = self.initial_chat_history_messages
+        user_history = await self.load_user_history(message.channel, config_data[self.GPT_HISTORY_LENGTH])
         
         # forward message to GPT 3_5 and return response
         used_model = gpt_wrapper.supported_models.gpt_3_5_turbo
@@ -274,15 +295,30 @@ class gpt3_5_feature(BotFeature):
         
 
     async def ask_GPT_modal_callback(self, interaction):
+        await interaction.response.send_message("Please wait while I ask GPT 3.5...", ephemeral=True)
         message = ui_tools.get_modal_value(interaction, 0)
         question_embed = discord.Embed(title=f"Your question:", description=message, color=0x00ff00)
-        await interaction.response.send_message("Please wait while I ask GPT 3.5...", ephemeral=True)
         try:
             used_model = gpt_wrapper.supported_models.gpt_3_5_turbo
-            response, tokens_used = await gpt_wrapper.get_response(message, used_model, config["OPENAI_KEY"])
+            user_data = self.feature_collection.get(interaction.user.id)
+            if self.PRIVATE_HISTORY not in user_data.keys() or type(user_data[self.PRIVATE_HISTORY]) is not list:
+                user_data[self.PRIVATE_HISTORY] = []
+            user_history = user_data[self.PRIVATE_HISTORY]
+            user_history.append(role_options.get_role_message(role_options.user, message))
+            response, tokens_used = await gpt_wrapper.get_response_with_history(user_history, used_model, config["OPENAI_KEY"], loaded=True)
             
             response_embed = self.get_response_embed(response)
             await interaction.followup.send(embeds=[question_embed, response_embed], ephemeral=True)
+
+            # make sure to save the user history, and make sure length is under the limit
+            user_history.append(role_options.get_role_message(role_options.assistant, response))
+            config_data = self.feature_collection.get(self.GPT_FEATURE_CONFIG)
+            if self.PRIVATE_HISTORY_LENGTH not in config_data.keys() or config_data[self.PRIVATE_HISTORY_LENGTH] is None:
+                config_data[self.PRIVATE_HISTORY_LENGTH] = self.initial_private_history_length
+            if len(user_history) > config_data[self.PRIVATE_HISTORY_LENGTH]:
+                user_history = user_history[-config_data[self.PRIVATE_HISTORY_LENGTH]:]
+            user_data[self.PRIVATE_HISTORY] = user_history
+            self.feature_collection.set(interaction.user.id, user_data)
 
             # save tokens used
             user_data = self.feature_collection.get(interaction.user.id)
@@ -327,7 +363,12 @@ class gpt3_5_feature(BotFeature):
             # print("last_message", last_message.created_at.tzinfo)
             if now is None:
                 now = datetime.datetime.now(last_message.created_at.tzinfo)
-                minutes_ago = now - datetime.timedelta(minutes=self.delete_after_minutes)
+                # get delete after minutes from config
+                config_data = self.feature_collection.get(self.GPT_FEATURE_CONFIG)
+                if self.DELETE_AFTER_MINUTES not in config_data.keys()\
+                    or config_data[self.DELETE_AFTER_MINUTES] is None:
+                        config_data[self.DELETE_AFTER_MINUTES] = self.initial_delete_after_minutes
+                minutes_ago = now - datetime.timedelta(minutes=config_data[self.DELETE_AFTER_MINUTES])
             # print("now", now.tzinfo)
             print(last_message.created_at, "<=", minutes_ago)
             if last_message.created_at <= minutes_ago:
