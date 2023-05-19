@@ -6,6 +6,16 @@ class role_options(enum.Enum):
     user = "user"
     assistant = "assistant"
 
+    @classmethod
+    def get_role_message(instance, role, message):
+        if role == instance.user:
+            return {"role": instance.user.value, "content": message}
+        elif role == instance.assistant:
+            return {"role": instance.assistant.value, "content": message}
+        else:
+            raise Exception("Invalid role")
+
+
 class gpt_wrapper:
     class supported_models(enum.Enum):
         gpt_3_5_turbo = "gpt-3.5-turbo"
@@ -22,13 +32,17 @@ class gpt_wrapper:
         return tokens / instance.get_tokens_per_dollar(model)
 
     @classmethod
-    async def get_response_with_history(instance, user_history : list, model : supported_models, api_key):
+    async def get_response_with_history(instance, user_history : list, model : supported_models, api_key, loaded=False):
         refactored_user_history = [{"role": "system", "content": "You are a helpful assistant."}]
-        for message in user_history:
-            if message[0] == role_options.user:
-                refactored_user_history.append({"role":"user", "content" : message[1]})
-            elif message[0] == role_options.assistant:
-                refactored_user_history.append({"role":"assistant", "content" : message[1]})
+        if loaded:
+            for message in user_history:
+                refactored_user_history.append(message)
+        else:
+            for message in user_history:
+                if message[0] == role_options.user:
+                    refactored_user_history.append({"role":"user", "content" : message[1]})
+                elif message[0] == role_options.assistant:
+                    refactored_user_history.append({"role":"assistant", "content" : message[1]})
 
         chatgpt_url = "https://api.openai.com/v1/chat/completions"
 
