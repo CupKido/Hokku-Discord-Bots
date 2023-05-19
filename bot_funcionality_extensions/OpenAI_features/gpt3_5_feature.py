@@ -38,6 +38,7 @@ class gpt3_5_feature(BotFeature):
     GPT_TOKENS_USED = "gpt_tokens_used"
     GPT_CHAT_COST = "gpt_chat_cost"
     PRIVATE_HISTORY = "private_history"
+    IS_CHAT_PRIVATE = "is_chat_private"
     # feature item name
     FEATURE_NAME = "gpt3_5_data"
 
@@ -147,6 +148,8 @@ class gpt3_5_feature(BotFeature):
                 interaction.guild.default_role: discord.PermissionOverwrite(read_messages=True, send_messages=False),
             })
             await interaction.response.send_message("GPT chat made public.", ephemeral=True)
+            user_data[self.IS_CHAT_PRIVATE] = False
+            self.feature_collection.set(interaction.user.id, user_data)
 
         @bot.tree.command(name="private_gpt_chat", description="make your active GPT chat private")
         async def private_gpt_chat(interaction):
@@ -160,6 +163,8 @@ class gpt3_5_feature(BotFeature):
                 interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False, send_messages=False),
             })
             await interaction.response.send_message("GPT chat made private.", ephemeral=True)
+            user_data[self.IS_CHAT_PRIVATE] = True
+            self.feature_collection.set(interaction.user.id, user_data)
 
     def add_active_gpt_channel(self, channel_id, user_data, server_data):
         # save channel id to user db, server db and feature db
@@ -179,7 +184,8 @@ class gpt3_5_feature(BotFeature):
 
         # user db
         user_data[self.ACTIVE_GPT_CHAT] = channel_id
-
+        user_data[self.IS_CHAT_PRIVATE] = True
+           
         # save data
         self.feature_collection.set(self.FEATURE_NAME, feature_data)
         self.feature_collection.set(user_data['_id'], user_data)
@@ -251,7 +257,15 @@ class gpt3_5_feature(BotFeature):
         
         # the message is indeed in an active GPT chat, intended for GPT 3_5
         # change permissions of channel to only allow the bot to send messages
-        await message.channel.edit(overwrites={message.author: discord.PermissionOverwrite(send_messages=False),})
+        user_data = self.feature_collection.get(message.author.id)
+        if self.IS_CHAT_PRIVATE not in user_data.keys() or type(user_data[self.IS_CHAT_PRIVATE]) is not bool:
+            user_data[self.IS_CHAT_PRIVATE] = True
+        if user_data[self.IS_CHAT_PRIVATE]:
+            await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                                                message.author: discord.PermissionOverwrite(send_messages=False),})
+        else:
+            await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=True),
+                                                message.author: discord.PermissionOverwrite(send_messages=False),})
 
         # load user chat history
         config_data = self.config_collection.get(self.GPT_FEATURE_CONFIG)
@@ -277,7 +291,7 @@ class gpt3_5_feature(BotFeature):
             await message.channel.send(content=user_mention,embeds=embeds)
 
             # save tokens used
-            user_data = self.feature_collection.get(message.author.id)
+            
             if self.GPT_CHAT_COST not in user_data.keys() or type(user_data[self.GPT_CHAT_COST]) is not float:
                 user_data[self.GPT_CHAT_COST] = gpt_wrapper.tokens_to_dollars(tokens_used, used_model)
             else:
@@ -290,7 +304,14 @@ class gpt3_5_feature(BotFeature):
             print(e)
         
         # change permissions of channel to allow user to send messages
-        await message.channel.edit(overwrites={message.author: discord.PermissionOverwrite(send_messages=True),})
+        
+        if user_data[self.IS_CHAT_PRIVATE]:
+            await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                                                message.author: discord.PermissionOverwrite(send_messages=True),})
+        else:
+            await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=True),
+                                                message.author: discord.PermissionOverwrite(send_messages=True),})
+
 
         
 
