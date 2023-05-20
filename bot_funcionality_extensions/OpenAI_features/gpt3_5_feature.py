@@ -311,8 +311,6 @@ class gpt3_5_feature(BotFeature):
         else:
             await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=True),
                                                 message.author: discord.PermissionOverwrite(send_messages=True, read_messages=True),})
-
-
         
 
     async def ask_GPT_modal_callback(self, interaction):
@@ -339,10 +337,8 @@ class gpt3_5_feature(BotFeature):
             if len(user_history) > config_data[self.PRIVATE_HISTORY_LENGTH]:
                 user_history = user_history[-config_data[self.PRIVATE_HISTORY_LENGTH]:]
             user_data[self.PRIVATE_HISTORY] = user_history
-            self.config_collection.set(interaction.user.id, user_data)
 
             # save tokens used
-            user_data = self.feature_collection.get(interaction.user.id)
             if self.GPT_CHAT_COST not in user_data.keys() or type(user_data[self.GPT_CHAT_COST]) is not float:
                 user_data[self.GPT_CHAT_COST] = gpt_wrapper.tokens_to_dollars(tokens_used, used_model)
             else:
