@@ -262,10 +262,10 @@ class gpt3_5_feature(BotFeature):
             user_data[self.IS_CHAT_PRIVATE] = True
         if user_data[self.IS_CHAT_PRIVATE]:
             await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                                                message.author: discord.PermissionOverwrite(send_messages=False),})
+                                                message.author: discord.PermissionOverwrite(send_messages=False, read_messages=True),})
         else:
             await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=True),
-                                                message.author: discord.PermissionOverwrite(send_messages=False),})
+                                                message.author: discord.PermissionOverwrite(send_messages=False, read_messages=True),})
 
         # load user chat history
         config_data = self.config_collection.get(self.GPT_FEATURE_CONFIG)
@@ -307,10 +307,10 @@ class gpt3_5_feature(BotFeature):
         
         if user_data[self.IS_CHAT_PRIVATE]:
             await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                                                message.author: discord.PermissionOverwrite(send_messages=True),})
+                                                message.author: discord.PermissionOverwrite(send_messages=True, read_messages=True),})
         else:
             await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=True),
-                                                message.author: discord.PermissionOverwrite(send_messages=True),})
+                                                message.author: discord.PermissionOverwrite(send_messages=True, read_messages=True),})
 
 
         
