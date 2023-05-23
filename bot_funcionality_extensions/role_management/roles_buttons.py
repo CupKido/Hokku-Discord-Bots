@@ -108,7 +108,7 @@ class roles_buttons(BotFeature):
         if self.ADDED_SERVERS_LIST not in feature_data:
             feature_data[self.ADDED_SERVERS_LIST] = []
         for guild_id in feature_data[self.ADDED_SERVERS_LIST]:
-            self.maintain_buttons_for_guild(guild_id)
+            await self.maintain_buttons_for_guild(guild_id)
 
     async def maintain_buttons_for_guild(self, guild_id):
         guild_data = self.feature_collection.get(guild_id)
