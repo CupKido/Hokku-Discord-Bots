@@ -28,18 +28,18 @@ class role_button(Button):
     
     async def callback(self, interaction):
         if interaction.user.id == interaction.guild.owner_id:
-            await interaction.response.send_message('Sorry, Owner cannot be modified')
+            await interaction.response.send_message('Sorry, Owner cannot be modified', ephemeral=True)
             return
         if self.role_id is not None:
             role = interaction.guild.get_role(self.role_id)
             if role is not None:
                 if role in interaction.user.roles:
                     await interaction.user.remove_roles(role)
-                    await interaction.response.send_message('Role removed')
+                    await interaction.response.send_message('Role removed', ephemeral=True)
                 else:
                     await interaction.user.add_roles(role)
-                    await interaction.response.send_message('Role added')
+                    await interaction.response.send_message('Role added', ephemeral=True)
             else:
-                await interaction.response.send_message('Role not found')
+                await interaction.response.send_message('Role not found', ephemeral=True)
         else:
-            await interaction.response.send_message('Role not found')
+            await interaction.response.send_message('Role not found', ephemeral=True)
