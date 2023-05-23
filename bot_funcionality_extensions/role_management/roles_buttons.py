@@ -26,7 +26,14 @@ class roles_buttons(BotFeature):
     def __init__(self, bot):
         super().__init__(bot)
         self.feature_collection = bot.db.get_collection_instance('RolesButtons')
+        
+        # take care of maintainance
+        bot.add_on_ready_callback(self.maintain_buttons)
+        bot.add_on_session_resumed_callback(self.maintain_buttons)
+        bot.add_every_5_hours_callback(self.maintain_buttons)
 
+
+        # add commands
         @bot.tree.command(name = 'create_button_roles', description='create buttons roles message')
         @app_commands.check(permission_checks.is_admin)
         async def create_button_roles(interaction: discord.Interaction, channel: discord.TextChannel):
