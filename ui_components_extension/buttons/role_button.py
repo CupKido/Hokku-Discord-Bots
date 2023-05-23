@@ -33,13 +33,17 @@ class role_button(Button):
         if self.role_id is not None:
             role = interaction.guild.get_role(self.role_id)
             if role is not None:
-                if role in interaction.user.roles:
-                    await interaction.user.remove_roles(role)
-                    await interaction.response.send_message('Role removed', ephemeral=True)
-                else:
-                    await interaction.user.add_roles(role)
-                    await interaction.response.send_message('Role added', ephemeral=True)
+                try:
+                    if role in interaction.user.roles:
+                        await interaction.user.remove_roles(role)
+                        await interaction.response.send_message(f'{role.name} Role removed', ephemeral=True)
+                    else:
+                        await interaction.user.add_roles(role)
+                        await interaction.response.send_message(f'{role.name} Role added', ephemeral=True)
+                except discord.errors.Forbidden:
+                    await interaction.response.send_message(f'Bot does not have permissions to modify {role.name} Role, '+\
+                                                            'please put the bot\'s role above it', ephemeral=True)
             else:
-                await interaction.response.send_message('Role not found', ephemeral=True)
+                await interaction.response.send_message(f'{role.name} Role not found', ephemeral=True)
         else:
-            await interaction.response.send_message('Role not found', ephemeral=True)
+            await interaction.response.send_message(f'{role.name} Role not found', ephemeral=True)
