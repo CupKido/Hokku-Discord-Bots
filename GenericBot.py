@@ -153,6 +153,9 @@ class GenericBot_client(IGenericBot):
         self.on_message_delete_callbacks = []
         self.on_message_edit_callbacks = []
 
+        self.on_reaction_add_callbacks = []
+        self.on_reaction_remove_callbacks = []
+
         self.on_invite_create_callbacks = []
         self.on_invite_delete_callbacks = []
 
@@ -205,6 +208,15 @@ class GenericBot_client(IGenericBot):
             for callback in self.on_message_edit_callbacks:
                 await callback(before, after)
 
+        @self.event
+        async def on_reaction_add(reaction, user):
+            for callback in self.on_reaction_add_callbacks:
+                await callback(reaction, user)
+
+        @self.event
+        async def on_reaction_remove(reaction, user):
+            for callback in self.on_reaction_remove_callbacks:
+                await callback(reaction, user)
 
         @self.event
         async def on_invite_create(invite):
@@ -313,6 +325,17 @@ class GenericBot_client(IGenericBot):
         self.on_message_edit_callbacks.append(callback)
         self.log("added on_message_edit_callback: " + str(callback.__name__))
     
+
+    # reaction events
+
+    def add_on_reaction_add_callback(self, callback):
+        self.on_reaction_add_callbacks.append(callback)
+        self.log("added on_reaction_add_callback: " + str(callback.__name__))
+    
+    def add_on_reaction_remove_callback(self, callback):
+        self.on_reaction_remove_callbacks.append(callback)
+        self.log("added on_reaction_remove_callback: " + str(callback.__name__))
+
     # invite events
 
     def add_on_invite_create_callback(self, callback):
