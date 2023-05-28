@@ -47,6 +47,7 @@ class GenericBot_client(IGenericBot):
         # bot init
         super().__init__(intents = discord.Intents.all(), command_prefix=command_prefix)
         self.db = DB_factory(db_name, db_method)
+        self.config_collection = self.db.get_collection_instance(General_DB_Names.Config_data.value)
         self.synced = False
         # bot options
         self.added = False
@@ -136,13 +137,26 @@ class GenericBot_client(IGenericBot):
 
 
         # alerting when joining a guild
-        @self.event
+        @self.generic_event
         async def on_guild_join(guild):
             # sync commands tree to discord guild
             await self.tree.sync(guild=guild)
             self.log('bot joined guild: ' + str(guild.name) + ' (' + str(guild.id) + ')')
             for callback in self.on_guild_join_callbacks:
                 await callback(guild)
+
+    
+    def generic_event(self, coro):
+        async def wrapper(*args, **kwargs):
+            for callback in self.on_before_any_event_callbacks:
+                callback(coro.__name__, *args, **kwargs)
+            await coro(*args, **kwargs)
+            for callback in self.on_after_any_event_callbacks:
+                callback(coro.__name__, *args, **kwargs)
+
+        wrapper.__name__ = coro.__name__
+        return self.event(wrapper)
+
 
     def add_event_callback_support(self):
         self.on_voice_state_update_callbacks = []
@@ -176,18 +190,22 @@ class GenericBot_client(IGenericBot):
         self.on_guild_join_callbacks = []
         self.on_guild_remove_callbacks = []
 
+        self.on_before_any_event_callbacks = []
+        self.on_after_any_event_callbacks = []
+        
+
         # every time a member moves to a different voice channel
-        @self.event
+        @self.generic_event
         async def on_voice_state_update(member, before, after):
             for callback in self.on_voice_state_update_callbacks:
                 await callback(member, before, after)
 
-        @self.event
+        @self.generic_event
         async def on_guild_channel_delete(channel):
             for callback in self.on_guild_channel_delete_callbacks:
                 await callback(channel)
 
-        @self.event
+        @self.generic_event
         async def on_resumed():
             self.log("session resumed")
             for callback in self.on_session_resumed_callbacks:
@@ -196,95 +214,95 @@ class GenericBot_client(IGenericBot):
                 # start callback
                 await callback()
 
-        @self.event
+        @self.generic_event
         async def on_message(message):
             for callback in self.on_message_callbacks:
                 await callback(message)
-            if message.content.startswith("!devs_command") and message.author.id in self.developers_list:
+            if message.content.startswith(str(self.command_prefix) + "devs_command") and message.author.id in self.developers_list:
                 await self.handle_dev_command(message)
 
-        @self.event
+        @self.generic_event
         async def on_message_edit(before, after):
             for callback in self.on_message_edit_callbacks:
                 await callback(before, after)
 
-        @self.event
+        @self.generic_event
         async def on_reaction_add(reaction, user):
             for callback in self.on_reaction_add_callbacks:
                 await callback(reaction, user)
 
-        @self.event
+        @self.generic_event
         async def on_reaction_remove(reaction, user):
             for callback in self.on_reaction_remove_callbacks:
                 await callback(reaction, user)
 
-        @self.event
+        @self.generic_event
         async def on_invite_create(invite):
             for callback in self.on_invite_create_callbacks:
                 await callback(invite)
         
-        @self.event
+        @self.generic_event
         async def on_invite_delete(invite):
             for callback in self.on_invite_delete_callbacks:
                 await callback(invite)
 
 
 
-        @self.event
+        @self.generic_event
         async def on_member_join(member):
             for callback in self.on_member_join_callbacks:
                 await callback(member)
         
-        @self.event
+        @self.generic_event
         async def on_member_remove(member):
             for callback in self.on_member_remove_callbacks:
                 await callback(member)
         
-        @self.event
+        @self.generic_event
         async def on_member_update(before, after):
             for callback in self.on_member_update_callbacks:
                 await callback(before, after)
 
-        @self.event
+        @self.generic_event
         async def on_member_ban(member):
             for callback in self.on_member_ban_callbacks:
                 await callback(member)
 
-        @self.event
+        @self.generic_event
         async def on_member_unban(member):
             for callback in self.on_member_unban_callbacks:
                 await callback(member)
 
-        @self.event
+        @self.generic_event
         async def on_guild_role_create(role):
             for callback in self.on_guild_role_create_callbacks:
                 await callback(role)
 
-        @self.event
+        @self.generic_event
         async def on_guild_role_delete(role):
             for callback in self.on_guild_role_delete_callbacks:
                 await callback(role)
 
-        @self.event
+        @self.generic_event
         async def on_guild_role_update(before, after):
             for callback in self.on_guild_role_update_callbacks:
                 await callback(before, after)
 
-        @self.event
+        @self.generic_event
         async def on_guild_channel_create(channel):
             for callback in self.on_guild_channel_create_callbacks:
                 await callback(channel)
         
-        @self.event
+        @self.generic_event
         async def on_message_delete(message):
             for callback in self.on_message_delete_callbacks:
                 await callback(message)
 
-        @self.event
+        @self.generic_event
         async def on_guild_channel_update(before, after):
             for callback in self.on_guild_channel_update_callbacks:
                 await callback(before, after)
-        @self.event
+        @self.generic_event
         async def on_guild_remove(guild):
             for callback in self.on_guild_remove_callbacks:
                 await callback(guild)
@@ -400,18 +418,34 @@ class GenericBot_client(IGenericBot):
         self.on_guild_remove_callbacks.append(callback)
         self.log("added on_guild_remove_callback: " + str(callback.__name__))
 
+    # all events
+
+    def add_on_before_any_event_callback(self, callback):
+        self.on_before_any_event_callbacks.append(callback)
+        self.log("added on_before_any_event_callback: " + str(callback.__name__))
+    
+    def add_on_after_any_event_callback(self, callback):
+        self.on_after_any_event_callbacks.append(callback)
+        self.log("added on_after_any_event_callback: " + str(callback.__name__))
+
+    
+    # activation method
     def activate(self): #
         self.run(self.secret_key)
 
+    # get bot's secret key
     def get_secret(self):
         return self.secret_key
 
+    # set logger instance
     def set_logger(self, logger):
         self.logger = logger
         
+    # get logger instance
     def get_logger(self):
         return self.logger
 
+    # log to logger
     def log(self, message):
         if self.logger is not None:
             self.logger.log(message)
@@ -422,6 +456,7 @@ class GenericBot_client(IGenericBot):
             except:
                 print('failed to print message')
     
+    # add features to bot
     def add_features(self, *features):
         self.log('================================================================')
         for feature in features:
@@ -431,6 +466,7 @@ class GenericBot_client(IGenericBot):
 
         self.log('================================================================')
 
+    # add feature to bot
     def add_feature(self, feature):
         # print feature class name
         self.log("| adding feature: " + str(feature)+ ' |')
@@ -438,6 +474,7 @@ class GenericBot_client(IGenericBot):
             self.features = {}
         
         self.features[str(feature)] = feature(self)
+
 
     def add_scheduler_events(self):
         self.every_hour_callbacks = []
