@@ -91,12 +91,14 @@ class GenericBot_client(IGenericBot):
             if int(message.id) == int(message_id):
                 return message
 
+
     def get_all_members_list(self):
         members = []
         for member in self.get_all_members():
             if member not in members:
                 members.append(member)
         return members
+
 
     async def on_ready(self):
         # running on_ready callbacks
@@ -149,10 +151,10 @@ class GenericBot_client(IGenericBot):
     def generic_event(self, coro):
         async def wrapper(*args, **kwargs):
             for callback in self.on_before_any_event_callbacks:
-                callback(coro.__name__, *args, **kwargs)
+                await callback(coro.__name__, *args, **kwargs)
             await coro(*args, **kwargs)
             for callback in self.on_after_any_event_callbacks:
-                callback(coro.__name__, *args, **kwargs)
+                await callback(coro.__name__, *args, **kwargs)
 
         wrapper.__name__ = coro.__name__
         return self.event(wrapper)
