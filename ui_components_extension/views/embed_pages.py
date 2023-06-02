@@ -1,7 +1,7 @@
 import discord
 import math
 class embed_pages(discord.ui.View):
-    def __init__(self, embeds, timeout=None, embed_title=None, title='', items_per_page=10, add_numbering=False):
+    def __init__(self, embeds, timeout=None, embed_title=None, title='', items_per_page=10, add_numbering=False, get_thumb=None):
         super().__init__(timeout=timeout)
         if embed_title is None:
             max_items = 10
@@ -20,6 +20,8 @@ class embed_pages(discord.ui.View):
         self.last_page = float(len(self.embeds)) / float(self.items_per_page) - 1
         self.last_page = int(math.ceil(self.last_page))
         self.add_numbering = add_numbering
+        self.get_thumb = get_thumb
+        self.loaded_thumbs = []
         if add_numbering:
             for i in range(len(self.embeds)):
                 this_embed = self.embeds[i]
@@ -55,6 +57,10 @@ class embed_pages(discord.ui.View):
         for i in range(self.current_page * self.items_per_page, (self.current_page + 1) * self.items_per_page):
             if i >= len(self.embeds):
                 break
+            if self.get_thumb is not None:
+                if i not in self.loaded_thumbs:
+                    self.embeds[i].set_thumbnail(url=self.get_thumb(self.embeds[i]))
+                    self.loaded_thumbs.append(i)
             res.append(self.embeds[i])
         return res
 
