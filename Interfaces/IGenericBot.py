@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 from abc import abstractmethod
-from discord import app_commands
 
 class IGenericBot(commands.Bot):
 
