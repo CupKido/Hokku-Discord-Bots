@@ -8,6 +8,9 @@ from discord.ext import commands, tasks
 import io
 import permission_checks
 from DB_instances.DB_instance import *
+import functools
+import typing
+import inspect
 ############################################
 # this is a generic bot that lets you sign #
 # to events the bot receives from discord. #
@@ -71,14 +74,15 @@ class GenericBot_client(IGenericBot):
 
 
 
-        @self.tree.command(name = 'get_invite_link', description='get invite link for this bot')
+        @self.generic_command(name = 'get_invite_link', description='get invite link for this bot')
         async def get_invite_link(interaction):
             await interaction.response.send_message(f'https://discord.com/api/oauth2/authorize?client_id={self.user.id}&permissions={self.permissions_code}&scope=bot', ephemeral=True)
     
-        @self.tree.command(name = 'get_guild_config', description='get guild config')
+        @self.generic_command(name = 'get_guild_config', description='get guild config')
         @app_commands.check(permission_checks.is_admin)
         async def get_guild_config(interaction):
-            this_server_config = server_config(interaction.guild.id)
+            server_collection = self.db.get_collection_instance(General_DB_Names.Server_data.value)
+            this_server_config = server_collection.get(interaction.guild.id)
             res = 'guild config: \n'
             guild_config = this_server_config.get_params()
             for key in guild_config:
@@ -159,6 +163,43 @@ class GenericBot_client(IGenericBot):
         wrapper.__name__ = coro.__name__
         return self.event(wrapper)
 
+    def generic_command(self, **kwargs2):
+        
+        def deco(coro: typing.Callable[..., typing.Coroutine]):
+            async def wrapper(interaction, **params) -> None:
+                call_coro : bool = True
+                for callback in self.on_before_any_command_callbacks:
+                    value : bool = await callback(coro.__name__, interaction, **params)
+                    if value is not None and type(value) is bool:
+                        if not value:
+                            call_coro : bool = False
+                if call_coro:
+                    result = await coro(interaction, **params)
+                    for callback in self.on_after_any_command_callbacks:
+                        await callback(coro.__name__, interaction, result, **params)
+            
+            # coro.__code__=wrapper.__code__
+            functools.update_wrapper(wrapper, coro)
+            # wrapper.__signature__ = inspect.signature(coro)
+            # wrapper.__signature__ = signature.replace(parameters=tuple(signature.parameters.values()))
+            # wrapper.__annotations__.update(coro.__annotations__)
+
+            # wrapper.__name__ = coro.__name__
+            # wrapper.__doc__ = coro.__doc__
+            # all_freevars = [x for x in coro.__code__.co_freevars] + [x for x in wrapper.__code__.co_freevars]
+            # all_varnames = [x for x in coro.__code__.co_varnames] + [x for x in wrapper.__code__.co_varnames]
+            # print(coro.__code__.co_varnames, coro.__code__.co_argcount)
+            # print(wrapper.__code__.co_varnames, wrapper.__code__.co_argcount)
+            # print(tuple(all_varnames), coro.__code__.co_argcount + wrapper.__code__.co_argcount)
+            
+            # wrapper.__code__= wrapper.__code__.replace(co_argcount=len(inspect.signature(coro).parameters)) # + wrapper.__code__.co_argcount)
+            # wrapper.__annotations__ = coro.__annotations__
+            # wrapper.__module__ = coro.__module__
+            self.tree.command(**kwargs2)(wrapper)
+            # self.tree.command(**kwargs2)(coro)
+        return deco
+
+
 
     def add_event_callback_support(self):
         self.on_voice_state_update_callbacks = []
@@ -195,6 +236,8 @@ class GenericBot_client(IGenericBot):
         self.on_before_any_event_callbacks = []
         self.on_after_any_event_callbacks = []
         
+        self.on_before_any_command_callbacks = []
+        self.on_after_any_command_callbacks = []
 
         # every time a member moves to a different voice channel
         @self.generic_event
@@ -430,7 +473,14 @@ class GenericBot_client(IGenericBot):
         self.on_after_any_event_callbacks.append(callback)
         self.log("added on_after_any_event_callback: " + str(callback.__name__))
 
-    
+    def add_on_before_any_command_callback(self, callback):
+        self.on_before_any_command_callbacks.append(callback)
+        self.log("added on_before_any_command_callback: " + str(callback.__name__))
+
+    def add_on_after_any_command_callback(self, callback):
+        self.on_after_any_command_callbacks.append(callback)
+        self.log("added on_after_any_command_callback: " + str(callback.__name__))
+
     # activation method
     def activate(self): #
         self.run(self.secret_key)
