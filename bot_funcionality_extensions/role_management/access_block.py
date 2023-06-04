@@ -26,8 +26,6 @@ class access_block_feature(BotFeature):
             if not await self.can_modify(interaction, guild_data):
                 await interaction.response.send_message('you cannot modify this', ephemeral=True)
                 return
-            if self.ALLOWED_ROLES not in guild_data.keys() or guild_data[self.ALLOWED_ROLES] is None or type(guild_data[self.ALLOWED_ROLES]) is not list:
-                guild_data[self.ALLOWED_ROLES] = []
             if role.id in guild_data[self.ALLOWED_ROLES]:
                 await interaction.response.send_message('role already allowed', ephemeral=True)
                 return
@@ -38,8 +36,6 @@ class access_block_feature(BotFeature):
     async def allow_user_selector_callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
         guild_data = self.get_guild_db_data(interaction.guild.id)
-        if self.ALLOWED_USERS not in guild_data.keys() or guild_data[self.ALLOWED_USERS] is None or type(guild_data[self.ALLOWED_USERS]) is not list:
-            guild_data[self.ALLOWED_USERS] = []
         for user in interaction.data['values']:
             if user not in guild_data[self.ALLOWED_USERS]:
                 guild_data[self.ALLOWED_USERS].append(user)
@@ -51,8 +47,6 @@ class access_block_feature(BotFeature):
     async def allow_role_selector_callback(self, interaction: discord.Interaction, select, view):
         selected_role = ui_tools.get_select_values(interaction)[0]
         guild_data = self.get_guild_db_data(interaction.guild.id)
-        if self.ALLOWED_ROLES not in guild_data.keys() or guild_data[self.ALLOWED_ROLES] is None or type(guild_data[self.ALLOWED_ROLES]) is not list:
-            guild_data[self.ALLOWED_ROLES] = []
         if selected_role not in guild_data[self.ALLOWED_ROLES]:
             guild_data[self.ALLOWED_ROLES].append(selected_role)
             await interaction.followup.send(f'<@&{selected_role}> role allowed', ephemeral=True)
@@ -85,8 +79,6 @@ class access_block_feature(BotFeature):
     async def disallow_user_selector_callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
         guild_data = self.get_guild_db_data(interaction.guild.id)
-        if self.ALLOWED_USERS not in guild_data.keys() or guild_data[self.ALLOWED_USERS] is None or type(guild_data[self.ALLOWED_USERS]) is not list:
-            guild_data[self.ALLOWED_USERS] = []
         for user in interaction.data['values']:
             if user in guild_data[self.ALLOWED_USERS]:
                 guild_data[self.ALLOWED_USERS].remove(user)
@@ -98,8 +90,6 @@ class access_block_feature(BotFeature):
     async def disallow_role_selector_callback(self, interaction: discord.Interaction, select, view):
         selected_role = ui_tools.get_select_values(interaction)[0]
         guild_data = self.get_guild_db_data(interaction.guild.id)
-        if self.ALLOWED_ROLES not in guild_data.keys() or guild_data[self.ALLOWED_ROLES] is None or type(guild_data[self.ALLOWED_ROLES]) is not list:
-            guild_data[self.ALLOWED_ROLES] = []
         if selected_role in guild_data[self.ALLOWED_ROLES]:
             guild_data[self.ALLOWED_ROLES].remove(selected_role)
             await interaction.followup.send(f'<@&{selected_role}> role removed', ephemeral=True)
@@ -129,8 +119,6 @@ class access_block_feature(BotFeature):
             for role in interaction.user.roles:
                 if role.id in guild_data[self.ALLOWED_ROLES]:
                     return True
-            if not role_found:
-                return False
         if guild_data[self.IS_OWNER]:
             if interaction.user.id != interaction.guild.owner_id:
                 return False
@@ -179,12 +167,8 @@ class access_block_feature(BotFeature):
                 if not guild_data[self.IS_OWNER]:
                     if interaction.user.guild_permissions.administrator:
                         return True
-                if self.ALLOWED_USERS not in guild_data.keys() or guild_data[self.ALLOWED_USERS] is None or type(guild_data[self.ALLOWED_USERS]) is not list:
-                    guild_data[self.ALLOWED_USERS] = []
                 if interaction.user.id in guild_data[self.ALLOWED_USERS]:
                     return True
-                if self.ALLOWED_ROLES not in guild_data.keys() or guild_data[self.ALLOWED_ROLES] is None or type(guild_data[self.ALLOWED_ROLES]) is not list:
-                    guild_data[self.ALLOWED_ROLES] = []
                 for role in interaction.user.roles:
                     if role.id in guild_data[self.ALLOWED_ROLES]:
                         return True
