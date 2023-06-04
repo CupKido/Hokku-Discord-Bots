@@ -1,8 +1,9 @@
 import discord 
 from discord.ext import commands
 from Interfaces.BotFeature import BotFeature
-from ui_components_extension.generic_ui_comps import Generic_View, mode_styles
+from ui_components_extension.generic_ui_comps import Generic_View
 from ui_components_extension import ui_tools
+from ui_components_extension.ui_tools import mode_styles
 class access_block_feature(BotFeature):
     ACCESS_BLOCKED = 'access_blocked' # whether access is currently blocked
     IS_OWNER = 'is_owner' # whether only owner can block access
