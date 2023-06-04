@@ -88,7 +88,6 @@ class access_block_feature(BotFeature):
         self.feature_collection.set(interaction.guild.id, guild_data)
 
     async def disallow_role_selector_callback(self, interaction: discord.Interaction, select, view):
-        await interaction.response.defer()
         selected_role = ui_tools.get_select_values(interaction)[0]
         guild_data = self.get_guild_db_data(interaction.guild.id)
         if selected_role in guild_data[self.ALLOWED_ROLES]:
