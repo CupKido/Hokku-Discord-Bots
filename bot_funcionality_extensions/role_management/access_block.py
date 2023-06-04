@@ -37,7 +37,7 @@ class access_block_feature(BotFeature):
         await interaction.response.defer()
         guild_data = self.get_guild_db_data(interaction.guild.id)
         for user in interaction.data['values']:
-            if user not in guild_data[self.ALLOWED_USERS]:
+            if str(user) not in guild_data[self.ALLOWED_USERS]:
                 guild_data[self.ALLOWED_USERS].append(user)
                 await interaction.followup.send(f'<@{user}> user allowed', ephemeral=True)
             else:
@@ -49,11 +49,11 @@ class access_block_feature(BotFeature):
         guild_data = self.get_guild_db_data(interaction.guild.id)
         if selected_role not in guild_data[self.ALLOWED_ROLES]:
             guild_data[self.ALLOWED_ROLES].append(selected_role)
+            self.feature_collection.set(interaction.guild.id, guild_data)
+            await interaction.response.edit_message(view=await self.get_block_access_menu(interaction))
             await interaction.followup.send(f'<@&{selected_role}> role allowed', ephemeral=True)
         else:
             await interaction.followup.send(f'<@&{selected_role}> role already allowed', ephemeral=True)
-        self.feature_collection.set(interaction.guild.id, guild_data)
-        await interaction.response.edit_message(view=await self.get_block_access_menu(interaction))
 
     
     async def block_access_button_callback(self, interaction: discord.Interaction, button, view):
@@ -80,7 +80,7 @@ class access_block_feature(BotFeature):
         await interaction.response.defer()
         guild_data = self.get_guild_db_data(interaction.guild.id)
         for user in interaction.data['values']:
-            if user in guild_data[self.ALLOWED_USERS]:
+            if str(user) in guild_data[self.ALLOWED_USERS]:
                 guild_data[self.ALLOWED_USERS].remove(user)
                 await interaction.followup.send(f'<@{user}> user removed', ephemeral=True)
             else:
@@ -88,16 +88,17 @@ class access_block_feature(BotFeature):
         self.feature_collection.set(interaction.guild.id, guild_data)
 
     async def disallow_role_selector_callback(self, interaction: discord.Interaction, select, view):
+        await interaction.response.defer()
         selected_role = ui_tools.get_select_values(interaction)[0]
         guild_data = self.get_guild_db_data(interaction.guild.id)
         if selected_role in guild_data[self.ALLOWED_ROLES]:
             guild_data[self.ALLOWED_ROLES].remove(selected_role)
+            self.feature_collection.set(interaction.guild.id, guild_data)
+            await interaction.response.edit_message(view=await self.get_block_access_menu(interaction))
             await interaction.followup.send(f'<@&{selected_role}> role removed', ephemeral=True)
         else:
             await interaction.followup.send(f'<@&{selected_role}> role already out', ephemeral=True)
-        self.feature_collection.set(interaction.guild.id, guild_data)
         
-        await interaction.response.edit_message(view=await self.get_block_access_menu(interaction))
 
 
     async def set_owner_only_button_callback(self, interaction: discord.Interaction, button, view):
@@ -112,13 +113,16 @@ class access_block_feature(BotFeature):
 
     def can_modify(self, interaction, guild_data):
         if guild_data[self.IS_CHAINED]:
-            if interaction.user.id in guild_data[self.ALLOWED_USERS]:
+            if str(interaction.guild.roles[0].id) in guild_data[self.ALLOWED_ROLES]:
+                return True
+            if str(interaction.user.id) in guild_data[self.ALLOWED_USERS]:
                 return True
             # check if user has a role that is allowed
             role_found = False
             for role in interaction.user.roles:
                 if role.id in guild_data[self.ALLOWED_ROLES]:
                     return True
+            
         if guild_data[self.IS_OWNER]:
             if interaction.user.id != interaction.guild.owner_id:
                 return False
@@ -150,7 +154,7 @@ class access_block_feature(BotFeature):
         if not is_owner and interaction.user.guild_permissions.administrator or interaction.user.id == interaction.guild.owner_id:
             my_view.add_user_selector(placeholder='disallow user', min_values=0, callback=self.disallow_user_selector_callback)
             options = [{'label': role.name, 'value': role.id, 'description' : ''} for role in interaction.guild.roles][:25]
-            my_view.add_generic_select(placeholder='select role', min_values=0, max_values=1, options=options, callback=self.disallow_role_selector_callback)
+            my_view.add_generic_select(placeholder='disallow role', min_values=0, max_values=1, options=options, callback=self.disallow_role_selector_callback)
 
         if interaction.user.id == interaction.guild.owner_id:
             my_view.add_generic_button(label='set owner only', style=mode_styles.get_on_off(is_owner), value=is_owner, callback=self.set_owner_only_button_callback)
@@ -167,10 +171,10 @@ class access_block_feature(BotFeature):
                 if not guild_data[self.IS_OWNER]:
                     if interaction.user.guild_permissions.administrator:
                         return True
-                if interaction.user.id in guild_data[self.ALLOWED_USERS]:
+                if str(interaction.user.id) in guild_data[self.ALLOWED_USERS]:
                     return True
                 for role in interaction.user.roles:
-                    if role.id in guild_data[self.ALLOWED_ROLES]:
+                    if str(role.id) in guild_data[self.ALLOWED_ROLES]:
                         return True
                 if not interaction.response.is_done():
                     await interaction.response.send_message('access to command is blocked', ephemeral=True)
