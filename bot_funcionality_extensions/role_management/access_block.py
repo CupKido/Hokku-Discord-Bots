@@ -192,3 +192,4 @@ class access_block_feature(BotFeature):
         if self.IS_CHAINED not in guild_data.keys() or guild_data[self.IS_CHAINED] is None or type(guild_data[self.IS_CHAINED]) is not bool:
             guild_data[self.IS_CHAINED] = False
         return guild_data
+    
