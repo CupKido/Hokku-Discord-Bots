@@ -22,7 +22,7 @@ class access_block_feature(BotFeature):
     
         @bot.generic_command(name = 'allow_role', description='allow a role to use the bot')
         async def allow_role(interaction: discord.Interaction, role: discord.Role):
-            guild_data = self.feature_collection.get(interaction.guild.id)
+            guild_data = self.get_guild_data(interaction.guild.id)
             if not await self.can_modify(interaction, guild_data):
                 await interaction.response.send_message('you cannot modify this', ephemeral=True)
                 return
@@ -37,7 +37,7 @@ class access_block_feature(BotFeature):
 
     async def allow_user_selector_callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        guild_data = self.feature_collection.get(interaction.guild.id)
+        guild_data = self.get_guild_data(interaction.guild.id)
         if self.ALLOWED_USERS not in guild_data.keys() or guild_data[self.ALLOWED_USERS] is None or type(guild_data[self.ALLOWED_USERS]) is not list:
             guild_data[self.ALLOWED_USERS] = []
         for user in interaction.data['values']:
@@ -50,7 +50,7 @@ class access_block_feature(BotFeature):
   
     async def allow_role_selector_callback(self, interaction: discord.Interaction, select, view):
         selected_role = ui_tools.get_select_values(interaction)[0]
-        guild_data = self.feature_collection.get(interaction.guild.id)
+        guild_data = self.get_guild_data(interaction.guild.id)
         if self.ALLOWED_ROLES not in guild_data.keys() or guild_data[self.ALLOWED_ROLES] is None or type(guild_data[self.ALLOWED_ROLES]) is not list:
             guild_data[self.ALLOWED_ROLES] = []
         if selected_role not in guild_data[self.ALLOWED_ROLES]:
@@ -63,7 +63,7 @@ class access_block_feature(BotFeature):
 
     
     async def block_access_button_callback(self, interaction: discord.Interaction, button, view):
-        guild_data = self.feature_collection.get(interaction.guild.id)
+        guild_data = self.get_guild_data(interaction.guild.id)
         if self.ACCESS_BLOCKED in guild_data.keys() and type(guild_data[self.ACCESS_BLOCKED]) is bool:
             guild_data[self.ACCESS_BLOCKED] = not guild_data[self.ACCESS_BLOCKED]
         else:
@@ -73,7 +73,7 @@ class access_block_feature(BotFeature):
         await interaction.response.edit_message(view=view)
 
     async def chain_access_button_callback(self, interaction: discord.Interaction, button, view):
-        guild_data = self.feature_collection.get(interaction.guild.id)
+        guild_data = self.get_guild_data(interaction.guild.id)
         if self.IS_CHAINED in guild_data.keys() and type(guild_data[self.IS_CHAINED]) is bool:
             guild_data[self.IS_CHAINED] = not guild_data[self.IS_CHAINED]
         else:
@@ -84,7 +84,7 @@ class access_block_feature(BotFeature):
 
     async def disallow_user_selector_callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        guild_data = self.feature_collection.get(interaction.guild.id)
+        guild_data = self.get_guild_data(interaction.guild.id)
         if self.ALLOWED_USERS not in guild_data.keys() or guild_data[self.ALLOWED_USERS] is None or type(guild_data[self.ALLOWED_USERS]) is not list:
             guild_data[self.ALLOWED_USERS] = []
         for user in interaction.data['values']:
@@ -97,7 +97,7 @@ class access_block_feature(BotFeature):
 
     async def disallow_role_selector_callback(self, interaction: discord.Interaction, select, view):
         selected_role = ui_tools.get_select_values(interaction)[0]
-        guild_data = self.feature_collection.get(interaction.guild.id)
+        guild_data = self.get_guild_data(interaction.guild.id)
         if self.ALLOWED_ROLES not in guild_data.keys() or guild_data[self.ALLOWED_ROLES] is None or type(guild_data[self.ALLOWED_ROLES]) is not list:
             guild_data[self.ALLOWED_ROLES] = []
         if selected_role in guild_data[self.ALLOWED_ROLES]:
@@ -111,7 +111,7 @@ class access_block_feature(BotFeature):
 
 
     async def set_owner_only_button_callback(self, interaction: discord.Interaction, button, view):
-        guild_data = self.feature_collection.get(interaction.guild.id)
+        guild_data = self.get_guild_data(interaction.guild.id)
         if self.IS_OWNER in guild_data.keys() and type(guild_data[self.IS_OWNER]) is bool:
             guild_data[self.IS_OWNER] = not guild_data[self.IS_OWNER]
         else:
@@ -142,7 +142,7 @@ class access_block_feature(BotFeature):
         
     async def get_block_access_menu(self, interaction):
         my_view = Generic_View()
-        guild_data = self.feature_collection.get(interaction.guild.id)
+        guild_data = self.get_guild_data(interaction.guild.id)
         access_blocked = guild_data[self.ACCESS_BLOCKED]
         is_owner = guild_data[self.IS_OWNER]
         is_chained = guild_data[self.IS_CHAINED]
@@ -170,7 +170,7 @@ class access_block_feature(BotFeature):
         return my_view
 
     async def can_use(self, name, interaction, **params):
-        guild_data = self.feature_collection.get(interaction.guild.id)
+        guild_data = self.get_guild_data(interaction.guild.id)
         if self.ACCESS_BLOCKED in guild_data.keys() and type(guild_data[self.ACCESS_BLOCKED]) is bool:
             if guild_data[self.ACCESS_BLOCKED]:
                 if interaction.user.id == interaction.guild.owner_id:
@@ -193,3 +193,13 @@ class access_block_feature(BotFeature):
                     await interaction.followup.send('access to command is blocked', ephemeral=True)
                 return False
         return True
+
+    async def get_guild_data(self, guild_id):
+        guild_data = self.feature_collection.get(guild_id)
+        if self.ACCESS_BLOCKED not in guild_data.keys() or guild_data[self.ACCESS_BLOCKED] is None or type(guild_data[self.ACCESS_BLOCKED]) is not bool:
+            guild_data[self.ACCESS_BLOCKED] = False
+        if self.IS_OWNER not in guild_data.keys() or guild_data[self.IS_OWNER] is None or type(guild_data[self.IS_OWNER]) is not bool:
+            guild_data[self.IS_OWNER] = False
+        if self.IS_CHAINED not in guild_data.keys() or guild_data[self.IS_CHAINED] is None or type(guild_data[self.IS_CHAINED]) is not bool:
+            guild_data[self.IS_CHAINED] = False
+        return guild_data
