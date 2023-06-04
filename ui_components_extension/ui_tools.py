@@ -34,3 +34,17 @@ def color_to_string(color):
     
 def get_modal_value(interaction, index):
     return interaction.data['components'][index]['components'][0]['value']
+
+def get_select_values(interaction):
+    return interaction.data['values']
+
+class mode_styles:
+    on = discord.ButtonStyle.green
+    off = discord.ButtonStyle.red
+
+    @classmethod
+    def get_on_off(instance, mode):
+        if mode:
+            return instance.on
+        else:
+            return instance.off
