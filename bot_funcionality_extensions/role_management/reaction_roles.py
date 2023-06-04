@@ -5,8 +5,7 @@
 # add reaction role to last message in channel
 
 
-import discord 
-from discord.ext import commands
+import discord
 from Interfaces.BotFeature import BotFeature
 from discord.ui import View
 from ui_components_extension.buttons.role_button import role_button
@@ -26,7 +25,7 @@ class reaction_roles(BotFeature):
         
         bot.add_on_reaction_add_callback(self.on_reaction_add)
         bot.add_on_reaction_remove_callback(self.on_reaction_remove)
-        @bot.tree.command(name = 'add_reaction_role', description='add a reaction role to the message')
+        @bot.generic_command(name = 'add_reaction_role', description='add a reaction role to the message')
         @app_commands.check(permission_checks.is_admin)
         async def add_reaction_role(interaction: discord.Interaction, role: discord.Role, message_id : str, emoji: str):
             # check if message exists
@@ -71,7 +70,7 @@ class reaction_roles(BotFeature):
 
             pass
 
-        @bot.tree.command(name = 'remove_reaction_role', description='remove a reaction role from the message')
+        @bot.generic_command(name = 'remove_reaction_role', description='remove a reaction role from the message')
         @app_commands.check(permission_checks.is_admin)
         async def remove_reaction_role(interaction: discord.Interaction, role: discord.Role, message_id : int):
             pass
