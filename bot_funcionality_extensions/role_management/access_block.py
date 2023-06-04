@@ -197,6 +197,10 @@ class access_block_feature(BotFeature):
 
     def get_guild_db_data(self, guild_id):
         guild_data = self.feature_collection.get(guild_id)
+        if self.ALLOWED_ROLES not in guild_data.keys() or guild_data[self.ALLOWED_ROLES] is None or type(guild_data[self.ALLOWED_ROLES]) is not list:
+            guild_data[self.ALLOWED_ROLES] = []
+        if self.ALLOWED_USERS not in guild_data.keys() or guild_data[self.ALLOWED_USERS] is None or type(guild_data[self.ALLOWED_USERS]) is not list:
+            guild_data[self.ALLOWED_USERS] = []
         if self.ACCESS_BLOCKED not in guild_data.keys() or guild_data[self.ACCESS_BLOCKED] is None or type(guild_data[self.ACCESS_BLOCKED]) is not bool:
             guild_data[self.ACCESS_BLOCKED] = False
         if self.IS_OWNER not in guild_data.keys() or guild_data[self.IS_OWNER] is None or type(guild_data[self.IS_OWNER]) is not bool:
