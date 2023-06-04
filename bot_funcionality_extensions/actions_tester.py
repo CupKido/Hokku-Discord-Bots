@@ -10,6 +10,7 @@ import requests
 from io import BytesIO
 from ui_components_extension.generic_ui_comps import Generic_View
 from ui_components_extension.minesweeper import minesweeper
+from ui_components_extension.buttons.role_button import role_button
 ##################################
 # a feature for simulating a     #
 # user to test results of        #
@@ -31,6 +32,8 @@ class actions_tester(BotFeature):
     def __init__(self, bot : IGenericBot):
         super().__init__(bot)
         self.voice_clients = {}
+        # bot.add_on_before_any_command_callback(self.on_before_any_command_callback)
+        # bot.add_on_after_any_event_callback(self.on_after_any_event_callback)
         @bot.tree.command(name = 'join_vc', description='join a vc')
         @app_commands.check(permission_checks.is_admin)
         async def join_a_vc(interaction: discord.Interaction, channel : discord.VoiceChannel):
@@ -137,3 +140,19 @@ class actions_tester(BotFeature):
         @app_commands.check(permission_checks.is_admin)
         async def test5(interaction: discord.Interaction):
             await interaction.response.send_message('', view=minesweeper())
+
+        @bot.tree.command(name = 'add_role_button', description='add role button')
+        @app_commands.check(permission_checks.is_admin)
+        async def test6(interaction: discord.Interaction, role : discord.Role, label: str = None, emoji : str = None):
+            await interaction.response.send_message('adding button', ephemeral=True)
+            my_view = Generic_View()
+            if label is None:
+                label = role.name
+            my_view.add_item(role_button(label=label, role_id=role.id, style=discord.ButtonStyle.primary, bot=self.bot_client, emoji=emoji))
+            await interaction.followup.send('test', view=my_view)
+
+    async def on_after_any_event_callback(self, name, *args, **kwargs):
+        print(name, args, kwargs)
+
+    async def on_before_any_command_callback(self, name, *args, **kwargs):
+        print(name, args, kwargs)
