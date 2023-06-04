@@ -82,11 +82,6 @@ class confessions(BotFeature):
         message = ui_tools.get_modal_value(interaction, 0)
         await self.confess_with_message(interaction, message)
 
-
-
-
-
-
     async def add_options_buttons(self, message):
         my_view = Generic_View()
         my_view.add_generic_button(label=' Reply',
