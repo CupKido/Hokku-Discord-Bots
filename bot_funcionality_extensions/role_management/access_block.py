@@ -53,7 +53,7 @@ class access_block_feature(BotFeature):
             await interaction.response.edit_message(view=await self.get_block_access_menu(interaction))
             await interaction.followup.send(f'<@&{selected_role}> role allowed', ephemeral=True)
         else:
-            await interaction.followup.send(f'<@&{selected_role}> role already allowed', ephemeral=True)
+            await interaction.response.send_message(f'<@&{selected_role}> role already allowed', ephemeral=True)
 
     
     async def block_access_button_callback(self, interaction: discord.Interaction, button, view):
@@ -96,7 +96,7 @@ class access_block_feature(BotFeature):
             await interaction.response.edit_message(view=await self.get_block_access_menu(interaction))
             await interaction.followup.send(f'<@&{selected_role}> role removed', ephemeral=True)
         else:
-            await interaction.followup.send(f'<@&{selected_role}> role already out', ephemeral=True)
+            await interaction.response.send_message(f'<@&{selected_role}> role already out', ephemeral=True)
         
 
 
