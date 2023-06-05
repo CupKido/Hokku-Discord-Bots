@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ui import View, button, Modal, Button, select
 from discord.ext import commands
 from discord import ui
-
+from ui_components_extension.buttons.on_off_button import on_off_button
 
 ####################################
 # A Generic Button, that lets you  #
@@ -128,17 +128,16 @@ class Generic_View(View):
         return new_button
 
     
-    def add_generic_select(self, placeholder=None, min_values = 0, max_values = None,
-        options = None, callback=None):
-        if max_values is None:
-            max_values = len(options)
+    def add_generic_select(self, **kwargs):
+        if 'options' not in kwargs.keys():
+            raise ValueError('options must be specified')
+        options = kwargs['options']
+        if 'max_values' not in kwargs.keys():
+            kwargs['max_values'] = len(options)
         # create options
-        options_list = [discord.SelectOption(label=option['label'], description=option['description'], value=option['value']) for option in options]
-        new_select = Generic_Select(placeholder=placeholder,
-                                     min_values = min_values,
-                                       max_values = max_values,
-                                         options = options_list,
-                                           callback=callback)
+        options_list = [discord.SelectOption(**option) for option in options]
+        kwargs['options'] = options_list
+        new_select = Generic_Select(**kwargs)
         #new_select.set_view(self)
         self.add_item(new_select)
 
@@ -151,6 +150,10 @@ class Generic_View(View):
         user_select.callback = callback
         self.add_item(user_select)
 
+    def add_on_off_button(self, **kwargs):
+        new_button = on_off_button(**kwargs)
+        self.add_item(new_button)
+        return new_button
 
 ####################################
 # A Generic Modal, that lets you   #
