@@ -56,25 +56,23 @@ class access_block_feature(BotFeature):
             await interaction.response.send_message(f'<@&{selected_role}> role already allowed', ephemeral=True)
 
     
-    async def block_access_button_callback(self, interaction: discord.Interaction, button, view):
+    def block_access_button_callback(self, interaction: discord.Interaction, value : bool) -> bool:
         guild_data = self.get_guild_db_data(interaction.guild.id)
         if self.ACCESS_BLOCKED in guild_data.keys() and type(guild_data[self.ACCESS_BLOCKED]) is bool:
             guild_data[self.ACCESS_BLOCKED] = not guild_data[self.ACCESS_BLOCKED]
         else:
-            guild_data[self.ACCESS_BLOCKED] = button.value
-        button.style=mode_styles.get_on_off(guild_data[self.ACCESS_BLOCKED])
+            guild_data[self.ACCESS_BLOCKED] = not value
         self.feature_collection.set(interaction.guild.id, guild_data)
-        await interaction.response.edit_message(view=view)
+        return guild_data[self.ACCESS_BLOCKED]
 
-    async def chain_access_button_callback(self, interaction: discord.Interaction, button, view):
+    def chain_access_button_callback(self, interaction: discord.Interaction, value : bool) -> bool:
         guild_data = self.get_guild_db_data(interaction.guild.id)
         if self.IS_CHAINED in guild_data.keys() and type(guild_data[self.IS_CHAINED]) is bool:
             guild_data[self.IS_CHAINED] = not guild_data[self.IS_CHAINED]
         else:
-            guild_data[self.IS_CHAINED] = button.value
-        button.style=mode_styles.get_on_off(guild_data[self.IS_CHAINED])
+            guild_data[self.IS_CHAINED] = not value
         self.feature_collection.set(interaction.guild.id, guild_data)
-        await interaction.response.edit_message(view=view)
+        return guild_data[self.IS_CHAINED]
 
     async def disallow_user_selector_callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
@@ -100,15 +98,14 @@ class access_block_feature(BotFeature):
         
 
 
-    async def set_owner_only_button_callback(self, interaction: discord.Interaction, button, view):
+    def set_owner_only_button_callback(self, interaction: discord.Interaction, value) -> bool:
         guild_data = self.get_guild_db_data(interaction.guild.id)
         if self.IS_OWNER in guild_data.keys() and type(guild_data[self.IS_OWNER]) is bool:
             guild_data[self.IS_OWNER] = not guild_data[self.IS_OWNER]
         else:
-            guild_data[self.IS_OWNER] = button.value
-        button.style=mode_styles.get_on_off(guild_data[self.IS_OWNER])
+            guild_data[self.IS_OWNER] = not value
         self.feature_collection.set(interaction.guild.id, guild_data)
-        await interaction.response.edit_message(view=view)
+        return guild_data[self.IS_OWNER]
 
     def can_modify(self, interaction, guild_data):
         if guild_data[self.IS_CHAINED]:
@@ -138,12 +135,12 @@ class access_block_feature(BotFeature):
         is_owner = guild_data[self.IS_OWNER]
         is_chained = guild_data[self.IS_CHAINED]
         if not is_owner and interaction.user.guild_permissions.administrator or interaction.user.id == interaction.guild.owner_id:
-            my_view.add_generic_button(label='block access', 
-                                        style=mode_styles.get_on_off(access_blocked), 
+            my_view.add_on_off_button(label='block access', 
                                         value=access_blocked, 
                                         callback=self.block_access_button_callback)
-            my_view.add_generic_button(label='chain access', style=mode_styles.get_on_off(is_chained), 
-                                        value=is_chained, callback=self.chain_access_button_callback)
+            my_view.add_on_off_button(label='chain access', 
+                                        value=is_chained, 
+                                        callback=self.chain_access_button_callback)
         
         if self.can_modify(interaction, guild_data):
             my_view.add_user_selector(placeholder='allow user', min_values=0, callback=self.allow_user_selector_callback)
@@ -156,7 +153,7 @@ class access_block_feature(BotFeature):
             my_view.add_generic_select(placeholder='disallow role', min_values=0, max_values=1, options=options, callback=self.disallow_role_selector_callback)
 
         if interaction.user.id == interaction.guild.owner_id:
-            my_view.add_generic_button(label='set owner only', style=mode_styles.get_on_off(is_owner), value=is_owner, callback=self.set_owner_only_button_callback)
+            my_view.add_on_off_button(label='set owner only', value=is_owner, callback=self.set_owner_only_button_callback)
         
         return my_view
 
