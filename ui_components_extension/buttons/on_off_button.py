@@ -33,6 +33,9 @@ class on_off_button(discord.ui.Button):
                 await interaction.message.edit(view=self.view)
             else:
                 await interaction.response.edit_message(view=self.view)
+        else:
+            if not interaction.response.is_done():
+                await interaction.response.defer()
         
     async def turn_on(self):
         self.value = True
