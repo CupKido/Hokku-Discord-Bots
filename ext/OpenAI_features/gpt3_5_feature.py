@@ -4,9 +4,10 @@ from discord import app_commands
 import permission_checks
 from Interfaces.BotFeature import BotFeature
 from DB_instances.DB_instance import General_DB_Names
-from bot_funcionality_extensions.OpenAI_features.gpt_wrapper import gpt_wrapper, role_options
-from ui_components_extension.generic_ui_comps import Generic_Modal
-import ui_components_extension.ui_tools as ui_tools
+from ext.OpenAI_features.gpt_wrapper import gpt_wrapper, role_options
+from ext.OpenAI_features.gpt_wrapper import gpt_wrapper, role_options
+from ui_ext.generic_ui_comps import Generic_Modal
+import ui_ext.ui_tools as ui_tools
 from dotenv import dotenv_values
 config = dotenv_values('.env')
 import io

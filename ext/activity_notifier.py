@@ -5,7 +5,7 @@ from discord import app_commands
 import permission_checks
 from Interfaces.BotFeature import BotFeature
 from Interfaces.IGenericBot import IGenericBot
-from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
+from ui_ext.generic_ui_comps import Generic_View, Generic_Modal
 # from DB_instances.per_id_db import per_id_db
 # from DB_instances.generic_config_interface import server_config
 from DB_instances.DB_instance import General_DB_Names

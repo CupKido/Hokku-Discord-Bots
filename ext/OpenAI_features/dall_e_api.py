@@ -5,9 +5,9 @@ import openai
 import asyncio
 from Interfaces.BotFeature import BotFeature
 # from DB_instances.per_id_db import per_id_db
-from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
-from ui_components_extension.views.embed_pages import embed_pages
-import ui_components_extension.ui_tools as ui_tools
+from ui_ext.generic_ui_comps import Generic_View, Generic_Modal
+from ui_ext.views.embed_pages import embed_pages
+import ui_ext.ui_tools as ui_tools
 import permission_checks
 import os
 import json

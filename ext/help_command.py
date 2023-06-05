@@ -1,6 +1,6 @@
 import discord
 from Interfaces.BotFeature import BotFeature
-from ui_components_extension.views.embed_pages import embed_pages
+from ui_ext.views.embed_pages import embed_pages
 class help_command(BotFeature):
     def __init__(self, bot):
         super().__init__(bot)

@@ -1,7 +1,7 @@
 from discord.ui import View
 import discord
 import random
-from ui_components_extension.generic_ui_comps import Generic_Button
+from ui_ext.generic_ui_comps import Generic_Button
 
 class minesweeper(View):
     def __init__(self, *, timeout = 600, ephemeral=False):

@@ -3,8 +3,8 @@ from discord.ext import commands
 from discord import app_commands
 import permission_checks
 from Interfaces.BotFeature import BotFeature
-from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
-from ui_components_extension import ui_tools
+from ui_ext.generic_ui_comps import Generic_View, Generic_Modal
+from ui_ext import ui_tools
 #from DB_instances.per_id_db import per_id_db
 from DB_instances.DB_instance import General_DB_Names
 import datetime

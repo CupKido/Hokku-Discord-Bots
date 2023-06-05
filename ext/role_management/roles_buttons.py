@@ -9,10 +9,10 @@ import discord
 from discord.ext import commands
 from Interfaces.BotFeature import BotFeature
 from discord.ui import View
-from ui_components_extension.buttons.role_button import role_button
-from ui_components_extension.generic_ui_comps import Generic_Modal, Generic_View
+from ui_ext.buttons.role_button import role_button
+from ui_ext.generic_ui_comps import Generic_Modal, Generic_View
 import permission_checks
-import ui_components_extension.ui_tools as ui_tools
+import ui_ext.ui_tools as ui_tools
 from discord import app_commands
 
 class roles_buttons(BotFeature):

@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ui import View, button, Modal, Button, select
 from discord.ext import commands
 from discord import ui
-from ui_components_extension.buttons.on_off_button import on_off_button
+from ui_ext.buttons.on_off_button import on_off_button
 
 ####################################
 # A Generic Button, that lets you  #
@@ -116,6 +116,7 @@ class Generic_Selector(discord.ui.UserSelect):
 class Generic_View(View):
     def __init__(self, timeout=None):
         super().__init__(timeout=timeout)
+    
     def add_generic_button(self, label=None, style=None, emoji=None, callback=None, value=None, url=None):
         new_button = Generic_Button(label=label,
                                      style=style,
@@ -126,7 +127,6 @@ class Generic_View(View):
         self.add_item(new_button)
 
         return new_button
-
     
     def add_generic_select(self, **kwargs):
         if 'options' not in kwargs.keys():
