@@ -9,8 +9,9 @@ from Interfaces.BotFeature import BotFeature
 import requests
 from io import BytesIO
 from ui_components_extension.generic_ui_comps import Generic_View
-from ui_components_extension.minesweeper import minesweeper
+from ui_components_extension.games.minesweeper import minesweeper
 from ui_components_extension.buttons.role_button import role_button
+from ui_components_extension.buttons.on_off_button import on_off_button
 ##################################
 # a feature for simulating a     #
 # user to test results of        #
@@ -151,8 +152,22 @@ class actions_tester(BotFeature):
             my_view.add_item(role_button(label=label, role_id=role.id, style=discord.ButtonStyle.primary, bot=self.bot_client, emoji=emoji))
             await interaction.followup.send('test', view=my_view)
 
+        @bot.tree.command(name = 'add_on_off_button', description='add on off button')
+        @app_commands.check(permission_checks.is_admin)
+        async def test7(interaction: discord.Interaction, label: str = None, emoji : str = None):
+            await interaction.response.send_message('adding button', ephemeral=True)
+            my_view = Generic_View()
+            if label is None:
+                label = 'test'
+            my_view.add_item(on_off_button(label=label, style=discord.ButtonStyle.primary, emoji=emoji, callback=self.on_off_callback))
+            await interaction.followup.send('test', view=my_view)
+
     async def on_after_any_event_callback(self, name, *args, **kwargs):
         print(name, args, kwargs)
+
+    async def on_off_callback(self, interaction, value : bool) -> bool:
+        await interaction.response.send_message(f'existing value: {value}', ephemeral=True)
+        return not value
 
     async def on_before_any_command_callback(self, name, *args, **kwargs):
         print(name, args, kwargs)
