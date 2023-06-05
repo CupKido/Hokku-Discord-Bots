@@ -3,7 +3,7 @@ from discord import app_commands
 from Interfaces.IGenericBot import IGenericBot
 from DB_instances.generic_config_interface import server_config
 from DB_instances.per_id_db import per_id_db
-from bot_funcionality_extensions.logger import logger
+from ext.logger import logger
 from discord.ext import commands, tasks
 import io
 import permission_checks

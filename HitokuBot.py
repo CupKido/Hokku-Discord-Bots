@@ -1,8 +1,8 @@
 from GenericBot import GenericBot_client
-from bot_funcionality_extensions.confessions import confessions
-from bot_funcionality_extensions.bot_activities_fetures.watching_members_feature import watching_members_feature
-from bot_funcionality_extensions.prefix_adapter import prefix_adapter
-from bot_funcionality_extensions.help_command import help_command
+from ext.confessions import confessions
+from ext.bot_activities_fetures.watching_members_feature import watching_members_feature
+from ext.prefix_adapter import prefix_adapter
+from ext.help_command import help_command
 from DB_instances.DB_instance import DB_Methods
 
 from dotenv import dotenv_values

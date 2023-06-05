@@ -1,0 +1,6 @@
+from GenericBot import GenericBot_client
+from bot_funcionality_extensions.room_opening.room_opening import room_opening
+from bot_funcionality_extensions.event_logger import event_logger
+from bot_funcionality_extensions.role_management import *
+from bot_funcionality_extensions.OpenAI_features import *
+
