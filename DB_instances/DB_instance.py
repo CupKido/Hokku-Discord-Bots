@@ -18,12 +18,13 @@ class General_DB_Names(enum.Enum):
 class DB_Methods(enum.Enum):
     Json = 'J'
     MongoDB = 'M'
+    DynamicDB = 'D'
 
 class DB_instance:
     def get(self, id):
         pass
     def get_item_instance(self, id):
-        pass
+        return item_instance(self, id)
         
     def set(self, id, data):
         pass
@@ -56,9 +57,6 @@ class MongoDB_instance(DB_instance):
                 return {'_id': str(id)}
             else:
                 return item
-    
-        def get_item_instance(self, id):
-            return item_instance(self, id)
             
         def set(self, id, data):
             self.collection.update_one({'_id': str(id)}, {'$set': data}, upsert=True)
@@ -124,7 +122,7 @@ class JsonDB_instance(DB_instance):
         
         def get_item_instance(self, id):
             id = str(id)
-            return item_instance(self, id)
+            return super().get_item_instance(id)
         
         def set(self, id, value):
             id = str(id)
@@ -182,6 +180,61 @@ class JsonDB_instance(DB_instance):
         file_path = os.path.join(self.location,  self.db_name, collection_name + self.file_extension)
         return self.collection_instance(file_path)
 
+class DynamicDB_instance(DB_instance):
+
+    db = {} # {db_name: [{collection_name: [{id: {params}}, ...]}, ...]}
+
+    class collection_instance:
+        def __init__(self, collection):
+            self.collection = collection
+        
+        def get(self, id):
+            if self.collection in DynamicDB_instance.db.keys():
+                if id in DynamicDB_instance.db[self.collection].keys():
+                    return DynamicDB_instance.db[self.collection][id]
+            else:
+                return {'_id': id}
+        
+        def set(self, id, value):
+            if self.collection not in DynamicDB_instance.db.keys():
+                DynamicDB_instance.db[self.collection] = {}
+            DynamicDB_instance.db[self.collection][id] = value
+        
+        def delete(self, id):
+            if self.collection in DynamicDB_instance.db.keys():
+                if id in DynamicDB_instance.db[self.collection].keys():
+                    del DynamicDB_instance.db[self.collection][id]
+
+        def get_all(self):
+            if self.collection in DynamicDB_instance.db.keys():
+                return DynamicDB_instance.db[self.collection].values()
+            else:
+                return []
+
+        def get_all_ids(self):
+            if self.collection in DynamicDB_instance.db.keys():
+                return DynamicDB_instance.db[self.collection].keys()
+            else:
+                return []
+
+        def get_all_data(self):
+            if self.collection in DynamicDB_instance.db.keys():
+                return DynamicDB_instance.db[self.collection].items()
+            else:
+                return []
+
+        def get_all_data_dict(self):
+            if self.collection in DynamicDB_instance.db.keys():
+                return DynamicDB_instance.db[self.collection]
+            else:
+                return {}
+            
+
+    def __init__(self, db_name):
+        self.db_name = db_name
+    
+    def get_collection_instance(self, collection_name):
+        return self.db_instance.get_collection_instance(collection_name)
 
 class item_instance:
     def __init__(self, db_instance, id):
@@ -215,5 +268,7 @@ def DB_factory(db_name, DB_Method : DB_Methods, uri=None):
         return JsonDB_instance(db_name, uri)
     elif DB_Method == DB_Methods.MongoDB:
         return MongoDB_instance(db_name, uri)
+    elif DB_Method == DB_Methods.DynamicDB:
+        return DynamicDB_instance(db_name)
     else:
         raise Exception('Invalid DB_Method: ' + str(DB_Method))
