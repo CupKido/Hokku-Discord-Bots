@@ -6,7 +6,7 @@ import hmac
 import time
 import datetime
 import threading
-from bot_funcionality_extensions.TwitchAPI_features.twitch_wrapper import twitch_wrapper
+from ext.TwitchAPI_features.twitch_wrapper import twitch_wrapper
 import asyncio
 # from twitch_wrapper import twitch_wrapper
 import requests

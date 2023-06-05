@@ -1,5 +1,5 @@
 import discord
-from ui_components_extension.ui_tools import mode_styles 
+from ui_ext.ui_tools import mode_styles 
 import inspect
 class on_off_button(discord.ui.Button):
     def __init__(self, **kwargs):

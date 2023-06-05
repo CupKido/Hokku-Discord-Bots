@@ -5,8 +5,8 @@ from Interfaces.BotFeature import BotFeature
 # from DB_instances.generic_config_interface import server_config
 # from DB_instances.per_id_db import per_id_db
 from DB_instances.DB_instance import General_DB_Names
-from bot_funcionality_extensions.TwitchAPI_features.twitch_wrapper import twitch_wrapper
-from bot_funcionality_extensions.TwitchAPI_features.eventsub_wrapper import eventsub_wrapper
+from ext.TwitchAPI_features.twitch_wrapper import twitch_wrapper
+from ext.TwitchAPI_features.eventsub_wrapper import eventsub_wrapper
 import permission_checks
 import async_timeout
 from dotenv import dotenv_values

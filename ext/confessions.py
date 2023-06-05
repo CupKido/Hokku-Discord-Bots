@@ -7,8 +7,8 @@ import discord
 from DB_instances.DB_instance import General_DB_Names
 from discord.ext import commands
 from discord import app_commands
-from ui_components_extension.generic_ui_comps import Generic_View, Generic_Modal
-import ui_components_extension.ui_tools as ui_tools
+from ui_ext.generic_ui_comps import Generic_View, Generic_Modal
+import ui_ext.ui_tools as ui_tools
 import permission_checks
 
 
