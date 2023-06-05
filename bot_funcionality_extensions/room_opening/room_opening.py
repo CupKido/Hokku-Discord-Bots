@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from bot_funcionality_extensions.room_opening.active_channel_states import ChannelState
 import ui_components_extension.ui_tools as ui_tools
 #from DB_instances.generic_config_interface import server_config
 from DB_instances.DB_instance import General_DB_Names
@@ -13,6 +12,7 @@ import json
 import os
 import requests
 import permission_checks
+from enum import Enum
 
 ########################################
 # a feature for the GenericBot that    #
@@ -28,6 +28,13 @@ import permission_checks
 # - on_guild_channel_delete                     #
 # - on_guild_join                               #
 #################################################
+
+
+
+class ChannelState(Enum):
+    PUBLIC = 1
+    PRIVATE = 2
+    SPECIAL = 3
 
 #TODO: use bot_client.add_view for buttons maintenance
 
