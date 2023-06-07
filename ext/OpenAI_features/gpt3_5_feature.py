@@ -333,7 +333,6 @@ class gpt3_5_feature(BotFeature):
             async def response_callback(response, tokens_used):
                 response_embed = self.get_response_embed(response)
                 await interaction.followup.send(embeds=[question_embed, response_embed], ephemeral=True)
-                print('sent')
                 user_history = user_data[self.PRIVATE_HISTORY]
                 # make sure to save the user history, and make sure length is under the limit
                 user_history.append(role_options.get_role_message(role_options.assistant, response))
@@ -357,7 +356,6 @@ class gpt3_5_feature(BotFeature):
                 config["OPENAI_KEY"], 
                 loaded=True, 
                 callback=response_callback)
-            print("done")
             
         except Exception as e:
             await interaction.followup.send("GPT 3.5 is not responding. Please try again later.", embed=question_embed, ephemeral=True)
