@@ -102,13 +102,11 @@ class gpt_wrapper:
             "messages": refactored_user_history
         }
         response = requests.post(chatgpt_url, headers=headers, data=json.dumps(data))
-        if response.status == 200:
-            response_json = response.json()
-            answer = response_json["choices"][0]["message"]["content"]
-            token_amount = response_json['usage']['total_tokens']
-            return answer, token_amount
-        else:
-            raise Exception("Sorry, we have encountered an error. Please try again")
+        response.raise_for_status()
+        response_json = response.json()
+        answer = response_json["choices"][0]["message"]["content"]
+        token_amount = response_json['usage']['total_tokens']
+        return answer, token_amount
         
     @classmethod
     def get_response(instance, message : str, model : supported_models, api_key):
