@@ -278,31 +278,34 @@ class gpt3_5_feature(BotFeature):
         used_model = gpt_wrapper.supported_models.gpt_3_5_turbo
         please_wait_message = await message.channel.send("Please wait while I ask GPT 3.5...")
         try:
-            response, tokens_used = await gpt_wrapper.get_response_with_history(user_history, 
-                                                                                used_model, 
-                                                                                config["OPENAI_KEY"])
-            await please_wait_message.delete()
-            #print(response)
-            # prepare response to user
-            response_embed = self.get_response_embed(response)
-            embeds=[response_embed]
-            # add button to show chat history
-            user_mention = message.author.mention
-            # send response to user
-            await message.channel.send(content=user_mention,embeds=embeds)
+            async def response_callback(response, tokens_used):
+                await please_wait_message.delete()
+                #print(response)
+                # prepare response to user
+                response_embed = self.get_response_embed(response)
+                embeds=[response_embed]
+                # add button to show chat history
+                user_mention = message.author.mention
+                # send response to user
+                await message.channel.send(content=user_mention,embeds=embeds)
 
-            # save tokens used
-            
-            if self.GPT_CHAT_COST not in user_data.keys() or type(user_data[self.GPT_CHAT_COST]) is not float:
-                user_data[self.GPT_CHAT_COST] = gpt_wrapper.tokens_to_dollars(tokens_used, used_model)
-            else:
-                user_data[self.GPT_CHAT_COST] += gpt_wrapper.tokens_to_dollars(tokens_used, used_model)
-            
-            self.feature_collection.set(message.author.id, user_data)
+                # save tokens used
+                
+                if self.GPT_CHAT_COST not in user_data.keys() or type(user_data[self.GPT_CHAT_COST]) is not float:
+                    user_data[self.GPT_CHAT_COST] = gpt_wrapper.tokens_to_dollars(tokens_used, used_model)
+                else:
+                    user_data[self.GPT_CHAT_COST] += gpt_wrapper.tokens_to_dollars(tokens_used, used_model)
+                
+                self.feature_collection.set(message.author.id, user_data)
+            await gpt_wrapper.get_response_with_history_async(user_history, 
+                                                        used_model, 
+                                                        config["OPENAI_KEY"], 
+                                                        callback=response_callback)
         except Exception as e:
             await please_wait_message.delete()
             await message.channel.send("GPT 3.5 is not responding. Please try again later.")
             print(e)
+            
         
         # change permissions of channel to allow user to send messages
         
@@ -318,34 +321,43 @@ class gpt3_5_feature(BotFeature):
         await interaction.response.send_message("Please wait while I ask GPT 3.5...", ephemeral=True)
         message = ui_tools.get_modal_value(interaction, 0)
         question_embed = discord.Embed(title=f"Your question:", description=message, color=0x00ff00)
+        used_model = gpt_wrapper.supported_models.gpt_3_5_turbo
+        user_data = self.feature_collection.get(interaction.user.id)
+        if self.PRIVATE_HISTORY not in user_data.keys() or type(user_data[self.PRIVATE_HISTORY]) is not list:
+            user_data[self.PRIVATE_HISTORY] = []
+
+        user_history = user_data[self.PRIVATE_HISTORY]
+        user_history.append(role_options.get_role_message(role_options.user, message))
+        user_data[self.PRIVATE_HISTORY] = user_history
         try:
-            used_model = gpt_wrapper.supported_models.gpt_3_5_turbo
-            user_data = self.feature_collection.get(interaction.user.id)
-            if self.PRIVATE_HISTORY not in user_data.keys() or type(user_data[self.PRIVATE_HISTORY]) is not list:
-                user_data[self.PRIVATE_HISTORY] = []
-            user_history = user_data[self.PRIVATE_HISTORY]
-            user_history.append(role_options.get_role_message(role_options.user, message))
-            response, tokens_used = await gpt_wrapper.get_response_with_history(user_history, used_model, config["OPENAI_KEY"], loaded=True)
-            
-            response_embed = self.get_response_embed(response)
-            await interaction.followup.send(embeds=[question_embed, response_embed], ephemeral=True)
+            async def response_callback(response, tokens_used):
+                response_embed = self.get_response_embed(response)
+                await interaction.followup.send(embeds=[question_embed, response_embed], ephemeral=True)
+                print('sent')
+                user_history = user_data[self.PRIVATE_HISTORY]
+                # make sure to save the user history, and make sure length is under the limit
+                user_history.append(role_options.get_role_message(role_options.assistant, response))
+                config_data = self.config_collection.get(self.GPT_FEATURE_CONFIG)
+                if self.PRIVATE_HISTORY_LENGTH not in config_data.keys() or config_data[self.PRIVATE_HISTORY_LENGTH] is None:
+                    config_data[self.PRIVATE_HISTORY_LENGTH] = self.initial_private_history_length
+                if len(user_history) > config_data[self.PRIVATE_HISTORY_LENGTH]:
+                    user_history = user_history[-config_data[self.PRIVATE_HISTORY_LENGTH]:]
+                user_data[self.PRIVATE_HISTORY] = user_history
 
-            # make sure to save the user history, and make sure length is under the limit
-            user_history.append(role_options.get_role_message(role_options.assistant, response))
-            config_data = self.config_collection.get(self.GPT_FEATURE_CONFIG)
-            if self.PRIVATE_HISTORY_LENGTH not in config_data.keys() or config_data[self.PRIVATE_HISTORY_LENGTH] is None:
-                config_data[self.PRIVATE_HISTORY_LENGTH] = self.initial_private_history_length
-            if len(user_history) > config_data[self.PRIVATE_HISTORY_LENGTH]:
-                user_history = user_history[-config_data[self.PRIVATE_HISTORY_LENGTH]:]
-            user_data[self.PRIVATE_HISTORY] = user_history
-
-            # save tokens used
-            if self.GPT_CHAT_COST not in user_data.keys() or type(user_data[self.GPT_CHAT_COST]) is not float:
-                user_data[self.GPT_CHAT_COST] = gpt_wrapper.tokens_to_dollars(tokens_used, used_model)
-            else:
-                user_data[self.GPT_CHAT_COST] += gpt_wrapper.tokens_to_dollars(tokens_used, used_model)
-            
-            self.feature_collection.set(interaction.user.id, user_data)
+                # save tokens used
+                if self.GPT_CHAT_COST not in user_data.keys() or type(user_data[self.GPT_CHAT_COST]) is not float:
+                    user_data[self.GPT_CHAT_COST] = gpt_wrapper.tokens_to_dollars(tokens_used, used_model)
+                else:
+                    user_data[self.GPT_CHAT_COST] += gpt_wrapper.tokens_to_dollars(tokens_used, used_model)
+                
+                self.feature_collection.set(interaction.user.id, user_data)
+            await gpt_wrapper.get_response_with_history_async(
+                user_history, 
+                used_model, 
+                config["OPENAI_KEY"], 
+                loaded=True, 
+                callback=response_callback)
+            print("done")
             
         except Exception as e:
             await interaction.followup.send("GPT 3.5 is not responding. Please try again later.", embed=question_embed, ephemeral=True)
