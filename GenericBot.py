@@ -8,6 +8,7 @@ from discord.ext import commands, tasks
 import io
 import permission_checks
 from DB_instances.DB_instance import *
+from Interfaces.BotFeature import BotFeature
 import functools
 import typing
 import inspect
@@ -509,7 +510,7 @@ class GenericBot_client(IGenericBot):
                 print('failed to print message')
     
     # add features to bot
-    def add_features(self, *features):
+    def add_features(self, *features : list[BotFeature]):
         self.log('================================================================')
         for feature in features:
             if feature != features[0]:
@@ -519,12 +520,12 @@ class GenericBot_client(IGenericBot):
         self.log('================================================================')
 
     # add feature to bot
-    def add_feature(self, feature):
+    def add_feature(self, feature : BotFeature, attrs = {}):
         # print feature class name
         self.log("| adding feature: " + str(feature)+ ' |')
         if type(self.features) is not dict:
             self.features = {}
-        
+        feature.set_attrs(attrs)
         self.features[str(feature)] = feature(self)
 
 
