@@ -20,7 +20,15 @@ class DB_Methods(enum.Enum):
     MongoDB = 'M'
     DynamicDB = 'D'
 
+
 class DB_instance:
+    def get_collection_instance(self, collection_name):
+        pass
+    def get_all_collections(self):
+        pass
+
+
+class collection_instance:
     def get(self, id):
         pass
     def get_item_instance(self, id):
@@ -45,9 +53,37 @@ class DB_instance:
         pass
 
 
+class item_instance:
+    def __init__(self, db_instance, id):
+        self.db_instance = db_instance
+        self.id = id
+        self.params = self.db_instance.get(id)
+
+    def get_param(self, param_name):
+        param_name = str(param_name).lower()
+        if param_name in self.params.keys():
+            return self.params[param_name]
+        return None
+    
+    def get_params(self):
+        return self.params
+
+    def set_params(self, **kwargs):
+        for x in kwargs.keys():
+            self.params[str(x).lower()] = kwargs[x]
+        self.db_instance.set(self.id, self.params)
+    
+    def set_param(self, param_name, value):
+        self.params[str(param_name).lower()] = value
+        self.db_instance.set(self.id, self.params)
+
+    def delete_item(self):
+        self.db_instance.delete(self.id)
+
+
 class MongoDB_instance(DB_instance):
 
-    class collection_instance:
+    class MongoDB_collection_instance(collection_instance):
         def __init__(self, collection):
             self.collection = collection
 
@@ -97,12 +133,15 @@ class MongoDB_instance(DB_instance):
         self.db = self.client[db_name]
     
     def get_collection_instance(self, collection_name):
-        return self.collection_instance(self.db[collection_name])
+        return self.MongoDB_collection_instance(self.db[collection_name])
     
+    def get_all_collections(self):
+        return self.db.list_collection_names()
+
 
 class JsonDB_instance(DB_instance):
 
-    class collection_instance:
+    class JsonDB_collection_instance(collection_instance):
 
         def __init__(self, file_location):
             self.file_location = file_location
@@ -144,22 +183,22 @@ class JsonDB_instance(DB_instance):
         def get_all(self):
             with open(self.file_location, 'r') as f:
                 data = json.load(f)
-            return data.values()
+                return data.values()
         
         def get_all_ids(self):
             with open(self.file_location, 'r') as f:
                 data = json.load(f)
-            return data.keys()
+                return data.keys()
         
         def get_all_data(self):
             with open(self.file_location, 'r') as f:
                 data = json.load(f)
-            return data.items()
+                return data.items()
         
         def get_all_data_dict(self):
             with open(self.file_location, 'r') as f:
                 data = json.load(f)
-            return data
+                return data
 
     base_location = 'data_base'
     file_extension = '.json'
@@ -175,16 +214,20 @@ class JsonDB_instance(DB_instance):
         if not os.path.exists(os.path.join(self.location, self.db_name)):
             os.makedirs(os.path.join(self.location, self.db_name))
         
-
     def get_collection_instance(self, collection_name):
         file_path = os.path.join(self.location,  self.db_name, collection_name + self.file_extension)
-        return self.collection_instance(file_path)
+        return self.JsonDB_collection_instance(file_path)
+    
+    def get_all_collections(self):
+        # return file names without extension
+        return [x[:-len(self.file_extension)] for x in os.listdir(os.path.join(self.location, self.db_name)) if x.endswith(self.file_extension)]
+
 
 class DynamicDB_instance(DB_instance):
 
     db = {} # {db_name: [{collection_name: [{id: {params}}, ...]}, ...]}
 
-    class collection_instance:
+    class DynamicDB_collection_instance(collection_instance):
         def __init__(self, collection):
             self.collection = collection
         
@@ -234,34 +277,12 @@ class DynamicDB_instance(DB_instance):
         self.db_name = db_name
     
     def get_collection_instance(self, collection_name):
-        return self.db_instance.get_collection_instance(collection_name)
-
-class item_instance:
-    def __init__(self, db_instance, id):
-        self.db_instance = db_instance
-        self.id = id
-        self.params = self.db_instance.get(id)
-
-    def get_param(self, param_name):
-        param_name = str(param_name).lower()
-        if param_name in self.params.keys():
-            return self.params[param_name]
-        return None
+        return self.DynamicDB_collection_instance(collection_name)
     
-    def get_params(self):
-        return self.params
+    def get_all_collections(self):
+        return self.db[self.db_name].keys() if self.db_name in self.db.keys() else []
 
-    def set_params(self, **kwargs):
-        for x in kwargs.keys():
-            self.params[str(x).lower()] = kwargs[x]
-        self.db_instance.set(self.id, self.params)
-    
-    def set_param(self, param_name, value):
-        self.params[str(param_name).lower()] = value
-        self.db_instance.set(self.id, self.params)
 
-    def delete_item(self):
-        self.db_instance.delete(self.id)
 
 def DB_factory(db_name, DB_Method : DB_Methods, uri=None):
     if DB_Method == DB_Methods.Json:
