@@ -4,7 +4,7 @@ from Interfaces.IGenericBot import IGenericBot
 from DB_instances.generic_config_interface import server_config
 from DB_instances.per_id_db import per_id_db
 from ext.logger import logger
-from discord.ext import commands, tasks
+from discord.ext import tasks
 import io
 import permission_checks
 from DB_instances.DB_instance import *
@@ -164,6 +164,7 @@ class GenericBot_client(IGenericBot):
         wrapper.__name__ = coro.__name__
         return self.event(wrapper)
 
+
     def generic_command(self, **kwargs2):
         
         def deco(coro: typing.Callable[..., typing.Coroutine]):
@@ -199,7 +200,6 @@ class GenericBot_client(IGenericBot):
             self.tree.command(**kwargs2)(wrapper)
             # self.tree.command(**kwargs2)(coro)
         return deco
-
 
 
     def add_event_callback_support(self):
@@ -389,7 +389,6 @@ class GenericBot_client(IGenericBot):
         self.on_message_edit_callbacks.append(callback)
         self.log("added on_message_edit_callback: " + str(callback.__name__))
     
-
     # reaction events
 
     def add_on_reaction_add_callback(self, callback):
@@ -528,11 +527,20 @@ class GenericBot_client(IGenericBot):
         feature.set_attrs(attrs)
         self.features[str(feature)] = feature(self)
 
-
     def add_scheduler_events(self):
         self.every_hour_callbacks = []
         self.every_5_hours_callbacks = []
         self.every_day_callbacks = []
+
+    def add_every_time_callback(self, callback, **kwargs):
+        @tasks.loop(**kwargs)
+        async def every_callback():
+            try:
+                await callback(**kwargs)
+            except Exception as e:
+                self.log('failed to run callback: ' + str(callback.__name__))
+                self.log('error: ' + str(e))
+        every_callback.start(self)
 
     @tasks.loop(hours=1)
     async def go_every_hour(self):
