@@ -120,6 +120,12 @@ A simple framework that allows creating, loading and unloading features from dis
 
   * every_day_callback
   
+  All events:
+  
+  * on_before_any_event_callbacks
+  
+  * on_after_any_event_callbacks
+  
   
 ## Bot Features
   
@@ -128,7 +134,7 @@ A simple framework that allows creating, loading and unloading features from dis
   The class recieves a Generic Bot instance as an argument on its constructor (__init__ func).
   Inside it's constructor, it can sign onto events, and add commmands to the bot
 
-  You, as a developer, are supposed to create your own features.
+  You, as a developer, are supposed to create your own features for your needs.
   
   #### Code Example:
   
@@ -158,6 +164,7 @@ A simple framework that allows creating, loading and unloading features from dis
   * active study rooms - for rooms with cam only
   * activity notifier - lets users get notified when there are more than a certain number of users on vc, or when their friend joins vc
   * help command - adds the help command that sends a description about all commands that specific user can use
+  * 
   
 ## The Main File 
   The main function is the actual python file we run on our machine.
@@ -254,7 +261,24 @@ A simple framework that allows creating, loading and unloading features from dis
                                     emoji= '<your emoji>'
                                     )
     channel.send('<your message>', view = my_view)
-    
+  ### ON OFF button
+  a button that has its own functionality for turning green and red depends on a recieved callback.
+  #### Parameters:
+  
+  * Any parameter from discord.ui.Button.
+  * value (bool) - on/off.
+  * callback : function - a function that returns the new value based on the click interaction and the current value.
+  #### Code Example:
+    my_view = Generic_View()
+    def update_callback(interaction, prev):
+        new_val = not prev
+        update_db(interaction.user.id, new_val) // or whatever you wanna do based on the click
+        return new_val
+    gen_view.add_on_off_button(label = '<your label>',
+                                    callback = update_callback, // your callback function
+                                    emoji= '<your emoji>'
+                                    )
+    channel.send('<your message>', view = my_view)
   ### Generic Select
   A UI element that lets the user choose multiple choices from a list.
   The Select can be created with the "add_generic_select" method of the "Generic_View" class.
@@ -364,27 +388,35 @@ A simple framework that allows creating, loading and unloading features from dis
   In this case - contains functionallity for the game Minesweeper.
   just attach an instance as a view to any message, and youll be presented with an interactinve game board, that lets you play the game!
   
-  ## DB instance
-  the db_instance is a module that contains different classes for using the DB in an easy way.
+  ## DB instances
+  the db_instances is a module that contains different classes for using the DB in an easy way.
   
   Few of the items inside it are:
   * General_DB_Names : Enum - contains a few commonly used names for collections, that features could share.
   * DB_Methods : Enum - Contains the DB interfaces options, currently supports:
     * Json
     * MongoDB
+    * DynamicDB
   * DB_instance : class - an abstract class for db instances
+  * collection_instance : class - an abstract class for collection instances
+  * item_instance : class - represents an item inside a collection.
   * MongoDB_instance : class (inherits DB_instance) - used to connect to a MongoDB Database, parameters are:
     * db_name : str 
     * connection_string=None : str
   * JsonDB_instance : class (inherits DB_instance) - used to maintain a Json database, parameters are:
     * db_name : str
     * location=None : str
-  * item_instance : class - represents an item inside a collection.
+  * DynamicDB : class (inherits DB_instance) - used to maintain a variables based Databse, parameters are:
+    * db_name : str 
   * DB_factory : function - for getting a DB_instance based on parameters, which are:
     * db_name : str
     * DB_Method : DB_Methods
     * uri : str - either connection string for MongoDB or location for Json
-  
+  * transfer_DB : function - for transfering all data between two DBs, parameters:
+    * from_db : DB_instance
+    * to_db : DB_instance
+    * overwrite : bool (optional)
+    * delete_from_db : bool (optional)
 
 
 # Useful Links
