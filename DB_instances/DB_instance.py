@@ -1,7 +1,5 @@
 import json
-import discord
 import os
-import pymongo
 from pymongo import MongoClient
 from dotenv import dotenv_values
 import enum
@@ -22,11 +20,14 @@ class DB_Methods(enum.Enum):
 
 
 class DB_instance:
+    db_method = None
+
     def get_collection_instance(self, collection_name):
         pass
     def get_all_collections(self):
         pass
-
+    def delete_db(self):
+        pass
 
 class collection_instance:
     def get(self, id):
@@ -82,7 +83,7 @@ class item_instance:
 
 
 class MongoDB_instance(DB_instance):
-
+    db_method = DB_Methods.MongoDB
     class MongoDB_collection_instance(collection_instance):
         def __init__(self, collection):
             self.collection = collection
@@ -104,7 +105,7 @@ class MongoDB_instance(DB_instance):
             return self.collection.find()
         
         def get_all_ids(self):
-            return [x['_id'] for x in self.collection.find()]
+            return self.collection.distinct('_id')
         
         def get_all_data(self):
             return [x for x in self.collection.find()]
@@ -138,9 +139,11 @@ class MongoDB_instance(DB_instance):
     def get_all_collections(self):
         return self.db.list_collection_names()
 
+    def delete_db(self):
+        self.client.drop_database(self.db_name)
 
 class JsonDB_instance(DB_instance):
-
+    db_method = DB_Methods.Json
     class JsonDB_collection_instance(collection_instance):
 
         def __init__(self, file_location):
@@ -222,9 +225,12 @@ class JsonDB_instance(DB_instance):
         # return file names without extension
         return [x[:-len(self.file_extension)] for x in os.listdir(os.path.join(self.location, self.db_name)) if x.endswith(self.file_extension)]
 
+    def delete_db(self):
+        import shutil
+        shutil.rmtree(os.path.join(self.location, self.db_name))
 
 class DynamicDB_instance(DB_instance):
-
+    db_method = DB_Methods.DynamicDB
     db = {} # {db_name: [{collection_name: [{id: {params}}, ...]}, ...]}
 
     class DynamicDB_collection_instance(collection_instance):
@@ -282,7 +288,9 @@ class DynamicDB_instance(DB_instance):
     def get_all_collections(self):
         return self.db[self.db_name].keys() if self.db_name in self.db.keys() else []
 
-
+    def delete_db(self):
+        if self.db_name in self.db.keys():
+            del self.db[self.db_name]
 
 def DB_factory(db_name, DB_Method : DB_Methods, uri=None):
     if DB_Method == DB_Methods.Json:
