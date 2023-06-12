@@ -66,6 +66,7 @@ class roles_buttons(BotFeature):
             self.feature_collection.set(interaction.guild.id, guild_data)
             await self.maintain_buttons_for_guild(interaction.guild.id)
             await interaction.followup.send('Role added successfully', ephemeral=True)
+            await self._log_guild(f'Role {role.name} added to the roles message', interaction.guild.id)
     
         @bot.tree.command(name = 'remove_button_role', description='remove a button role from the message')
         @app_commands.check(permission_checks.is_admin)
@@ -87,6 +88,7 @@ class roles_buttons(BotFeature):
         self.feature_collection.set(interaction.guild.id, guild_data)
         await self.maintain_buttons_for_guild(interaction.guild.id)
         await interaction.response.send_message('Role removed successfully', ephemeral=True)
+        await self._log_guild(f"Role {selected_role_title} ({selected_role_id}) removed from the roles message", interaction.guild.id)
 
 
     async def create_button_roles_modal_callback(self, interaction):
@@ -101,6 +103,7 @@ class roles_buttons(BotFeature):
         message = await channel.send(embed=discord.Embed(title=message_title, description=message_description))
         guild_data[self.ROLES_MESSAGE_ID] = message.id
         self.feature_collection.set(interaction.guild.id, guild_data)
+        await interaction.followup.send('Roles message created successfully', ephemeral=True)
 
 
     async def maintain_buttons(self):

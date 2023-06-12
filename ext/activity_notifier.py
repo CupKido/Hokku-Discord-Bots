@@ -154,6 +154,7 @@ class activity_notifier(BotFeature):
                     continue
                 await the_member.send(embed = self.get_member_is_active_embed(member))
                 self.update_last_notification_for_member(member_db)
+                self._log_guild("Notifying " + str(the_member) + " about " + str(member) + " joining a voice channel", member.guild.id)
                 return
                 
 

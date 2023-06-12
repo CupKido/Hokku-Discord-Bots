@@ -67,7 +67,7 @@ class reaction_roles(BotFeature):
 
             self.feature_collection.set(interaction.guild.id, guild_data)
             await interaction.followup.send('Reaction role added', ephemeral=True) 
-            await self.log_guild(f"Reaction role added: {role.name} to message {message_id}", interaction.guild.id)
+            await self._log_guild(f"Reaction role added: {role.name} to message {message_id}", interaction.guild.id)
 
             pass
 
@@ -102,7 +102,7 @@ class reaction_roles(BotFeature):
                 guild_data[self.REACTION_ROLES_LIST].remove(reaction_role)
                 self.feature_collection.set(interaction.guild.id, guild_data)
                 await interaction.followup.send('Reaction role removed', ephemeral=True)
-                await self.log_guild(f"Reaction role removed: {role.name} ({role.id}) from message {message_id}", interaction.guild.id)
+                await self._log_guild(f"Reaction role removed: {role.name} ({role.id}) from message {message_id}", interaction.guild.id)
             except discord.errors.HTTPException:
                 await interaction.followup.send('Emoji not found', ephemeral=True)
                 return
@@ -119,7 +119,7 @@ class reaction_roles(BotFeature):
                     if role_data['emoji'] == reaction.emoji:
                         role = reaction.message.guild.get_role(role_data['role_id'])
                         await user.add_roles(role)
-                        await self.log_guild(f"Reaction role added: {role.name} ({role.id}) to {user.name} ({user.id})", reaction.message.guild.id)
+                        await self._log_guild(f"Reaction role added: {role.name} ({role.id}) to {user.name} ({user.id})", reaction.message.guild.id)
                         return
                 break
 
@@ -135,6 +135,6 @@ class reaction_roles(BotFeature):
                     if role_data['emoji'] == reaction.emoji:
                         role = reaction.message.guild.get_role(role_data['role_id'])
                         await user.remove_roles(role)
-                        await self.log_guild(f"Reaction role removed: {role.name} ({role.id}) from {user.name} ({user.id})", reaction.message.guild.id)
+                        await self._log_guild(f"Reaction role removed: {role.name} ({role.id}) from {user.name} ({user.id})", reaction.message.guild.id)
                         return
                 break
