@@ -36,15 +36,19 @@ class prefix_adapter(BotFeature):
             return
         if len(message.content) < 2:
             return
+        # make sure message starts with prefix, which means it is a command
         if message.content.startswith(prefix_adapter.prefix):
             command_name = message.content.split(' ')[0][len(prefix_adapter.prefix):]
             
             if command_name in self.commands.keys():
                 interaction = demi_interaction(message)
+                # make sure command is allowed to run
                 if await self.commands[command_name][1](interaction):
                     coro = self.commands[command_name][0]
                     params = {}
                     try:
+                        # make sure command is not blocked
+                        # call relevant callbacks
                         call_coro : bool = True
                         for callback in self.bot_client.on_before_any_command_callbacks:
                             value : bool = await callback(coro.__name__, interaction, **params)
