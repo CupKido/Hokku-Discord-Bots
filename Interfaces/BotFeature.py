@@ -2,10 +2,11 @@ from Interfaces.IGenericBot import IGenericBot
 
 # an abstract class that represents a feature of the bot
 class BotFeature:
+    LOG_FEATURE_ATTR_NAME = 'log_feature'
     
-    def __init__(self, bot : IGenericBot):
+    def __init__(self, bot : IGenericBot, log_feature=False):
         self.bot_client = bot
-        self.attrs = {}
+        self.attrs = {self.LOG_FEATURE_ATTR_NAME : log_feature}
 
     @classmethod
     def set_attrs(instance, value):
@@ -17,8 +18,10 @@ class BotFeature:
 
     @classmethod
     def log(instance, message):
-        self.bot_client.get_logger().log_instance(message, instance)
+        if instance.attrs[instance.LOG_FEATURE_ATTR_NAME]:
+            instance.bot_client.get_logger().log_instance(message, instance)
 
     @classmethod
     def log_guild(instance, message, guild_id):
-        self.bot_client.get_logger().log_guild_instance(message, guild_id, instance)
+        if instance.attrs[instance.LOG_FEATURE_ATTR_NAME]:
+            instance.bot_client.get_logger().log_guild_instance(message, guild_id, instance)

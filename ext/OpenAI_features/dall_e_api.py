@@ -194,30 +194,9 @@ class dall_e_api(BotFeature):
                         embeds.append(embed)
                     embs = embed_pages(embeds)
                     await embs.send(interaction=interaction, followup=True)
+                    self.log_guild(f"generated {str(len(image_urls))} images for {interaction.user.display_name} ({str(interaction.user.id)}): " + prompt, interaction.guild.id)
                     member_db.set_params(user_mid_request=False)
                     return
-                    files= []
-                    # create thread for downloading images and start it
-                    t = threading.Thread(target=self.download_images, args=(image_urls, user_dir))
-                    t.start()
-                    # sleep for the time it takes to download all images, in async way so the bot can still respond
-                    await asyncio.sleep(len(image_urls) * self.wait_per_image)
-                    # wait for all images to be downloaded, hoping that they are all downloaded already
-                    t.join()
-
-
-                    
-                    for x in range(len(image_urls)):
-                        filename = user_dir + "\\" + str(x) +".jpg"
-                        files.append(discord.File(filename))
-                    # sending images with embed
-                    await interaction.followup.send(content=interaction.user.mention,
-                                                            embed=ready_embed,
-                                                            files=files)
-                    
-                    # updatingg member status
-
-
         except Exception as e:
             print(e)
             error_embed = discord.Embed(title=str(e), description='embed_description', color=discord.Color.blurple())
