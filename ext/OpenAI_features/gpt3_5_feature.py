@@ -73,7 +73,7 @@ class gpt3_5_feature(BotFeature):
             self.servers_collection.set(interaction.guild.id, server_data)
             await category.edit(overwrites={interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False)})
             await interaction.response.send_message("GPT category set to " + category.name, ephemeral=True)
-            await self.log_guild("GPT category set to " + category.name, interaction.guild.id)
+            await self._log_guild("GPT category set to " + category.name, interaction.guild.id)
 
         @bot.tree.command(name="new_gpt_chat", description="Starts a new chat with GPT 3_5")
         async def new_gpt_chat(interaction):
@@ -113,7 +113,7 @@ class gpt3_5_feature(BotFeature):
             self.add_active_gpt_channel(channel.id, user_data, server_data)
             await channel.send("starting new GPT chat with " + interaction.user.mention)
             await interaction.response.send_message("new GPT chat created.", ephemeral=True)
-            await self.log_guild(f"new GPT chat created for {interaction.user.mention}.", interaction.guild.id)
+            await self._log_guild(f"new GPT chat created for {interaction.user.mention}.", interaction.guild.id)
 
         @bot.tree.command(name="close_gpt_chat", description="Ends your active GPT chat")
         async def close_gpt_chat(interaction):
@@ -128,7 +128,7 @@ class gpt3_5_feature(BotFeature):
             await channel.delete()
             self.remove_active_gpt_channel(user_data[self.ACTIVE_GPT_CHAT], user_data, server_data)
             await interaction.response.send_message("GPT chat closed.", ephemeral=True)
-            await self.log_guild(f"GPT chat closed for {interaction.user.mention}.", interaction.guild.id)
+            await self._log_guild(f"GPT chat closed for {interaction.user.mention}.", interaction.guild.id)
             
         @bot.tree.command(name="ask_gpt", description="Ask GPT 3_5 a question (privately)")
         async def ask_gpt(interaction):
@@ -410,6 +410,6 @@ class gpt3_5_feature(BotFeature):
                 server_data = self.servers_collection.get(server_id)
                 await self.send_transcript(user_data)
                 self.remove_active_gpt_channel(chat_id, user_data, server_data)
-                await self.log_guild(f"Closed GPT chat with {user_id} and sent transcript.", server_id)
+                await self._log_guild(f"Closed GPT chat with {user_id} and sent transcript.", server_id)
                 await channel.delete()
         pass

@@ -14,12 +14,12 @@ class BotFeature:
         for key in attrs.keys():
             self.attrs[key] = attrs[key]
     
-    # TODO: add usage in features and make sure works properly.
+    # TODO: add usage in features
 
-    async def log(self, message):
+    async def _log(self, message):
         if self.attrs[self.LOG_FEATURE_ATTR_NAME]:
             self.bot_client.get_logger().log_instance(message, self)
 
-    async def log_guild(self, message, guild_id):
+    async def _log_guild(self, message, guild_id):
         if self.LOG_FEATURE_ATTR_NAME in self.attrs and self.attrs[self.LOG_FEATURE_ATTR_NAME]:
             await self.bot_client.get_logger().log_guild_instance(message, guild_id, self)
