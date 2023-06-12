@@ -72,6 +72,7 @@ class access_block_feature(BotFeature):
         else:
             guild_data[self.IS_CHAINED] = not value
         self.feature_collection.set(interaction.guild.id, guild_data)
+        self.log_guild('Is chained mode set to ' + str(guild_data[self.IS_CHAINED]), interaction.guild.id)
         return guild_data[self.IS_CHAINED]
 
     async def disallow_user_selector_callback(self, interaction: discord.Interaction):
@@ -105,6 +106,7 @@ class access_block_feature(BotFeature):
         else:
             guild_data[self.IS_OWNER] = not value
         self.feature_collection.set(interaction.guild.id, guild_data)
+        self.log_guild('Owner only mode set to ' + str(guild_data[self.IS_OWNER]), interaction.guild.id)
         return guild_data[self.IS_OWNER]
 
     def can_modify(self, interaction, guild_data):

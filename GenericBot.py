@@ -162,6 +162,7 @@ class GenericBot_client(IGenericBot):
                 await callback(coro.__name__, *args, **kwargs)
 
         wrapper.__name__ = coro.__name__
+        # TODO: look into self.event, maybe theres a better way to do it...
         return self.event(wrapper)
 
 
