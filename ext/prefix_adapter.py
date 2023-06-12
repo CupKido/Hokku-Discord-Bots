@@ -42,9 +42,20 @@ class prefix_adapter(BotFeature):
             if command_name in self.commands.keys():
                 interaction = demi_interaction(message)
                 if await self.commands[command_name][1](interaction):
+                    coro = self.commands[command_name][0]
+                    params = {}
                     try:
+                        call_coro : bool = True
+                        for callback in self.bot_client.on_before_any_command_callbacks:
+                            value : bool = await callback(coro.__name__, interaction, **params)
+                            if value is not None and type(value) is bool:
+                                if not value:
+                                    call_coro : bool = False
                         # await message.reply('Command found, yet not supported, please use the slash comma instead')
-                        await self.commands[command_name][0](interaction)
+                        if call_coro:
+                            await self.commands[command_name][0](interaction)
+                            for callback in self.bot_client.on_after_any_command_callbacks:
+                                await callback(coro.__name__, interaction, **params)
                         return
                     except Exception as e:
                         print(e)
