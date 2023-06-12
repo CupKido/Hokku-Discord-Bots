@@ -7,6 +7,7 @@ A simple framework that allows creating, loading and unloading features from dis
     -   [Supported Events](#list-of-supported-events)
 -   [Bot Features](#bot-features)
     -   [Existing Features](#existing-features)
+    -   [Logging](#logging)
 -   [The Main File](#the-main-file)
     -   [Framework Way](#first-way)
     -   [Custom Way](#second-way)
@@ -152,6 +153,14 @@ A simple framework that allows creating, loading and unloading features from dis
 
       async def say_hi(self):
         print('Hi, an hour has passed')
+  
+  ### Logging
+  
+  The bot feature also has a async protected logging methods:
+  
+  _log(meesage : str) - for logging logs related to the bot
+  
+  _log_guild(message : str, guild_id : int) - for logging logs that are about actions that are related to the guild. if log channel is set by an adming, all guild   logs will be sent in it
   
   ### Existing features:
   * room opening - lets you to have a dynamic server
