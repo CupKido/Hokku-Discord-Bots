@@ -1,9 +1,10 @@
 import discord
 from discord import app_commands
 from Interfaces.IGenericBot import IGenericBot
+from Interfaces.ILogger import ILogger
 from DB_instances.generic_config_interface import server_config
 from DB_instances.per_id_db import per_id_db
-from ext.logger import logger
+from ext.logger import logger as logger_feature
 from discord.ext import tasks
 import io
 import permission_checks
@@ -47,7 +48,7 @@ import inspect
 class GenericBot_client(IGenericBot):
     developers_list = []
 
-    def __init__(self, secret_key, db_name, db_method, alert_when_online : bool = False, command_prefix = '!', error_handler = None, debug=False, permissions_code : int = 8):
+    def __init__(self, secret_key, db_name, db_method, alert_when_online : bool = False, command_prefix = '!', error_handler = None, debug=False, permissions_code : int = 8, log_all_features = False, logger : ILogger =None):
         # bot init
         super().__init__(intents = discord.Intents.all(), command_prefix=command_prefix)
         self.db = DB_factory(db_name, db_method)
@@ -57,13 +58,17 @@ class GenericBot_client(IGenericBot):
         self.added = False
         self.alert_when_online = alert_when_online
         # bot logger
-        self.logger = logger(self) 
+        if logger is None:
+            self.logger = logger_feature(self)
+        else:
+            self.logger = logger(self) 
         # bot secret key
         self.secret_key = secret_key
         # create features dict
         self.features = {}
         self.is_debug = debug
         self.permissions_code=permissions_code
+        self.log_all_features = log_all_features
         if error_handler is None:
             self.error_handler = self.default_error_handler
         else:
@@ -520,13 +525,18 @@ class GenericBot_client(IGenericBot):
         self.log('================================================================')
 
     # add feature to bot
-    def add_feature(self, feature : BotFeature, attrs = {}):
+    def add_feature(self, feature : BotFeature, attrs = None):
         # print feature class name
         self.log("| adding feature: " + str(feature)+ ' |')
         if type(self.features) is not dict:
             self.features = {}
-        feature.set_attrs(attrs)
         self.features[str(feature)] = feature(self)
+        if self.log_all_features:
+            if attrs is None:
+                attrs = {}
+            attrs[feature.LOG_FEATURE_ATTR_NAME] = True
+        if attrs is not None:
+            self.features[str(feature)].set_attrs(attrs)
 
     def add_scheduler_events(self):
         self.every_hour_callbacks = []

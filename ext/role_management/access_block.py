@@ -32,7 +32,7 @@ class access_block_feature(BotFeature):
             guild_data[self.ALLOWED_ROLES].append(role.id)
             self.feature_collection.set(interaction.guild.id, guild_data)
             await interaction.response.send_message('role allowed', ephemeral=True)
-            self.log_guild(f'<@&{role.id}> Role added to allowed roles list', interaction.guild.id)
+            await self.log_guild(f'<@&{role.id}> Role added to allowed roles list', interaction.guild.id)
 
     async def allow_user_selector_callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
@@ -41,7 +41,7 @@ class access_block_feature(BotFeature):
             if str(user) not in guild_data[self.ALLOWED_USERS]:
                 guild_data[self.ALLOWED_USERS].append(user)
                 await interaction.followup.send(f'<@{user}> user allowed', ephemeral=True)
-                self.log_guild(f'<@{user}> user added to allowed users list by {interaction.user.mention}', interaction.guild.id)
+                await self.log_guild(f'<@{user}> user added to allowed users list by {interaction.user.mention}', interaction.guild.id)
             else:
                 await interaction.followup.send(f'<@{user}> user already allowed', ephemeral=True)
         self.feature_collection.set(interaction.guild.id, guild_data)
@@ -54,28 +54,28 @@ class access_block_feature(BotFeature):
             self.feature_collection.set(interaction.guild.id, guild_data)
             await interaction.response.edit_message(view=await self.get_block_access_menu(interaction))
             await interaction.followup.send(f'<@&{selected_role}> role allowed', ephemeral=True)
-            self.log_guild(f'<@&{selected_role}> Role added to allowed roles list by {interaction.user.mention}', interaction.guild.id)
+            await self.log_guild(f'<@&{selected_role}> Role added to allowed roles list by {interaction.user.mention}', interaction.guild.id)
         else:
             await interaction.response.send_message(f'<@&{selected_role}> role already allowed', ephemeral=True)
 
-    def block_access_button_callback(self, interaction: discord.Interaction, value : bool) -> bool:
+    async def block_access_button_callback(self, interaction: discord.Interaction, value : bool) -> bool:
         guild_data = self.get_guild_db_data(interaction.guild.id)
         if self.ACCESS_BLOCKED in guild_data.keys() and type(guild_data[self.ACCESS_BLOCKED]) is bool:
             guild_data[self.ACCESS_BLOCKED] = not guild_data[self.ACCESS_BLOCKED]
         else:
             guild_data[self.ACCESS_BLOCKED] = not value
         self.feature_collection.set(interaction.guild.id, guild_data)
-        self.log_guild('access blocked mode set to ' + str(guild_data[self.ACCESS_BLOCKED]) + f' by {interaction.user.mention}', interaction.guild.id)
+        await self.log_guild('access blocked mode set to ' + str(guild_data[self.ACCESS_BLOCKED]) + f' by {interaction.user.mention}', interaction.guild.id)
         return guild_data[self.ACCESS_BLOCKED]
 
-    def chain_access_button_callback(self, interaction: discord.Interaction, value : bool) -> bool:
+    async def chain_access_button_callback(self, interaction: discord.Interaction, value : bool) -> bool:
         guild_data = self.get_guild_db_data(interaction.guild.id)
         if self.IS_CHAINED in guild_data.keys() and type(guild_data[self.IS_CHAINED]) is bool:
             guild_data[self.IS_CHAINED] = not guild_data[self.IS_CHAINED]
         else:
             guild_data[self.IS_CHAINED] = not value
         self.feature_collection.set(interaction.guild.id, guild_data)
-        self.log_guild('Is chained mode set to ' + str(guild_data[self.IS_CHAINED]) + f' by {interaction.user.mention}', interaction.guild.id)
+        await self.log_guild('Is chained mode set to ' + str(guild_data[self.IS_CHAINED]) + f' by {interaction.user.mention}', interaction.guild.id)
         return guild_data[self.IS_CHAINED]
 
     async def disallow_user_selector_callback(self, interaction: discord.Interaction):
@@ -85,7 +85,7 @@ class access_block_feature(BotFeature):
             if str(user) in guild_data[self.ALLOWED_USERS]:
                 guild_data[self.ALLOWED_USERS].remove(user)
                 await interaction.followup.send(f'<@{user}> user removed', ephemeral=True)
-                self.log_guild(f'<@{user}> user removed from allowed users list by {interaction.user.mention}', interaction.guild.id)
+                await self.log_guild(f'<@{user}> user removed from allowed users list by {interaction.user.mention}', interaction.guild.id)
             else:
                 await interaction.followup.send(f'<@{user}> user already out', ephemeral=True)
         self.feature_collection.set(interaction.guild.id, guild_data)
@@ -98,18 +98,18 @@ class access_block_feature(BotFeature):
             self.feature_collection.set(interaction.guild.id, guild_data)
             await interaction.response.edit_message(view=await self.get_block_access_menu(interaction))
             await interaction.followup.send(f'<@&{selected_role}> role removed', ephemeral=True)
-            self.log_guild(f'<@&{selected_role}> Role removed from allowed roles list by {interaction.user.mention}', interaction.guild.id)
+            await self.log_guild(f'<@&{selected_role}> Role removed from allowed roles list by {interaction.user.mention}', interaction.guild.id)
         else:
             await interaction.response.send_message(f'<@&{selected_role}> role already out', ephemeral=True)
         
-    def set_owner_only_button_callback(self, interaction: discord.Interaction, value) -> bool:
+    async def set_owner_only_button_callback(self, interaction: discord.Interaction, value) -> bool:
         guild_data = self.get_guild_db_data(interaction.guild.id)
         if self.IS_OWNER in guild_data.keys() and type(guild_data[self.IS_OWNER]) is bool:
             guild_data[self.IS_OWNER] = not guild_data[self.IS_OWNER]
         else:
             guild_data[self.IS_OWNER] = not value
         self.feature_collection.set(interaction.guild.id, guild_data)
-        self.log_guild('Owner only mode set to ' + str(guild_data[self.IS_OWNER]) + f' by {interaction.user.mention}' , interaction.guild.id)
+        await self.log_guild('Owner only mode set to ' + str(guild_data[self.IS_OWNER]) + f' by {interaction.user.mention}' , interaction.guild.id)
         return guild_data[self.IS_OWNER]
 
     def can_modify(self, interaction, guild_data):

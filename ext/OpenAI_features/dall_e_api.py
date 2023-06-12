@@ -194,7 +194,7 @@ class dall_e_api(BotFeature):
                         embeds.append(embed)
                     embs = embed_pages(embeds)
                     await embs.send(interaction=interaction, followup=True)
-                    self.log_guild(f"generated {str(len(image_urls))} images for {interaction.user.display_name} ({str(interaction.user.id)}): " + prompt, interaction.guild.id)
+                    await self.log_guild(f"generated {str(len(image_urls))} images for {interaction.user.display_name} ({str(interaction.user.id)}): " + prompt, interaction.guild.id)
                     member_db.set_params(user_mid_request=False)
                     return
         except Exception as e:
