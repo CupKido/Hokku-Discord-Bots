@@ -67,13 +67,45 @@ class reaction_roles(BotFeature):
 
             self.feature_collection.set(interaction.guild.id, guild_data)
             await interaction.followup.send('Reaction role added', ephemeral=True) 
+            await self.log_guild(f"Reaction role added: {role.name} to message {message_id}", interaction.guild.id)
 
             pass
+
 
         @bot.generic_command(name = 'remove_reaction_role', description='remove a reaction role from the message')
         @app_commands.check(permission_checks.is_admin)
         async def remove_reaction_role(interaction: discord.Interaction, role: discord.Role, message_id : int):
-            pass
+            # check if message exists
+            await interaction.response.defer()
+            message = await interaction.channel.fetch_message(message_id)
+            if message is None:
+                await interaction.followup.send('Message not found', ephemeral=True)
+                return
+            # make sure reaction role doesn't already exist
+            guild_data = self.feature_collection.get(interaction.guild.id)
+            if self.REACTION_ROLES_LIST not in guild_data.keys():
+                await interaction.followup.send('Reaction role not found', ephemeral=True)
+            reaction_role = None
+            for reaction_role in guild_data[self.REACTION_ROLES_LIST]:
+                if reaction_role['message_id'] == message_id:
+                    for role_data in reaction_role['reaction_roles']:
+                        if role_data['role_id'] == role.id:
+                            reaction_role = role_data
+                            break
+                    break
+            if reaction_role is None:
+                await interaction.followup.send('Reaction role not found', ephemeral=True)
+                return
+            # remove reaction role
+            try:
+                await message.remove_reaction(reaction_role['emoji'])
+                guild_data[self.REACTION_ROLES_LIST].remove(reaction_role)
+                self.feature_collection.set(interaction.guild.id, guild_data)
+                await interaction.followup.send('Reaction role removed', ephemeral=True)
+                await self.log_guild(f"Reaction role removed: {role.name} ({role.id}) from message {message_id}", interaction.guild.id)
+            except discord.errors.HTTPException:
+                await interaction.followup.send('Emoji not found', ephemeral=True)
+                return
 
     async def on_reaction_add(self, reaction, user):
         if user.bot or user.id == reaction.message.guild.owner_id:
@@ -87,6 +119,7 @@ class reaction_roles(BotFeature):
                     if role_data['emoji'] == reaction.emoji:
                         role = reaction.message.guild.get_role(role_data['role_id'])
                         await user.add_roles(role)
+                        await self.log_guild(f"Reaction role added: {role.name} ({role.id}) to {user.name} ({user.id})", reaction.message.guild.id)
                         return
                 break
 
@@ -102,5 +135,6 @@ class reaction_roles(BotFeature):
                     if role_data['emoji'] == reaction.emoji:
                         role = reaction.message.guild.get_role(role_data['role_id'])
                         await user.remove_roles(role)
+                        await self.log_guild(f"Reaction role removed: {role.name} ({role.id}) from {user.name} ({user.id})", reaction.message.guild.id)
                         return
                 break
