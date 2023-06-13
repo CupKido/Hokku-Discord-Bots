@@ -20,6 +20,7 @@ class BotFeature:
         if self.attrs[self.LOG_FEATURE_ATTR_NAME]:
             self.bot_client.get_logger().log_instance(message, self)
 
+
     async def _log_guild(self, message, guild_id):
         if self.LOG_FEATURE_ATTR_NAME in self.attrs and self.attrs[self.LOG_FEATURE_ATTR_NAME]:
             await self.bot_client.get_logger().log_guild_instance(message, guild_id, self)

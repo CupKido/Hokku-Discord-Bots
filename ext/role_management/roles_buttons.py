@@ -30,7 +30,7 @@ class roles_buttons(BotFeature):
         # take care of maintainance
         bot.add_on_ready_callback(self.maintain_buttons)
         bot.add_on_session_resumed_callback(self.maintain_buttons)
-        bot.add_every_5_hours_callback(self.maintain_buttons)
+        bot.add_every_time_callback(self.maintain_buttons, hours=5)
 
 
         # add commands

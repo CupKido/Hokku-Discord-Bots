@@ -30,13 +30,14 @@ from enum import Enum
 #################################################
 
 
+# TODO: make sure all logs work properly
+# TODO: use bot_client.add_view for buttons maintenance
 
 class ChannelState(Enum):
     PUBLIC = 1
     PRIVATE = 2
     SPECIAL = 3
 
-#TODO: use bot_client.add_view for buttons maintenance
 
 EDITING_VC_CHANNEL = 'editing_vc_channel'
 STATIC_MESSAGE_ID = 'static_message_id'
@@ -69,7 +70,6 @@ class room_opening(BotFeature):
         self.logger = client.get_logger()
         self.dead_channels_counter = 0
         self.active_channels = {}
-        self.logger.log('room_opening extension loading...')
         self.bot_client.add_on_ready_callback(self.resume_buttons)
         self.bot_client.add_on_ready_callback(self.clean_dead_active_channels)
         self.bot_client.add_on_session_resumed_callback(self.resume_buttons)
@@ -77,7 +77,7 @@ class room_opening(BotFeature):
         self.bot_client.add_on_voice_state_update_callback(self.vc_state_update)
         self.bot_client.add_on_guild_channel_delete_callback(self.on_guild_channel_delete_callback)
         self.bot_client.add_on_guild_join_callback(self.on_guild_join_callback)
-        self.bot_client.add_every_5_hours_callback(self.resume_buttons)
+        self.bot_client.add_every_time_callback(self.resume_buttons, hours=4)
         @client.tree.command(name = 'edit_channel', description='present the channel editing menu')
         async def show_editing_menu(interaction: discord.Interaction):
 
@@ -91,7 +91,7 @@ class room_opening(BotFeature):
                 message = await interaction.response.send_message(embed = embed, view = self.get_menu_view(this_server_config), ephemeral=True)
 
             except Exception as e:
-                self.log(str(e))
+                self._log(str(e))
                 await interaction.response.send_message('Ops.. Something went wrong', ephemeral = True)
 
         #@client.tree.command(name = 'create_static_message', description='create a static message for vc creation channel')
@@ -136,7 +136,7 @@ class room_opening(BotFeature):
 
 
             except Exception as e:
-                self.log(str(e))
+                self._log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
         
         @client.tree.command(name = 'add_master_channel', description='add a channel to master channel list')
@@ -164,7 +164,7 @@ class room_opening(BotFeature):
                 await interaction.response.send_message(embed=embed, ephemeral = True)
 
             except Exception as e:
-                self.log(str(e))
+                self._log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
             
         @client.tree.command(name = 'remove_master_channel', description='remove a channel from master channel list')
@@ -191,7 +191,7 @@ class room_opening(BotFeature):
                 await interaction.response.defer(ephemeral = True)
 
             except Exception as e:
-                self.log(str(e))
+                self._log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
 
 
@@ -236,7 +236,7 @@ class room_opening(BotFeature):
                 await interaction.response.send_message(embed=embed, ephemeral = True)
 
             except Exception as e:
-                self.log(str(e))
+                self._log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
 
         @client.tree.command(name = 'add_special_role', description='add role to special roles list')
@@ -263,7 +263,7 @@ class room_opening(BotFeature):
                     await interaction.response.send_message(f'role \"{role.name}\" was added to the list', ephemeral = True)
                 this_server_config.set_params(special_roles=special_roles)
             except Exception as e:
-                self.log(str(e))
+                self._log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
 
         @client.tree.command(name = 'remove_special_role', description='remove role from special roles list')
@@ -284,7 +284,7 @@ class room_opening(BotFeature):
                     await interaction.response.send_message(f'role \"{role.name}\" is not in the list', ephemeral = True)
                 this_server_config.set_params(special_roles=special_roles)
             except Exception as e:
-                self.log(str(e))
+                self._log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
 
 
@@ -338,7 +338,7 @@ class room_opening(BotFeature):
                     await self.initialize_creation_channel(channel, this_server_config)
                 await interaction.response.send_message(f'\"{channel.name}\" was set as vc editing channel', ephemeral = True)
             except Exception as e:
-                self.log(str(e))
+                self._log(str(e))
                 await interaction.response.send_message('Ops.. Something went wrong', ephemeral = True)
 
         @client.tree.command(name = 'set_special_as_buttons', description='displays special roles as buttons, otherwise its a list')
@@ -350,7 +350,7 @@ class room_opening(BotFeature):
                 this_server_config.set_params(use_buttons = use_buttons)
                 await interaction.response.send_message(f'Buttons mode was set to {use_buttons}', ephemeral = True)
             except Exception as e:
-                self.log(str(e))
+                self._log(str(e))
                 await interaction.response.send_message('Ops.. Something went wrong', ephemeral = True)
 
 
@@ -362,7 +362,7 @@ class room_opening(BotFeature):
                 await self.resume_buttons_for_guild(interaction.guild.id)
                 await interaction.response.send_message(f'Buttons were resumed', ephemeral = True)
             except Exception as e:
-                self.log(str(e))
+                self._log(str(e))
                 await interaction.response.send_message('Ops.. Something went wrong', ephemeral = True)
 
 
@@ -388,7 +388,7 @@ class room_opening(BotFeature):
                 except discord.errors.NotFound as e:
                     pass
                 except Exception as e:
-                    self.log('Error deleting channel due to error: ' + str(e))
+                    self._log('Error deleting channel due to error: ' + str(e))
                     self.load_active_channels()
                     return
                 self.save_active_channels()
@@ -405,16 +405,16 @@ class room_opening(BotFeature):
                 if after.channel.id in this_server_config.get_param(VC_FOR_VC):
                     await self.create_dynamic_channel(member, after.channel, this_server_config)
 
-            # self.log(self.active_channels)
+            # self._log(self.active_channels)
         except discord.errors.HTTPException as e:
-            await self.log_guild('Error creating channel due to error: ' + str(e), after.channel.guild)
+            await self._log_guild('Error creating channel due to error: ' + str(e), after.channel.guild)
             self.load_active_channels()
             return
 
     async def on_guild_channel_delete_callback(self, channel):
         if channel.guild.id in self.active_channels.keys() and channel.id in self.active_channels[channel.guild.id].keys():
             self.active_channels[channel.guild.id].pop(channel.id)
-            await self.log_guild(f'deleted {channel.name} channel from active channels because it was deleted', channel.guild)
+            await self._log_guild(f'deleted {channel.name} channel from active channels because it was deleted', channel.guild)
             self.save_active_channels()
 
     async def on_guild_join_callback(self, guild):
@@ -461,7 +461,7 @@ class room_opening(BotFeature):
         await interaction.response.send_message(embed=embed, ephemeral = True)
         await channel_modifier.publish_vc(interaction.user.voice.channel)
         self.set_active_channel_state(interaction.guild.id, interaction.user.voice.channel.id, ChannelState.PUBLIC)
-        await self.log_guild(f'published {interaction.user.voice.channel.name} channel', interaction.guild)
+        await self._log_guild(f'published {interaction.user.voice.channel.name} channel', interaction.guild)
  
     async def private_channel(self, interaction, button, view):
         # print('public channel button pressed')
@@ -478,7 +478,7 @@ class room_opening(BotFeature):
         # print('message sent, changing channel premisions')
         await channel_modifier.private_vc(interaction.user.voice.channel)
         self.set_active_channel_state(interaction.guild.id, interaction.user.voice.channel.id, ChannelState.PRIVATE)
-        await self.log_guild(f'private {interaction.user.voice.channel.name} channel', interaction.guild)
+        await self._log_guild(f'private {interaction.user.voice.channel.name} channel', interaction.guild)
 
     async def special_channel(self, interaction, button, view):
         # embed = discord.Embed(title='Coming soon!')
@@ -880,16 +880,16 @@ class room_opening(BotFeature):
                     # if channel was deleted
                     if channel is None:
                         to_pop.append(channel_id)
-                        self.log('a channel was deleted due to it not existing')
+                        self._log('a channel was deleted due to it not existing')
 
                     # if channel is empty
                     elif len(channel.members) == 0:
                         to_pop.append(channel_id)
-                        await self.log_guild(f'deleted {channel.name} channel due to inactivity', channel.guild)
+                        await self._log_guild(f'deleted {channel.name} channel due to inactivity', channel.guild)
                         try:
                             await channel.delete()
                         except Exception as e:
-                            self.log('could not delete channel due to error: \n' + str(e))
+                            self._log('could not delete channel due to error: \n' + str(e))
                             pass
 
                     # if channel is not empty
@@ -901,7 +901,7 @@ class room_opening(BotFeature):
                 for channel_id in to_pop:
                     self.active_channels[guild_id].pop(channel_id)
         except Exception as e:
-            self.log('could not load active channels due to fatal error: \n' + str(e))
+            self._log('could not load active channels due to fatal error: \n' + str(e))
         self.save_active_channels()
     
     async def initialize_creation_channel(self, channel, this_server_config):
@@ -980,8 +980,8 @@ class room_opening(BotFeature):
     #################
 
     async def initialize_guild(self, guild):
-        self.log('initializing guild: ' + str(guild.name))
-        await self.log_guild('initializing guild', guild)
+        self._log('initializing guild: ' + str(guild.name))
+        await self._log_guild('initializing guild', guild)
         this_server_config = server_config(guild.id)
 
         # check if guild is already initialized
@@ -1004,7 +1004,7 @@ class room_opening(BotFeature):
     async def setup_guild(self, guild, this_server_config):
         # set default params
         if this_server_config.get_param(STATIC_MESSAGE_ID) is None:
-            self.log('setting default params for ' + guild.name)
+            await self._log_guild('setting default params for ' + guild.name, guild.id)
             this_server_config.set_params(is_message_embed=True, 
                                         embed_message_title='Manage your dynamic voice channel',
                                         embed_message_description='Here you can manage your voice \
@@ -1059,7 +1059,7 @@ class room_opening(BotFeature):
         '''
         restarts all active buttons on all creatrion channels
         '''
-        self.log('initializing buttons')
+        await self._log('initializing buttons')
 
         # get all guilds
         for guild in self.bot_client.guilds:
@@ -1086,7 +1086,7 @@ class room_opening(BotFeature):
 
                 # if message doesnt exist
                 if msg is None:
-                    self.log('could not find message, creating new one')
+                    await self._log_guild('could not find message, creating new one', guild_id)
                     await self.initialize_creation_channel(creation_channel, this_server_config)
                 else:
                     try:
@@ -1099,9 +1099,9 @@ class room_opening(BotFeature):
                         # updating server config
                         this_server_config.set_params(static_message_id=new_msg.id)
                     except:
-                        self.log('could not find message, creating new one')
+                        await self._log_guild('could not find message, creating new one', guild_id)
                         await self.initialize_creation_channel(creation_channel, this_server_config)    
-                    self.log('button initialized for ' + creation_channel.guild.name)
+                    await self._log_guild('button initialized for ' + creation_channel.guild.name, guild_id)
 
     ##################
     # util functions #

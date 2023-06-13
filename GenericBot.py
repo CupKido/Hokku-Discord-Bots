@@ -135,14 +135,22 @@ class GenericBot_client(IGenericBot):
             \n=================================')
         
         # printing active guilds
-        self._log('im active on: ')
+        self._log(f'im ({self.user.name}) active on: ')
         for guild in self.guilds:
             self._log('\t    ' + str(guild.name) + ' (' + str(guild.id) + ')')
         # starting scheduler
         print('starting scheduler')
-        self.go_every_hour.start()
-        self.go_every_5_hours.start()
-        self.go_every_day.start()
+        for (callback, kwargs) in self.events_to_start:
+            @tasks.loop(**kwargs)
+            async def every_callback(self):
+                try:
+                    await callback()
+                except Exception as e:
+                    self._log('failed to run callback: ' + str(callback.__name__))
+                    self._log('error: ' + str(e))
+            every_callback.__name__ = callback.__name__
+            every_callback.start(self)
+            
 
 
 
@@ -524,16 +532,11 @@ class GenericBot_client(IGenericBot):
         self.every_hour_callbacks = []
         self.every_5_hours_callbacks = []
         self.every_day_callbacks = []
+        self.events_to_start = []
 
     def add_every_time_callback(self, callback, **kwargs):
-        @tasks.loop(**kwargs)
-        async def every_callback():
-            try:
-                await callback(**kwargs)
-            except Exception as e:
-                self._log('failed to run callback: ' + str(callback.__name__))
-                self._log('error: ' + str(e))
-        every_callback.start(self)
+        self.events_to_start.append((callback, kwargs))
+        
 
     @tasks.loop(hours=1)
     async def go_every_hour(self):
