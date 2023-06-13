@@ -43,7 +43,6 @@ import inspect
 # guild specific logs.                     #
 ############################################
 
-#TODO: add "initializer" function instead of __init__ to allow for easier feature adding, and changing parameters
 
 class GenericBot_client(IGenericBot):
     developers_list = []
@@ -61,7 +60,7 @@ class GenericBot_client(IGenericBot):
         if logger is None:
             self.logger = logger_feature(self)
         else:
-            self.logger = logger(self) 
+            self.logger = logger
         # bot secret key
         self.secret_key = secret_key
         # create features dict
@@ -75,8 +74,8 @@ class GenericBot_client(IGenericBot):
             self.error_handler = error_handler
 
         # adding event callbacks support
-        self.add_scheduler_events()
-        self.add_event_callback_support()
+        self._add_scheduler_events()
+        self._add_event_callback_support()
 
 
 
@@ -124,21 +123,21 @@ class GenericBot_client(IGenericBot):
                 async def error_handler(interaction, error=None):
                     await self.error_handler(interaction, error)
                     if error is not None:
-                        self.log(str(error))
+                        self._log(str(error))
                         print(type(error))
 
         # syncing commands tree to discord
         if not self.synced:
-            self.log('=================================\nsyncing commands tree to discord')
+            self._log('=================================\nsyncing commands tree to discord')
             await self.tree.sync()
             self.synced = True
-            self.log('synced \
+            self._log('synced \
             \n=================================')
         
         # printing active guilds
-        self.log('im active on: ')
+        self._log('im active on: ')
         for guild in self.guilds:
-            self.log('\t    ' + str(guild.name) + ' (' + str(guild.id) + ')')
+            self._log('\t    ' + str(guild.name) + ' (' + str(guild.id) + ')')
         # starting scheduler
         print('starting scheduler')
         self.go_every_hour.start()
@@ -153,7 +152,7 @@ class GenericBot_client(IGenericBot):
         async def on_guild_join(guild):
             # sync commands tree to discord guild
             await self.tree.sync(guild=guild)
-            self.log('bot joined guild: ' + str(guild.name) + ' (' + str(guild.id) + ')')
+            self._log('bot joined guild: ' + str(guild.name) + ' (' + str(guild.id) + ')')
             for callback in self.on_guild_join_callbacks:
                 await callback(guild)
 
@@ -167,7 +166,6 @@ class GenericBot_client(IGenericBot):
                 await callback(coro.__name__, *args, **kwargs)
 
         wrapper.__name__ = coro.__name__
-        # TODO: look into self.event, maybe theres a better way to do it...
         return self.event(wrapper)
 
 
@@ -185,30 +183,13 @@ class GenericBot_client(IGenericBot):
                     result = await coro(interaction, **params)
                     for callback in self.on_after_any_command_callbacks:
                         await callback(coro.__name__, interaction, result, **params)
-            
-            # coro.__code__=wrapper.__code__
             functools.update_wrapper(wrapper, coro)
-            # wrapper.__signature__ = inspect.signature(coro)
-            # wrapper.__signature__ = signature.replace(parameters=tuple(signature.parameters.values()))
-            # wrapper.__annotations__.update(coro.__annotations__)
-
-            # wrapper.__name__ = coro.__name__
-            # wrapper.__doc__ = coro.__doc__
-            # all_freevars = [x for x in coro.__code__.co_freevars] + [x for x in wrapper.__code__.co_freevars]
-            # all_varnames = [x for x in coro.__code__.co_varnames] + [x for x in wrapper.__code__.co_varnames]
-            # print(coro.__code__.co_varnames, coro.__code__.co_argcount)
-            # print(wrapper.__code__.co_varnames, wrapper.__code__.co_argcount)
-            # print(tuple(all_varnames), coro.__code__.co_argcount + wrapper.__code__.co_argcount)
-            
-            # wrapper.__code__= wrapper.__code__.replace(co_argcount=len(inspect.signature(coro).parameters)) # + wrapper.__code__.co_argcount)
-            # wrapper.__annotations__ = coro.__annotations__
-            # wrapper.__module__ = coro.__module__
             self.tree.command(**kwargs2)(wrapper)
-            # self.tree.command(**kwargs2)(coro)
+            return wrapper
         return deco
 
 
-    def add_event_callback_support(self):
+    def _add_event_callback_support(self):
         self.on_voice_state_update_callbacks = []
         self.on_ready_callbacks = []
         self.on_session_resumed_callbacks = []
@@ -259,10 +240,10 @@ class GenericBot_client(IGenericBot):
 
         @self.generic_event
         async def on_resumed():
-            self.log("session resumed")
+            self._log("session resumed")
             for callback in self.on_session_resumed_callbacks:
                 # print callback type
-                self.log('activating: ' + str(callback))
+                self._log('activating: ' + str(callback))
                 # start callback
                 await callback()
 
@@ -365,27 +346,27 @@ class GenericBot_client(IGenericBot):
 
     def add_on_session_resumed_callback(self, callback):
         self.on_session_resumed_callbacks.append(callback)
-        self.log("added on_session_resumed_callback: " + str(callback.__name__))
+        self._log("added on_session_resumed_callback: " + str(callback.__name__))
 
     def add_on_ready_callback(self, callback):
         self.on_ready_callbacks.append(callback)
-        self.log("added on_ready_callback: " + str(callback.__name__))
+        self._log("added on_ready_callback: " + str(callback.__name__))
     
     def add_on_voice_state_update_callback(self, callback):
         self.on_voice_state_update_callbacks.append(callback)
-        self.log("added on_voice_state_update_callback: " + str(callback.__name__))
+        self._log("added on_voice_state_update_callback: " + str(callback.__name__))
 
     def add_on_guild_channel_delete_callback(self, callback):
         self.on_guild_channel_delete_callbacks.append(callback)
-        self.log("added on_guild_channel_delete_callback: " + str(callback.__name__))
+        self._log("added on_guild_channel_delete_callback: " + str(callback.__name__))
 
     def add_on_message_callback(self, callback):
         self.on_message_callbacks.append(callback)
-        self.log("added on_message_callback: " + str(callback.__name__))
+        self._log("added on_message_callback: " + str(callback.__name__))
 
     def add_on_message_delete_callback(self, callback):
         self.on_message_delete_callbacks.append(callback)
-        self.log("added on_message_delete_callback: " + str(callback.__name__))
+        self._log("added on_message_delete_callback: " + str(callback.__name__))
 
     # need to add to event logger
 
@@ -393,99 +374,99 @@ class GenericBot_client(IGenericBot):
 
     def add_on_message_edit_callback(self, callback):
         self.on_message_edit_callbacks.append(callback)
-        self.log("added on_message_edit_callback: " + str(callback.__name__))
+        self._log("added on_message_edit_callback: " + str(callback.__name__))
     
     # reaction events
 
     def add_on_reaction_add_callback(self, callback):
         self.on_reaction_add_callbacks.append(callback)
-        self.log("added on_reaction_add_callback: " + str(callback.__name__))
+        self._log("added on_reaction_add_callback: " + str(callback.__name__))
     
     def add_on_reaction_remove_callback(self, callback):
         self.on_reaction_remove_callbacks.append(callback)
-        self.log("added on_reaction_remove_callback: " + str(callback.__name__))
+        self._log("added on_reaction_remove_callback: " + str(callback.__name__))
 
     # invite events
 
     def add_on_invite_create_callback(self, callback):
         self.on_invite_create_callbacks.append(callback)
-        self.log("added on_invite_create_callback: " + str(callback.__name__))
+        self._log("added on_invite_create_callback: " + str(callback.__name__))
     
     def add_on_invite_delete_callback(self, callback):
         self.on_invite_delete_callbacks.append(callback)
-        self.log("added on_invite_delete_callback: " + str(callback.__name__))
+        self._log("added on_invite_delete_callback: " + str(callback.__name__))
     
     #member events
 
     def add_on_member_join_callback(self, callback):
         self.on_member_join_callbacks.append(callback)
-        self.log("added on_member_join_callback: " + str(callback.__name__))
+        self._log("added on_member_join_callback: " + str(callback.__name__))
 
     def add_on_member_remove_callback(self, callback):
         self.on_member_remove_callbacks.append(callback)
-        self.log("added on_member_remove_callback: " + str(callback.__name__))
+        self._log("added on_member_remove_callback: " + str(callback.__name__))
 
     def add_on_member_update_callback(self, callback):
         self.on_member_update_callbacks.append(callback)
-        self.log("added on_member_update_callback: " + str(callback.__name__))
+        self._log("added on_member_update_callback: " + str(callback.__name__))
     
     def add_on_member_ban_callback(self, callback):
         self.on_member_ban_callbacks.append(callback)
-        self.log("added on_member_ban_callback: " + str(callback.__name__))
+        self._log("added on_member_ban_callback: " + str(callback.__name__))
     
     def add_on_member_unban_callback(self, callback):
         self.on_member_unban_callbacks.append(callback)
-        self.log("added on_member_unban_callback: " + str(callback.__name__))
+        self._log("added on_member_unban_callback: " + str(callback.__name__))
     
     # guild role events
 
     def add_on_guild_role_create_callback(self, callback):
         self.on_guild_role_create_callbacks.append(callback)
-        self.log("added on_guild_role_create_callback: " + str(callback.__name__))
+        self._log("added on_guild_role_create_callback: " + str(callback.__name__))
 
     def add_on_guild_role_delete_callback(self, callback):
         self.on_guild_role_delete_callbacks.append(callback)
-        self.log("added on_guild_role_delete_callback: " + str(callback.__name__))
+        self._log("added on_guild_role_delete_callback: " + str(callback.__name__))
 
     def add_on_guild_role_update_callback(self, callback):
         self.on_guild_role_update_callbacks.append(callback)
-        self.log("added on_guild_role_update_callback: " + str(callback.__name__))
+        self._log("added on_guild_role_update_callback: " + str(callback.__name__))
 
     # channel events
 
     def add_on_guild_channel_create_callback(self, callback):
         self.on_guild_channel_create_callbacks.append(callback)
-        self.log("added on_guild_channel_create_callback: " + str(callback.__name__))
+        self._log("added on_guild_channel_create_callback: " + str(callback.__name__))
 
     def add_on_guild_channel_update_callback(self, callback):
         self.on_guild_channel_update_callbacks.append(callback)
-        self.log("added on_guild_channel_update_callback: " + str(callback.__name__))
+        self._log("added on_guild_channel_update_callback: " + str(callback.__name__))
 
     def add_on_guild_join_callback(self, callback):
         self.on_guild_join_callbacks.append(callback)
-        self.log("added on_guild_join_callback: " + str(callback.__name__))
+        self._log("added on_guild_join_callback: " + str(callback.__name__))
 
     def add_on_guild_remove_callback(self, callback):
         self.on_guild_remove_callbacks.append(callback)
-        self.log("added on_guild_remove_callback: " + str(callback.__name__))
+        self._log("added on_guild_remove_callback: " + str(callback.__name__))
 
     # all events
 
     def add_on_before_any_event_callback(self, callback):
         self.on_before_any_event_callbacks.append(callback)
-        self.log("added on_before_any_event_callback: " + str(callback.__name__))
+        self._log("added on_before_any_event_callback: " + str(callback.__name__))
     
     def add_on_after_any_event_callback(self, callback):
         self.on_after_any_event_callbacks.append(callback)
-        self.log("added on_after_any_event_callback: " + str(callback.__name__))
+        self._log("added on_after_any_event_callback: " + str(callback.__name__))
 
     def add_on_before_any_command_callback(self, callback):
         self.on_before_any_command_callbacks.append(callback)
-        self.log("added on_before_any_command_callback: " + str(callback.__name__))
+        self._log("added on_before_any_command_callback: " + str(callback.__name__))
 
     def add_on_after_any_command_callback(self, callback):
         self.on_after_any_command_callbacks.append(callback)
-        self.log("added on_after_any_command_callback: " + str(callback.__name__))
+        self._log("added on_after_any_command_callback: " + str(callback.__name__))
 
     # activation method
     def activate(self): #
@@ -504,7 +485,7 @@ class GenericBot_client(IGenericBot):
         return self.logger
 
     # log to logger
-    def log(self, message):
+    def _log(self, message):
         if self.logger is not None:
             self.logger.log(message)
             print(self.logger.remove_emojis(message)) #
@@ -516,18 +497,19 @@ class GenericBot_client(IGenericBot):
     
     # add features to bot
     def add_features(self, *features : list[BotFeature]):
-        self.log('================================================================')
+        self._log('================================================================')
         for feature in features:
             if feature != features[0]:
-                self.log('----------------------------------------------------------------')
+                self._log('----------------------------------------------------------------')
             self.add_feature(feature)
 
-        self.log('================================================================')
+        self._log('================================================================')
 
     # add feature to bot
     def add_feature(self, feature : BotFeature, attrs = None):
         # print feature class name
-        self.log("| adding feature: " + str(feature)+ ' |')
+        self._log('----------------------------------------------------------------')
+        self._log("| adding feature: " + str(feature)+ ' |')
         if type(self.features) is not dict:
             self.features = {}
         self.features[str(feature)] = feature(self)
@@ -538,7 +520,7 @@ class GenericBot_client(IGenericBot):
         if attrs is not None:
             self.features[str(feature)].set_attrs(attrs)
 
-    def add_scheduler_events(self):
+    def _add_scheduler_events(self):
         self.every_hour_callbacks = []
         self.every_5_hours_callbacks = []
         self.every_day_callbacks = []
@@ -549,57 +531,57 @@ class GenericBot_client(IGenericBot):
             try:
                 await callback(**kwargs)
             except Exception as e:
-                self.log('failed to run callback: ' + str(callback.__name__))
-                self.log('error: ' + str(e))
+                self._log('failed to run callback: ' + str(callback.__name__))
+                self._log('error: ' + str(e))
         every_callback.start(self)
 
     @tasks.loop(hours=1)
     async def go_every_hour(self):
-        self.log('going over every hour callbacks:')
-        self.log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
+        self._log('going over every hour callbacks:')
+        self._log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
         for callback in self.every_hour_callbacks:
-            self.log('----------------------------------------')
-            self.log('\tactivating\t' + str(callback.__name__) + '()')
-            self.log('----------------------------------------')
+            self._log('----------------------------------------')
+            self._log('\tactivating\t' + str(callback.__name__) + '()')
+            self._log('----------------------------------------')
             await callback()
             
-        self.log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
+        self._log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
 
     @tasks.loop(hours=5)
     async def go_every_5_hours(self):
-        self.log('going over every 5 hours callbacks:')
-        self.log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
+        self._log('going over every 5 hours callbacks:')
+        self._log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
         for callback in self.every_5_hours_callbacks:
-            self.log('----------------------------------------')
-            self.log('\tactivating\t' + str(callback.__name__) + '()')
-            self.log('----------------------------------------')
+            self._log('----------------------------------------')
+            self._log('\tactivating\t' + str(callback.__name__) + '()')
+            self._log('----------------------------------------')
             await callback()
             
-        self.log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
+        self._log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
 
     @tasks.loop(hours=24)
     async def go_every_day(self):
-        self.log('going over every day callbacks:')
-        self.log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
+        self._log('going over every day callbacks:')
+        self._log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
         for callback in self.every_day_callbacks:
-            self.log('----------------------------------------')
-            self.log('\tactivating\t' + str(callback.__name__) + '()')
-            self.log('----------------------------------------')
+            self._log('----------------------------------------')
+            self._log('\tactivating\t' + str(callback.__name__) + '()')
+            self._log('----------------------------------------')
             await callback()
             
-        self.log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
+        self._log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
 
     def add_every_hour_callback(self, callback):
         self.every_hour_callbacks.append(callback)
-        self.log("added every_hour_callback: " + str(callback.__name__))
+        self._log("added every_hour_callback: " + str(callback.__name__))
     
     def add_every_5_hours_callback(self, callback):
         self.every_5_hours_callbacks.append(callback)
-        self.log("added every_5_hours_callback: " + str(callback.__name__))
+        self._log("added every_5_hours_callback: " + str(callback.__name__))
 
     def add_every_day_callback(self, callback):
         self.every_day_callbacks.append(callback)
-        self.log("added every_day_callback: " + str(callback.__name__))
+        self._log("added every_day_callback: " + str(callback.__name__))
 
     async def default_error_handler(self, interaction, error=None):
         embed = discord.Embed(title='You do not have permissions to use this command')

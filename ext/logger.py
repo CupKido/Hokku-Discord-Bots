@@ -25,13 +25,12 @@ class logger(BotFeature, ILogger):
     LOG_CHANNEL = 'log_channel'
 
     def __init__(self, bot_client : IGenericBot):
-        bot_client.set_logger(self)
-        super().__init__(bot_client)
+        BotFeature.__init__(self, bot_client)
+        ILogger.__init__(self, bot_client)
         self.log("==================================================\n\
                 logger initialized\
                 \n==================================================")
         self.server_config = bot_client.db.get_collection_instance(General_DB_Names.Servers_data.value).get_item_instance
-        self.init_log_observerable()
         @self.bot_client.tree.command(name = 'set_logs_channel', description='sets the channel where the logs will be sent')
         @app_commands.check(permission_checks.is_admin)
         async def set_logs_cahnnel(interaction, channel : discord.TextChannel):
@@ -59,7 +58,7 @@ class logger(BotFeature, ILogger):
                     await channel_modifier.remove_readonly(last_log_channel)
             this_server_config.set_params(log_channel = None)
             
-    @self.logging_function(log_type.system_log)
+    @ILogger.logging_function(log_type.system_log)
     def log(self, msg):
         msg = self.remove_emojis(msg)
         todays_file = 'logfile_' + str(datetime.datetime.now().date()) + '.txt'
@@ -73,7 +72,7 @@ class logger(BotFeature, ILogger):
             # write msg
             f.write(str(msg) + '\t(' +str(datetime.datetime.now()) + ')\n')
 
-    @self.logging_function(log_type.feature_log)
+    @ILogger.logging_function(log_type.feature_log)
     def log_instance(self, msg, instance):
         msg = self.remove_emojis(msg)
         todays_file = 'logfile_' + str(datetime.datetime.now().date()) + '.txt'
@@ -87,7 +86,7 @@ class logger(BotFeature, ILogger):
             # write msg
             f.write(str(type(instance).__name__) + ': ' + str(msg) + '\t(' +str(datetime.datetime.now()) + ')\n')
 
-    @self.logging_function(log_type.system_guild_log)
+    @ILogger.logging_function(log_type.system_log)
     def log_guild(self, msg, guild_id):
         msg = self.remove_emojis(msg)
         todays_file = f'logfile_{str(guild_id)}_' + str(datetime.datetime.now().date()) + '.txt'
@@ -101,7 +100,7 @@ class logger(BotFeature, ILogger):
             # write msg
             f.write(str(msg) + '\t(' +str(datetime.datetime.now()) + ')\n')
 
-    @self.logging_function(log_type.feature_guild_log)
+    @ILogger.logging_function(log_type.feature_guild_log)
     async def log_guild_instance(self, msg, guild_id, instance):
         msg = self.remove_emojis(msg)
         todays_file = f'logfile_{str(guild_id)}_' + str(datetime.datetime.now().date()) + '.txt'
