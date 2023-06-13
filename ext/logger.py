@@ -20,8 +20,10 @@ from Interfaces.BotFeature import BotFeature
 # channel.                           #
 ######################################
 
+
 class logger(BotFeature, ILogger):
     LOG_CHANNEL = 'log_channel'
+
     def __init__(self, bot_client : IGenericBot):
         bot_client.set_logger(self)
         super().__init__(bot_client)
@@ -29,6 +31,7 @@ class logger(BotFeature, ILogger):
                 logger initialized\
                 \n==================================================")
         self.server_config = bot_client.db.get_collection_instance(General_DB_Names.Servers_data.value).get_item_instance
+        self.init_log_observerable()
         @self.bot_client.tree.command(name = 'set_logs_channel', description='sets the channel where the logs will be sent')
         @app_commands.check(permission_checks.is_admin)
         async def set_logs_cahnnel(interaction, channel : discord.TextChannel):
