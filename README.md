@@ -8,6 +8,7 @@ A simple framework that allows creating, loading and unloading features from dis
 -   [Bot Features](#bot-features)
     -   [Existing Features](#existing-features)
     -   [Logging](#logging)
+    -   [Loggers](#loggers)
 -   [The Main File](#the-main-file)
     -   [Framework Way](#first-way)
     -   [Custom Way](#second-way)
@@ -156,11 +157,27 @@ A simple framework that allows creating, loading and unloading features from dis
   
   ### Logging
   
-  The bot feature also has a async protected logging methods:
+  The bot feature also has an async protected logging methods:
   
   _log(meesage : str) - for logging logs related to the bot
   
-  _log_guild(message : str, guild_id : int) - for logging logs that are about actions that are related to the guild. if log channel is set by an adming, all guild   logs will be sent in it
+  _log_guild(message : str, guild_id : int) - for logging logs that are about actions that are related to the guild. if log channel is set by an adming, all guild   logs       will be sent in it
+  
+  # Loggers
+  
+  Loggers are class that implement the ILogger abstract class, that can be added to the bot.
+  when creating a logging method inside, make sure to use the "logging_function" decorator of the ILogger class,
+  that makes sure to alert all observers about the log.
+  
+  The "logging_function" takes one parameter of the "log_type" enum class, which as for now contains the values:
+  * system_log
+  * system_guild_log
+  * feature_log
+  * feature_guild_log
+  
+  In addition, observers can be added to loggers with the "add_log_observer" method of "ILogger", that receives:
+  * logtype : log_type
+  * callback : function
   
   ### Existing features:
   * room opening - lets you to have a dynamic server
