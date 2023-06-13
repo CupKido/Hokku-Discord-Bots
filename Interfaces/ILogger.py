@@ -38,6 +38,17 @@ class ILogger:
     def get_guild_logs(self, guild_id): 
         pass
     
+    # TODO: make sure works
+    def logging_function(self, logtype : log_type):
+        def deco(coro):
+            async def wrapper(*args, **kwargs):
+                for observer in self.log_observers:
+                    if logtype == observer[0]:
+                        await observer[1](*args, **kwargs)
+                coro(*args, **kwargs)
+            return wrapper
+        return deco
+
     def init_log_observerable(self):
         self.log_observers = []
         def add_log_observer(self, log_type : log_type, callback):
