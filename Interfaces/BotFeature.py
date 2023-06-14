@@ -3,10 +3,10 @@ from Interfaces.IGenericBot import IGenericBot
 # an abstract class that represents a feature of the bot
 class BotFeature:
     LOG_FEATURE_ATTR_NAME = 'log_feature'
-
-    def __init__(self, bot : IGenericBot, log_feature=False):
+    GUILDS_ATTR_NAME = "guilds"
+    def __init__(self, bot : IGenericBot, log_feature=False, guilds=None):
         self.bot_client = bot
-        self.attrs = {self.LOG_FEATURE_ATTR_NAME : log_feature}
+        self.attrs = {self.LOG_FEATURE_ATTR_NAME : log_feature, self.GUILDS_ATTR_NAME : guilds }
 
     def set_attrs(self, attrs : dict):
         if type(attrs) is not dict:
@@ -24,3 +24,10 @@ class BotFeature:
     async def _log_guild(self, message, guild_id):
         if self.LOG_FEATURE_ATTR_NAME in self.attrs and self.attrs[self.LOG_FEATURE_ATTR_NAME]:
             await self.bot_client.get_logger().log_guild_instance(message, guild_id, self)
+
+
+    # TODO: create wrapper that uses guilds in every command 
+    def feature_command(**kwargs):
+        def wrapper(coro):
+            pass 
+        
