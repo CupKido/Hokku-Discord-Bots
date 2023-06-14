@@ -78,7 +78,7 @@ class room_opening(BotFeature):
         self.bot_client.add_on_guild_channel_delete_callback(self.on_guild_channel_delete_callback)
         self.bot_client.add_on_guild_join_callback(self.on_guild_join_callback)
         self.bot_client.add_every_time_callback(self.resume_buttons, hours=4)
-        @client.tree.command(name = 'edit_channel', description='present the channel editing menu')
+        @self.feature_command(name = 'edit_channel', description='present the channel editing menu')
         async def show_editing_menu(interaction: discord.Interaction):
 
             try:
@@ -139,7 +139,7 @@ class room_opening(BotFeature):
                 self._log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
         
-        @client.tree.command(name = 'add_master_channel', description='add a channel to master channel list')
+        @self.feature_command(name = 'add_master_channel', description='add a channel to master channel list')
         @app_commands.check(permission_checks.is_admin)
         async def add_master_channel(interaction: discord.Interaction, channel : discord.VoiceChannel):
 
@@ -167,7 +167,7 @@ class room_opening(BotFeature):
                 self._log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
             
-        @client.tree.command(name = 'remove_master_channel', description='remove a channel from master channel list')
+        @self.feature_command(name = 'remove_master_channel', description='remove a channel from master channel list')
         @app_commands.check(permission_checks.is_admin)
         async def remove_master_channel(interaction: discord.Interaction, channel : discord.VoiceChannel):
 
@@ -195,7 +195,7 @@ class room_opening(BotFeature):
                 await interaction.response.send_message('error', ephemeral = True)
 
 
-        @client.tree.command(name = 'setup', description='create default category with master and edit channels')
+        @self.feature_command(name = 'setup', description='create default category with master and edit channels')
         @app_commands.check(permission_checks.is_admin)
         async def setup_command(interaction):
             started_embed = discord.Embed(title='Working on it...', description='Please wait')
@@ -209,7 +209,7 @@ class room_opening(BotFeature):
                                    description=f'Created: \nCategory: {category}\nEdit Channel: {edit}\nMaster Channel: {master}')
             await interaction.followup.send(embed=embed, ephemeral = True)
 
-        @client.tree.command(name = 'clear', description='clears master and edit channels, with the default category')
+        @self.feature_command(name = 'clear', description='clears master and edit channels, with the default category')
         @app_commands.check(permission_checks.is_admin)
         async def clear_command(interaction):
             embed = discord.Embed(title='Dynamico has cleared successfully !')
@@ -218,7 +218,7 @@ class room_opening(BotFeature):
             await self.clear_guild(interaction.guild, this_server_config)
             this_server_config.set_params(vc_name='{name}\'s Channel')
 
-        @client.tree.command(name = 'set_dynamics_name', description='set what name will be given to new vcs, for example: {name}\'s vc')
+        @self.feature_command(name = 'set_dynamics_name', description='set what name will be given to new vcs, for example: {name}\'s vc')
         @app_commands.check(permission_checks.is_admin)
         async def set_vc_names(interaction: discord.Interaction, name : str):
             if len(name) >= 80:
@@ -239,7 +239,7 @@ class room_opening(BotFeature):
                 self._log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
 
-        @client.tree.command(name = 'add_special_role', description='add role to special roles list')
+        @self.feature_command(name = 'add_special_role', description='add role to special roles list')
         @app_commands.check(permission_checks.is_admin)
         async def add_special_role(interaction : discord.Interaction, role : discord.Role, emoji : str = '', color : str = ''):
             try:
@@ -266,7 +266,7 @@ class room_opening(BotFeature):
                 self._log(str(e))
                 await interaction.response.send_message('error', ephemeral = True)
 
-        @client.tree.command(name = 'remove_special_role', description='remove role from special roles list')
+        @self.feature_command(name = 'remove_special_role', description='remove role from special roles list')
         @app_commands.check(permission_checks.is_admin)
         async def remove_special_role(interaction : discord.Interaction, role : discord.Role):
             try:
@@ -288,7 +288,7 @@ class room_opening(BotFeature):
                 await interaction.response.send_message('error', ephemeral = True)
 
 
-        @client.tree.command(name = 'choose_editing_channel', description='choose a channel for editing new voice channels')
+        @self.feature_command(name = 'choose_editing_channel', description='choose a channel for editing new voice channels')
         @app_commands.check(permission_checks.is_admin)
         async def choose_editing_channel(interaction: discord.Interaction, channel : discord.TextChannel, use_last_message : bool = False):
             try:
@@ -341,7 +341,7 @@ class room_opening(BotFeature):
                 self._log(str(e))
                 await interaction.response.send_message('Ops.. Something went wrong', ephemeral = True)
 
-        @client.tree.command(name = 'set_special_as_buttons', description='displays special roles as buttons, otherwise its a list')
+        @self.feature_command(name = 'set_special_as_buttons', description='displays special roles as buttons, otherwise its a list')
         @app_commands.check(permission_checks.is_admin)
         async def set_special_as_buttons(interaction: discord.Interaction, use_buttons : bool = True):
             try:
@@ -354,8 +354,8 @@ class room_opening(BotFeature):
                 await interaction.response.send_message('Ops.. Something went wrong', ephemeral = True)
 
 
-        # add command for resuming buttons on a soecific guild
-        @client.tree.command(name = 'resume_buttons', description='resumes buttons on a specific guild')
+        # add command for resuming buttons on a specific guild
+        @self.feature_command(name = 'resume_buttons', description='resumes buttons on a specific guild')
         @app_commands.check(permission_checks.is_admin)
         async def resume_buttons(interaction: discord.Interaction):
             try:

@@ -27,7 +27,7 @@ class to_do_list(BotFeature):
         per_id_db = bot.db.get_collection_instance("ToDoListFeature").get_item_instance
 
         bot.add_every_day_callback(self.clean_inactive_users)
-        @bot.tree.command(name='add_task', description='add task to the list')
+        @self.feature_command(name='add_task', description='add task to the list')
         async def add_task_command(interaction):
             this_user_db = per_id_db(interaction.user.id)
             tasks_list = this_user_db.get_param(self.TASKS_LIST)
@@ -37,11 +37,11 @@ class to_do_list(BotFeature):
 
             await self.show_add_task_modal(interaction)
 
-        @bot.tree.command(name='show_tasks', description='show tasks list')
+        @self.feature_command(name='show_tasks', description='show tasks list')
         async def show_tasks_command(interaction):
             await self.show_tasks(interaction)
                 
-        @bot.tree.command(name='is_to_do_list_embed', description='set if to do list will be sent as embed')
+        @self.feature_command(name='is_to_do_list_embed', description='set if to do list will be sent as embed')
         async def is_to_do_list_embed_command(interaction, is_embed : bool):
             this_user_db = per_id_db(interaction.user.id)
             this_user_db.set_params(is_embed=is_embed)

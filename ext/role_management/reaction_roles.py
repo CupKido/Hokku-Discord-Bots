@@ -25,7 +25,7 @@ class reaction_roles(BotFeature):
         
         bot.add_on_reaction_add_callback(self.on_reaction_add)
         bot.add_on_reaction_remove_callback(self.on_reaction_remove)
-        @bot.generic_command(name = 'add_reaction_role', description='add a reaction role to the message')
+        @self.feature_command(name = 'add_reaction_role', description='add a reaction role to the message')
         @app_commands.check(permission_checks.is_admin)
         async def add_reaction_role(interaction: discord.Interaction, role: discord.Role, message_id : str, emoji: str):
             # check if message exists
@@ -72,7 +72,7 @@ class reaction_roles(BotFeature):
             pass
 
 
-        @bot.generic_command(name = 'remove_reaction_role', description='remove a reaction role from the message')
+        @self.feature_command(name = 'remove_reaction_role', description='remove a reaction role from the message')
         @app_commands.check(permission_checks.is_admin)
         async def remove_reaction_role(interaction: discord.Interaction, role: discord.Role, message_id : int):
             # check if message exists

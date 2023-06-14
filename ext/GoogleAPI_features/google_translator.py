@@ -7,7 +7,7 @@ class google_translator(BotFeature):
     def __init__(self, bot):
         super().__init__(bot)
         self.languages = self.flip_dict(googletrans.LANGUAGES)
-        @bot.tree.command(name="translate", description="Translate text")
+        @self.feature_command(name="translate", description="Translate text")
         async def translate(interaction: discord.Interaction, text: str, target_language: str = "english"):
             translator = Translator()
             result = translator.translate(text, dest=self.get_letters_from_language(target_language))

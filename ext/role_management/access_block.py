@@ -16,11 +16,11 @@ class access_block_feature(BotFeature):
         self.feature_collection = bot.db.get_collection_instance('BotAccessBlock')
         bot.add_on_before_any_command_callback(self.can_use)
 
-        @bot.generic_command(name = 'block_access_menu', description='block access menu')
+        @self.feature_command(name = 'block_access_menu', description='block access menu')
         async def block_access_menu(interaction: discord.Interaction):
             await interaction.response.send_message('block access menu', ephemeral=True, view=await self.get_block_access_menu(interaction))
     
-        @bot.generic_command(name = 'allow_role', description='allow a role to use the bot')
+        @self.feature_command(name = 'allow_role', description='allow a role to use the bot')
         async def allow_role(interaction: discord.Interaction, role: discord.Role):
             guild_data = self.get_guild_db_data(interaction.guild.id)
             if not await self.can_modify(interaction, guild_data):
