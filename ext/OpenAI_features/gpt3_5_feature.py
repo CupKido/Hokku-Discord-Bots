@@ -65,7 +65,7 @@ class gpt3_5_feature(BotFeature):
         bot.add_on_message_callback(self.on_message)
         bot.add_on_ready_callback(self.start_cleaning_loop)
 
-        @bot.tree.command(name="set_gpt_category", description="Starts a new chat with GPT 3_5")
+        @self.feature_command(name="set_gpt_category", description="Starts a new chat with GPT 3_5")
         @app_commands.check(permission_checks.is_admin)
         async def set_gpt_category(interaction, category: discord.CategoryChannel):
             server_data = self.servers_collection.get(interaction.guild.id)
@@ -75,7 +75,7 @@ class gpt3_5_feature(BotFeature):
             await interaction.response.send_message("GPT category set to " + category.name, ephemeral=True)
             await self._log_guild("GPT category set to " + category.name, interaction.guild.id)
 
-        @bot.tree.command(name="new_gpt_chat", description="Starts a new chat with GPT 3_5")
+        @self.feature_command(name="new_gpt_chat", description="Starts a new chat with GPT 3_5")
         async def new_gpt_chat(interaction):
             server_data = self.servers_collection.get(interaction.guild.id)
 
@@ -115,7 +115,7 @@ class gpt3_5_feature(BotFeature):
             await interaction.response.send_message("new GPT chat created.", ephemeral=True)
             await self._log_guild(f"new GPT chat created for {interaction.user.mention}.", interaction.guild.id)
 
-        @bot.tree.command(name="close_gpt_chat", description="Ends your active GPT chat")
+        @self.feature_command(name="close_gpt_chat", description="Ends your active GPT chat")
         async def close_gpt_chat(interaction):
             user_data = self.feature_collection.get(interaction.user.id)
             server_data = self.servers_collection.get(interaction.guild.id)
@@ -130,7 +130,7 @@ class gpt3_5_feature(BotFeature):
             await interaction.response.send_message("GPT chat closed.", ephemeral=True)
             await self._log_guild(f"GPT chat closed for {interaction.user.mention}.", interaction.guild.id)
             
-        @bot.tree.command(name="ask_gpt", description="Ask GPT 3_5 a question (privately)")
+        @self.feature_command(name="ask_gpt", description="Ask GPT 3_5 a question (privately)")
         async def ask_gpt(interaction):
             question_modal = Generic_Modal(title='Ask ChatGPT')
             question_modal.add_input(label="Question", 
@@ -140,7 +140,7 @@ class gpt3_5_feature(BotFeature):
             question_modal.set_callback(callback=self.ask_GPT_modal_callback)
             await interaction.response.send_modal(question_modal)
 
-        @bot.tree.command(name="public_gpt_chat", description="make your active GPT chat public")
+        @self.feature_command(name="public_gpt_chat", description="make your active GPT chat public")
         async def public_gpt_chat(interaction):
             user_data = self.feature_collection.get(interaction.user.id)
             if self.ACTIVE_GPT_CHAT not in user_data.keys() or user_data[self.ACTIVE_GPT_CHAT] is None:
@@ -155,7 +155,7 @@ class gpt3_5_feature(BotFeature):
             user_data[self.IS_CHAT_PRIVATE] = False
             self.feature_collection.set(interaction.user.id, user_data)
 
-        @bot.tree.command(name="private_gpt_chat", description="make your active GPT chat private")
+        @self.feature_command(name="private_gpt_chat", description="make your active GPT chat private")
         async def private_gpt_chat(interaction):
             user_data = self.feature_collection.get(interaction.user.id)
             if self.ACTIVE_GPT_CHAT not in user_data.keys() or user_data[self.ACTIVE_GPT_CHAT] is None:
