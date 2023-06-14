@@ -9,6 +9,7 @@ A simple framework that allows creating, loading and unloading features from dis
     -   [Existing Features](#existing-features)
     -   [Logging](#logging)
     -   [Loggers](#loggers)
+    -   [Using commands](#using-commands)
 -   [The Main File](#the-main-file)
     -   [Framework Way](#first-way)
     -   [Custom Way](#second-way)
@@ -148,7 +149,7 @@ A simple framework that allows creating, loading and unloading features from dis
       def __init__(self, bot : IGenericBot):
         super.__init__(bot)
         bot.add_every_hour_callback(self.say_hi)
-        @bot.tree.command(name = 'ping', description='respond to ping')
+        @self.feature_command(name = 'ping', description='respond to ping')
         async def pong(interaction)
           await interaction.response.send_message('pong!')
 
@@ -163,7 +164,7 @@ A simple framework that allows creating, loading and unloading features from dis
   
   _log_guild(message : str, guild_id : int) - for logging logs that are about actions that are related to the guild. if log channel is set by an adming, all guild   logs       will be sent in it
   
-  # Loggers
+  ### Loggers
   
   Loggers are class that implement the ILogger abstract class, that can be added to the bot.
   when creating a logging method inside, make sure to use the "logging_function" decorator of the ILogger class,
@@ -178,6 +179,26 @@ A simple framework that allows creating, loading and unloading features from dis
   In addition, observers can be added to loggers with the "add_log_observer" method of "ILogger", that receives:
   * logtype : log_type
   * callback : function
+  
+  ### Using commands
+  
+  The framework also uses its own decorator for adding commands, that uses discord's library's decorator, but adds some additional functionality.
+  
+  The way you now add commands:
+  
+  On the __init__ function, you first call the BotFeature's __init__ and then declare async functions using the "feature_command" decorator of the BotFeature class, such as   in this case:
+  
+    class example_feature(BotFeature):
+        def __init__(self, bot):
+            super().__init__(bot)
+            @self.feature_command(name='ping', description='replies with pong')
+            async def <function_name>(interaction : discord.Interaction):
+                interaction.response.send_message('pong', ephemeral=True)
+  
+  The feature_command decorator allows us to add functionalities such as:
+  
+  * limiting guilds per feature, by setting the BotFeature.GUILDS_ATTR_NAME attribute, example on [BotFeatures attributes](#BotFeatures-attributes).
+  * calling the on_before_any_command and on_after_any_command events, that allow us to make features that relate to bot managment, such as the access_block_feature feature
   
   ### Existing features:
   * room opening - lets you to have a dynamic server
