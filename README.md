@@ -10,6 +10,7 @@ A simple framework that allows creating, loading and unloading features from dis
     -   [Logging](#logging)
     -   [Loggers](#loggers)
     -   [Using commands](#using-commands)
+    -   [BotFeatures attributes](#botfeatures-attributes)
 -   [The Main File](#the-main-file)
     -   [Framework Way](#first-way)
     -   [Custom Way](#second-way)
@@ -197,21 +198,36 @@ A simple framework that allows creating, loading and unloading features from dis
   
   The feature_command decorator allows us to add functionalities such as:
   
-  * limiting guilds per feature, by setting the BotFeature.GUILDS_ATTR_NAME attribute, example on [BotFeatures attributes](#BotFeatures-attributes).
+  * limiting guilds per feature, by setting the BotFeature.GUILDS_ATTR_NAME attribute, example on [BotFeatures attributes](#botfeatures-attributes).
   * calling the on_before_any_command and on_after_any_command events, that allow us to make features that relate to bot managment, such as the access_block_feature feature
   
+  ### BotFeatures attributes
+  In order to set attributes that affect the bot feature's functionality, in the bot's main file, instead of using the add_features function, you need to use the add_feature   function, and specify the attributes dictionary in the second parameter ('attrs').
+  Currently every bot feature uses these two attributes, so you can set the to whatever youd like:
+  * BotFeature.LOG_FEATURE_ATTR_NAME : bool - whether to output logs. (default is false)
+  * BotFeature.LOG_FEATURE_ATTR_NAME : list[int] - list of guilds that'll support the feature's commands. (default is None)
+  
+  Example for setting the bot feature's attributes:
+    
+    <bot var> = GenericBot_client(...) 
+    <bot var>.add_feature(gpt3_5_feature, {gpt3_5_feature.GUILDS_ATTR_NAME : [...], gpt3_5_feature.LOG_FEATURE_ATTR_NAME : True})
+    <bot var>.add_features(help_command, prefix_adapter, room_opening, watching_members_feature)
+    <bot var>.activate()
+  
+  Help for initializing bot can be found on [The Main File](#the-main-file)
+  
   ### Existing features:
-  * room opening - lets you to have a dynamic server
-  * confessions - lets you confess in a chosen confession channel
-  * actions tester - tool that helps you test actions of other bots
-  * event logger - tool that lets you see the logs of the past day
-  * discord api commands - lets you use some basic api command
-  * prefix_adapter - adapts all commands without parameters to prefix commands
-  * to do list - lets each user access a to do list that is saved on the bot
-  * active study rooms - for rooms with cam only
-  * activity notifier - lets users get notified when there are more than a certain number of users on vc, or when their friend joins vc
-  * help command - adds the help command that sends a description about all commands that specific user can use
-  * 
+  * room opening - lets you to have a dynamic server.
+  * confessions - lets you confess in a chosen confession channel.
+  * actions tester - tool that helps you test actions of other bots.
+  * event logger - tool that lets you see the logs of the past day.
+  * discord api commands - lets you use some basic api command.
+  * prefix_adapter - adapts all commands without parameters to prefix commands.
+  * to do list - lets each user access a to do list that is saved on the bot.
+  * active study rooms - for rooms with cam only.
+  * activity notifier - lets users get notified when there are more than a certain number of users on vc, or when their friend joins vc.
+  * help command - adds the help command that sends a description about all commands that specific user can use.
+  * access_block_feature - allows an option to give access to bot functionality only to selected members and roles.
   
 ## The Main File 
   The main function is the actual python file we run on our machine.
@@ -219,7 +235,7 @@ A simple framework that allows creating, loading and unloading features from dis
   and add into it all the features that we'd like to load, 
   by using the **'add_features'** method for a **few** features or the **'add_feature'** method for a **single** feature, 
   and sending the feature's class instance as a parameter.
-  
+  If you'd like to set specific parameters for a feature, make sure to look at [BotFeatures attributes](#botfeatures-attributes).
   After that, we will use the **'activate'** method of the GenericBot to start the bot.
   
   There are 2 ways to create a main file.
