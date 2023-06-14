@@ -65,7 +65,7 @@ class gpt3_5_feature(BotFeature):
         bot.add_on_message_callback(self.on_message)
         bot.add_on_ready_callback(self.start_cleaning_loop)
 
-        @self.feature_command(name="set_gpt_category", description="Starts a new chat with GPT 3_5")
+        @self.feature_command(name="set_gpt_category", description="sets a category for new chats with GPT to open in.")
         @app_commands.check(permission_checks.is_admin)
         async def set_gpt_category(interaction, category: discord.CategoryChannel):
             server_data = self.servers_collection.get(interaction.guild.id)
