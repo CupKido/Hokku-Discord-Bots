@@ -235,7 +235,9 @@ A simple framework that allows creating, loading and unloading features from dis
   and add into it all the features that we'd like to load, 
   by using the **'add_features'** method for a **few** features or the **'add_feature'** method for a **single** feature, 
   and sending the feature's class instance as a parameter.
+  
   If you'd like to set specific parameters for a feature, make sure to look at [BotFeatures attributes](#botfeatures-attributes).
+  
   After that, we will use the **'activate'** method of the GenericBot to start the bot.
   
   There are 2 ways to create a main file.
