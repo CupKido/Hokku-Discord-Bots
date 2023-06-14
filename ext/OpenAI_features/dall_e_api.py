@@ -50,15 +50,11 @@ class dall_e_api(BotFeature):
         per_id_db = bot.db.get_collection_instance("DallEFeature").get_item_instance
         self.last_amount_reset = datetime.datetime.now()
         bot.add_on_message_callback(self.on_message)
-        bot.add_on_ready_callback(self.start_tasks)
-        @bot.tree.command(name="dall_e_menu", description="Generate images with Dall-E")
+        bot.add_on_every_time_callback(self.reset_amounts, minutes=self.reset_every_hours)
+        @self.feature_command(name="dall_e_menu", description="Generate images with Dall-E")
         async def dallE_menu(interaction : discord.Interaction):
             await self.show_dallE_menu(interaction)
-    
-    async def start_tasks(self):
-        self.reset_amounts.start()
 
-    @tasks.loop(hours=reset_every_hours)
     async def reset_amounts(self):
         self.last_amount_reset = datetime.datetime.now()
         # for guild in self.bot.guilds:
