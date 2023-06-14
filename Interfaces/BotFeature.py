@@ -28,7 +28,7 @@ class BotFeature:
             await self.bot_client.get_logger().log_guild_instance(message, guild_id, self)
 
 
-    # TODO: create wrapper that uses guilds in every command 
+    # TODO: convert all features to use this decorator 
 
     def feature_command(self, **kwargs):
         def deco(coro):
