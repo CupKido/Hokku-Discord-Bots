@@ -18,6 +18,7 @@ class role_options(enum.Enum):
 
 
 class gpt_wrapper:
+    # TODO: add support for newer models 
     class supported_models(enum.Enum):
         gpt_3_5_turbo = "gpt-3.5-turbo"
 
