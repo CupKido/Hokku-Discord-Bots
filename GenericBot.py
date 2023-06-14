@@ -164,7 +164,7 @@ class GenericBot_client(IGenericBot):
             for callback in self.on_guild_join_callbacks:
                 await callback(guild)
 
-    
+    # decorator
     def generic_event(self, coro):
         async def wrapper(*args, **kwargs):
             for callback in self.on_before_any_event_callbacks:
@@ -176,7 +176,7 @@ class GenericBot_client(IGenericBot):
         wrapper.__name__ = coro.__name__
         return self.event(wrapper)
 
-
+    # decorator
     def generic_command(self, **kwargs2):
         
         def deco(coro: typing.Callable[..., typing.Coroutine]):
@@ -527,6 +527,8 @@ class GenericBot_client(IGenericBot):
             attrs[feature.LOG_FEATURE_ATTR_NAME] = True
         if attrs is not None:
             self.features[str(feature)].set_attrs(attrs)
+        # init commands
+        self.features[str(feature)].init_commands()
 
     def _add_scheduler_events(self):
         self.every_hour_callbacks = []
