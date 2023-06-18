@@ -33,7 +33,9 @@ class BotFeature:
     def feature_command(self, **kwargs):
         def deco(coro):
             def init_command():
+                # if the guilds attribute is not in the feature arguments and it is in the attrs and it is not None
                 if self.GUILDS_ATTR_NAME not in kwargs and self.GUILDS_ATTR_NAME in self.attrs.keys() and self.attrs[self.GUILDS_ATTR_NAME] is not None:
+                    # apply the guilds attribute to the command
                     new_guilds = []
                     for guild in self.attrs[self.GUILDS_ATTR_NAME]:
                         new_guilds.append(demi_guild(guild))

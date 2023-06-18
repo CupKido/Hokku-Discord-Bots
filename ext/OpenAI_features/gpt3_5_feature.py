@@ -14,6 +14,16 @@ import io
 import datetime
 import asyncio
 
+######################################
+# a feature that allows creating     #
+# text channels with chats gpt 3_5   #
+######################################
+# please insert your openai key in   #
+# the .env file or either set it as  #
+# an environment variable            #
+######################################
+
+
 class gpt3_5_feature(BotFeature):
     users_collection = None
     servers_collection = None

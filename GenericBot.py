@@ -507,8 +507,6 @@ class GenericBot_client(IGenericBot):
     def add_features(self, *features : list[BotFeature]):
         self._log('================================================================')
         for feature in features:
-            if feature != features[0]:
-                self._log('----------------------------------------------------------------')
             self.add_feature(feature)
 
         self._log('================================================================')
