@@ -260,26 +260,29 @@ class gpt3_5_feature(BotFeature):
         if message.author.bot:
             return
         
-        # check if server has an active GPT chat
-        server_data = self.servers_collection.get(message.guild.id)
-        if self.OPEN_CHATS not in server_data.keys() or server_data[self.OPEN_CHATS] is None or type(server_data[self.OPEN_CHATS]) is not list:
-            return
-
-        # check if message is in an active GPT chat
-        if message.channel.id not in server_data[self.OPEN_CHATS]:
-            return
-        
-        # the message is indeed in an active GPT chat, intended for GPT 3_5
-        # change permissions of channel to only allow the bot to send messages
         user_data = self.feature_collection.get(message.author.id)
-        if self.IS_CHAT_PRIVATE not in user_data.keys() or type(user_data[self.IS_CHAT_PRIVATE]) is not bool:
-            user_data[self.IS_CHAT_PRIVATE] = True
-        if user_data[self.IS_CHAT_PRIVATE]:
-            await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                                                message.author: discord.PermissionOverwrite(send_messages=False, read_messages=True),})
-        else:
-            await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=True),
-                                                message.author: discord.PermissionOverwrite(send_messages=False, read_messages=True),})
+        is_guild = type(message.channel) is not discord.channel.DMChannel
+        if is_guild:
+            # check if server has an active GPT chat
+            server_data = self.servers_collection.get(message.guild.id)
+            if self.OPEN_CHATS not in server_data.keys() or server_data[self.OPEN_CHATS] is None or type(server_data[self.OPEN_CHATS]) is not list:
+                return
+
+            # check if message is in an active GPT chat
+            if message.channel.id not in server_data[self.OPEN_CHATS]:
+                return
+        
+            # the message is indeed in an active GPT chat, intended for GPT 3_5
+            # if message in guild, change permissions of channel to only allow the bot to send messages
+            
+            if self.IS_CHAT_PRIVATE not in user_data.keys() or type(user_data[self.IS_CHAT_PRIVATE]) is not bool:
+                user_data[self.IS_CHAT_PRIVATE] = True
+            if user_data[self.IS_CHAT_PRIVATE]:
+                await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                                                    message.author: discord.PermissionOverwrite(send_messages=False, read_messages=True),})
+            else:
+                await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=True),
+                                                    message.author: discord.PermissionOverwrite(send_messages=False, read_messages=True),})
 
         # load user chat history
         config_data = self.config_collection.get(self.GPT_FEATURE_CONFIG)
@@ -290,9 +293,18 @@ class gpt3_5_feature(BotFeature):
         # forward message to GPT 3_5 and return response
         used_model = gpt_wrapper.supported_models.gpt_3_5_turbo
         please_wait_message = await message.channel.send("Please wait while I ask GPT 3.5...")
+        please_wait_message_id = please_wait_message.id
         try:
             async def response_callback(response, tokens_used):
-                await please_wait_message.delete()
+                try:
+                    await please_wait_message.delete()
+                except:
+                    # fetch message again
+                    try:
+                        please_wait_message = await message.channel.fetch_message(please_wait_message_id)
+                        await please_wait_message.delete()
+                    except Exception as e:
+                        print(e)
                 #print(response)
                 # prepare response to user
                 response_embed = self.get_response_embed(response)
@@ -301,7 +313,15 @@ class gpt3_5_feature(BotFeature):
                 user_mention = message.author.mention
                 # send response to user
                 await message.channel.send(content=user_mention,embeds=embeds)
-
+                # if message in guild, change permissions of channel to allow user to send messages
+                if is_guild:
+                    if user_data[self.IS_CHAT_PRIVATE]:
+                        await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                                                            message.author: discord.PermissionOverwrite(send_messages=True, read_messages=True),})
+                    else:
+                        await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=True),
+                                                            message.author: discord.PermissionOverwrite(send_messages=True, read_messages=True),})
+        
                 # save tokens used
                 
                 if self.GPT_CHAT_COST not in user_data.keys() or type(user_data[self.GPT_CHAT_COST]) is not float:
@@ -320,14 +340,6 @@ class gpt3_5_feature(BotFeature):
             print(e)
             
         
-        # change permissions of channel to allow user to send messages
-        
-        if user_data[self.IS_CHAT_PRIVATE]:
-            await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                                                message.author: discord.PermissionOverwrite(send_messages=True, read_messages=True),})
-        else:
-            await message.channel.edit(overwrites={message.guild.default_role: discord.PermissionOverwrite(read_messages=True),
-                                                message.author: discord.PermissionOverwrite(send_messages=True, read_messages=True),})
         
 
     async def ask_GPT_modal_callback(self, interaction):
