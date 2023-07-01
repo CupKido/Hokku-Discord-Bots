@@ -6,6 +6,7 @@ import requests
 class role_options(enum.Enum):
     user = "user"
     assistant = "assistant"
+    system = "system"
 
     @classmethod
     def get_role_message(instance, role, message):
@@ -45,6 +46,8 @@ class gpt_wrapper:
                     refactored_user_history.append({"role":"user", "content" : message[1]})
                 elif message[0] == role_options.assistant:
                     refactored_user_history.append({"role":"assistant", "content" : message[1]})
+                elif message[0] == role_options.system:
+                    refactored_user_history.append({"role":"system", "content" : message[1]})
 
         chatgpt_url = "https://api.openai.com/v1/chat/completions"
 
