@@ -22,11 +22,14 @@ class gpt_wrapper:
     # TODO: add support for newer models 
     class supported_models(enum.Enum):
         gpt_3_5_turbo = "gpt-3.5-turbo"
+        gpt_4 = "gpt-4"
 
     @classmethod
     def get_tokens_per_dollar(instance, model : supported_models):
         if model == instance.supported_models.gpt_3_5_turbo:
             return 500000
+        if model == instance.supported_models.gpt_4:
+            return 16666.7
         else:
             raise Exception("Invalid model name")
         

@@ -291,8 +291,11 @@ class gpt3_5_feature(BotFeature):
         user_history = await self.load_user_history(message.channel, config_data[self.GPT_HISTORY_LENGTH])
         
         # forward message to GPT 3_5 and return response
-        used_model = gpt_wrapper.supported_models.gpt_3_5_turbo
-        please_wait_message = await message.channel.send("Please wait while I ask GPT 3.5...")
+        if message.content.startswith("gpt4. "):
+            used_model = gpt_wrapper.supported_models.gpt_4
+        else:
+            used_model = gpt_wrapper.supported_models.gpt_3_5_turbo
+        please_wait_message = await message.channel.send("Please wait while I ask " + str(used_model.value) + "...")
         please_wait_message_id = please_wait_message.id
         try:
             async def response_callback(response, tokens_used):
@@ -343,10 +346,13 @@ class gpt3_5_feature(BotFeature):
         
 
     async def ask_GPT_modal_callback(self, interaction):
-        await interaction.response.send_message("Please wait while I ask GPT 3.5...", ephemeral=True)
+        await interaction.response.send_message("Please wait while I ask GPT...", ephemeral=True)
         message = ui_tools.get_modal_value(interaction, 0)
         question_embed = discord.Embed(title=f"Your question:", description=message, color=0x00ff00)
-        used_model = gpt_wrapper.supported_models.gpt_3_5_turbo
+        if message.startswith("gpt4. "):
+            used_model = gpt_wrapper.supported_models.gpt_4
+        else:
+            used_model = gpt_wrapper.supported_models.gpt_3_5_turbo
         user_data = self.feature_collection.get(interaction.user.id)
         if self.PRIVATE_HISTORY not in user_data.keys() or type(user_data[self.PRIVATE_HISTORY]) is not list:
             user_data[self.PRIVATE_HISTORY] = []
@@ -383,13 +389,13 @@ class gpt3_5_feature(BotFeature):
                 callback=response_callback)
             
         except Exception as e:
-            await interaction.followup.send("GPT 3.5 is not responding. Please try again later.", embed=question_embed, ephemeral=True)
+            await interaction.followup.send("GPT is not responding. Please try again later.", embed=question_embed, ephemeral=True)
             print(e)
         
     
     
     def get_response_embed(self, response):
-        response_embed = discord.Embed(title=f"GPT3.5\'s response:", description=str(response), color=0x00ff00)
+        response_embed = discord.Embed(title=f"GPT\'s response:", description=str(response), color=0x00ff00)
         return response_embed
 
     async def start_cleaning_loop(self):
