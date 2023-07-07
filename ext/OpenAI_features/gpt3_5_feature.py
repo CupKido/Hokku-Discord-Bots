@@ -315,7 +315,10 @@ class gpt3_5_feature(BotFeature):
                 # add button to show chat history
                 user_mention = message.author.mention
                 # send response to user
-                await message.channel.send(content=user_mention,embeds=embeds)
+                for embed in embeds:
+                    await message.channel.send(embed=embed)
+                    await asyncio.sleep(1)
+                await message.channel.send(content=user_mention)
                 # if message in guild, change permissions of channel to allow user to send messages
                 if is_guild:
                     if user_data[self.IS_CHAT_PRIVATE]:
@@ -338,7 +341,10 @@ class gpt3_5_feature(BotFeature):
                                                         config["OPENAI_KEY"], 
                                                         callback=response_callback)
         except Exception as e:
-            await please_wait_message.delete()
+            try:
+                await please_wait_message.delete()
+            except:
+                pass
             await message.channel.send("GPT 3.5 is not responding. Please try again later.")
             print(e)
             
@@ -364,7 +370,9 @@ class gpt3_5_feature(BotFeature):
         try:
             async def response_callback(response, tokens_used):
                 embeds = [question_embed] + self.get_response_embeds(response)
-                await interaction.followup.send(embeds=embeds, ephemeral=True)
+                for embed in embeds:
+                    await interaction.followup.send(embed=embed, ephemeral=True)
+                    await asyncio.sleep(1)
                 user_history = user_data[self.PRIVATE_HISTORY]
                 # make sure to save the user history, and make sure length is under the limit
                 user_history.append(role_options.get_role_message(role_options.assistant, response))
@@ -399,7 +407,7 @@ class gpt3_5_feature(BotFeature):
         embeds = []
         # if response is too long, split it into multiple embeds
         # split every 3000 characters
-        for i in range(0, len(response), 3000):
+        for i in range(0, len(response), 5800):
             embeds.append(discord.Embed(title=f"GPT\'s response:", description=str(response[i:i+3000]), color=0x00ff00))
         return embeds
 
