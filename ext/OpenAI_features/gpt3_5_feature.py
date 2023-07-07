@@ -291,7 +291,7 @@ class gpt3_5_feature(BotFeature):
         user_history = await self.load_user_history(message.channel, config_data[self.GPT_HISTORY_LENGTH])
         
         # forward message to GPT 3_5 and return response
-        if message.content.startswith("gpt4. "):
+        if message.content.startswith("gpt4."):
             used_model = gpt_wrapper.supported_models.gpt_4
         else:
             used_model = gpt_wrapper.supported_models.gpt_3_5_turbo
@@ -349,7 +349,7 @@ class gpt3_5_feature(BotFeature):
         await interaction.response.send_message("Please wait while I ask GPT...", ephemeral=True)
         message = ui_tools.get_modal_value(interaction, 0)
         question_embed = discord.Embed(title=f"Your question:", description=message, color=0x00ff00)
-        if message.startswith("gpt4. "):
+        if message.startswith("gpt4."):
             used_model = gpt_wrapper.supported_models.gpt_4
         else:
             used_model = gpt_wrapper.supported_models.gpt_3_5_turbo
