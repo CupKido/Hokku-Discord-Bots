@@ -311,8 +311,7 @@ class gpt3_5_feature(BotFeature):
                         print(e)
                 #print(response)
                 # prepare response to user
-                response_embed = self.get_response_embed(response)
-                embeds=[response_embed]
+                embeds=self.get_response_embeds(response)
                 # add button to show chat history
                 user_mention = message.author.mention
                 # send response to user
@@ -364,8 +363,8 @@ class gpt3_5_feature(BotFeature):
         user_data[self.PRIVATE_HISTORY] = user_history
         try:
             async def response_callback(response, tokens_used):
-                response_embed = self.get_response_embed(response)
-                await interaction.followup.send(embeds=[question_embed, response_embed], ephemeral=True)
+                embeds = [question_embed] + self.get_response_embeds(response)
+                await interaction.followup.send(embeds=embeds, ephemeral=True)
                 user_history = user_data[self.PRIVATE_HISTORY]
                 # make sure to save the user history, and make sure length is under the limit
                 user_history.append(role_options.get_role_message(role_options.assistant, response))
@@ -396,9 +395,13 @@ class gpt3_5_feature(BotFeature):
         
     
     
-    def get_response_embed(self, response):
-        response_embed = discord.Embed(title=f"GPT\'s response:", description=str(response), color=0x00ff00)
-        return response_embed
+    def get_response_embeds(self, response):
+        embeds = []
+        # if response is too long, split it into multiple embeds
+        # split every 3000 characters
+        for i in range(0, len(response), 3000):
+            embeds.append(discord.Embed(title=f"GPT\'s response:", description=str(response[i:i+3000]), color=0x00ff00))
+        return embeds
 
     async def start_cleaning_loop(self):
         self.clean_dead_gpt_chats.start()
