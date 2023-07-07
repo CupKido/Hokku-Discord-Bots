@@ -249,9 +249,9 @@ class gpt3_5_feature(BotFeature):
             if chat_message.author == self.bot_client.user:
                 if len(chat_message.embeds) == 0:
                     continue
-                user_history.append((role_options.assistant, chat_message.embeds[0].description))
+                user_history.append([role_options.assistant, chat_message.embeds[0].description])
             else:
-                user_history.append((role_options.user , chat_message.content))
+                user_history.append([role_options.user , chat_message.content])
         user_history.reverse()
         return user_history
     
@@ -293,6 +293,7 @@ class gpt3_5_feature(BotFeature):
         # forward message to GPT 3_5 and return response
         if message.content.startswith("gpt4."):
             used_model = gpt_wrapper.supported_models.gpt_4
+            user_history[-1][1] = user_history[-1][1][5:]
         else:
             used_model = gpt_wrapper.supported_models.gpt_3_5_turbo
         please_wait_message = await message.channel.send("Please wait while I ask " + str(used_model.value) + "...")
@@ -351,6 +352,7 @@ class gpt3_5_feature(BotFeature):
         question_embed = discord.Embed(title=f"Your question:", description=message, color=0x00ff00)
         if message.startswith("gpt4."):
             used_model = gpt_wrapper.supported_models.gpt_4
+            message = message[5:]
         else:
             used_model = gpt_wrapper.supported_models.gpt_3_5_turbo
         user_data = self.feature_collection.get(interaction.user.id)
