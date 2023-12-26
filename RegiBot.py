@@ -17,7 +17,7 @@ def main():
     dall_e_api.unlimited_users.append(1091693766294913145)
     dall_e_api.unlimited_users.append(590303170668920869)
     CoffeeBot.developers_list.append(427464593351114754)
-    CoffeeBot.add_features(to_do_list, watching_members_feature, help_command, gpt3_5_feature, dall_e_api, google_translator, eventsub_feature, prefix_adapter)
+    CoffeeBot.add_features(to_do_list, watching_members_feature, help_command, gpt3_5_feature, dall_e_api, google_translator, prefix_adapter)
     CoffeeBot.activate()
 
 
