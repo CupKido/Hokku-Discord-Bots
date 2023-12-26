@@ -292,7 +292,7 @@ class gpt3_5_feature(BotFeature):
         
         # forward message to GPT 3_5 and return response
         if message.content.startswith("gpt4."):
-            used_model = gpt_wrapper.supported_models.gpt_4
+            used_model = gpt_wrapper.supported_models.gpt_4_turbo
             user_history[-1][1] = user_history[-1][1][5:]
         else:
             used_model = gpt_wrapper.supported_models.gpt_3_5_turbo
